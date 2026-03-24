@@ -21,10 +21,8 @@ export default async function handler(req, res) {
           contents: [{ parts: [{ text: sys + '\n\n' + userMsg }] }],
           generationConfig: { 
             maxOutputTokens: maxTok, 
-            temperature: 0.8
-          },
-          thinkingConfig: {
-            thinkingBudget: 0
+            temperature: 0.8,
+            thinkingConfig: { thinkingBudget: 0 }
           }
         })
       }
