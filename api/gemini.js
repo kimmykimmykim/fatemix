@@ -1,6 +1,4 @@
-export const config = {
-  maxDuration: 60
-};
+export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,13 +13,19 @@ export default async function handler(req, res) {
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: sys + '\n\n' + userMsg }] }],
-          generationConfig: { maxOutputTokens: maxTok, temperature: 0.8 }
+          generationConfig: { 
+            maxOutputTokens: maxTok, 
+            temperature: 0.8
+          },
+          thinkingConfig: {
+            thinkingBudget: 0
+          }
         })
       }
     );
