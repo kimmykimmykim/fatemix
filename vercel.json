@@ -6,6 +6,10 @@
       "dest": "/api/gemini.js"
     },
     {
+      "src": "/splash.png",
+      "dest": "/splash.png"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
