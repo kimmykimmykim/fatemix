@@ -334,6 +334,23 @@ body::before{
   from { opacity:0; transform:translateY(28px) scale(0.97); }
   to   { opacity:1; transform:translateY(0) scale(1); }
 }
+/* 뒤집기 전 카드 클릭 유도 펄스 */
+@keyframes revealCardPulse {
+  0%,100% { box-shadow:0 4px 16px rgba(0,0,0,0.6); border-color:rgba(201,168,76,0.35); }
+  50%     { box-shadow:0 4px 28px rgba(201,168,76,0.35), 0 0 18px rgba(201,168,76,0.2); border-color:rgba(201,168,76,0.75); }
+}
+/* 전체 카드 오픈 시 운명 메시지 */
+@keyframes fateMsg {
+  0%   { opacity:0; transform:scale(0.8) translateY(10px); }
+  20%  { opacity:1; transform:scale(1.03) translateY(0); }
+  70%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(0.95); }
+}
+/* 덱 영역 페이드인 */
+@keyframes deckAreaIn {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
 
 </style>
 </head>
@@ -3593,9 +3610,8 @@ function spawnCardSparkles(sceneEl) {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), dur * 1000 + 50);
   }
-  // 카드 자체 글로우
+  // 카드 자체 글로우 (forwards로 유지 — 클리어 시 cardAppear 재실행 방지)
   sceneEl.style.animation = 'cardFlipGlow 1s ease forwards';
-  setTimeout(() => { sceneEl.style.animation = ''; }, 1100);
 }
 
 function doTarot(){
@@ -3616,8 +3632,17 @@ function doTarot(){
     flippedCount=0;
     hideTarotLoading();
     setTimeout(()=>{
+      const deckArea=document.getElementById('tarot-deck-area');
+      deckArea.style.opacity='0';
+      deckArea.style.transform='translateY(16px)';
       renderPickDeck();
       btn.disabled=false; btn.textContent='✦ 카드 뽑기';
+      // 덱 영역 부드럽게 등장
+      setTimeout(()=>{
+        deckArea.style.transition='opacity 0.6s ease, transform 0.6s ease';
+        deckArea.style.opacity='1';
+        deckArea.style.transform='translateY(0)';
+      }, 60);
     }, 520);
   }, 2200);
 }
@@ -3731,9 +3756,13 @@ function renderRevealDeck(){
 
   flippedCount=0;
   deckEl.innerHTML=drawnCards.map((card,i)=>`
-    <div style="text-align:center;animation:cardAppear 0.5s ease ${i*0.2}s both;">
-      <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;margin-bottom:8px;opacity:0.8;">${pos[i]}</div>
-      <div class="card-scene" id="scene-${i}" onclick="flipCard(${i})" style="width:${w}px;height:${h}px;">
+    <div style="text-align:center;animation:cardAppear 0.55s ease ${i*0.25}s both;">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;margin-bottom:8px;opacity:0.8;
+        animation:resultReveal 0.4s ease ${i*0.25+0.1}s both;">${pos[i]}</div>
+      <div class="card-scene" id="scene-${i}" onclick="flipCard(${i})"
+        style="width:${w}px;height:${h}px;
+          border-radius:12px;
+          animation:cardAppear 0.55s ease ${i*0.25}s both, revealCardPulse 2.5s ease-in-out ${i*0.25+0.6}s infinite;">
         <div class="card-flip" id="flip-${i}">
           <div class="card-face card-back">${makeCardBackSVG(w,h)}</div>
           <div class="card-face card-front${card.isRev?' reversed':''}" id="front-${i}"
@@ -3776,10 +3805,33 @@ function flipCard(i){
   flip.classList.add('flipped');
   const scene=document.getElementById(`scene-${i}`);
   scene.style.cursor='default';
-  // 파티클 + 글로우 연출
+  // 파티클 + 글로우 연출 (펄스 animation 덮어씌움)
   spawnCardSparkles(scene);
   flippedCount++;
-  if(flippedCount===spread) setTimeout(()=>startReading(),1000);
+  if(flippedCount===spread) showFateMessage();
+}
+
+function showFateMessage(){
+  const overlay=document.createElement('div');
+  overlay.style.cssText=`
+    position:fixed;inset:0;z-index:7000;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;background:rgba(10,10,20,0.0);
+  `;
+  overlay.innerHTML=`
+    <div style="
+      text-align:center;padding:28px 40px;
+      background:linear-gradient(160deg,rgba(20,14,40,0.95) 0%,rgba(10,10,25,0.95) 100%);
+      border:1px solid rgba(201,168,76,0.5);
+      border-radius:20px;backdrop-filter:blur(12px);
+      animation:fateMsg 2s ease forwards;
+    ">
+      <div style="font-size:22px;color:rgba(201,168,76,0.9);margin-bottom:10px;font-family:'Cinzel Decorative',serif;letter-spacing:0.12em;">✦</div>
+      <div style="font-size:15px;color:var(--text);font-family:'Cormorant Garamond',serif;letter-spacing:0.15em;">운명이 펼쳐집니다</div>
+      <div style="font-size:11px;color:rgba(201,168,76,0.65);margin-top:8px;letter-spacing:0.12em;">카드가 말을 건네고 있습니다</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>{ overlay.remove(); startReading(); }, 2000);
 }
 
 // 
