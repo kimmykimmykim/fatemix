@@ -290,9 +290,119 @@ body::before{
 }
 .card-scene { animation: cardAppear 0.4s ease forwards; }
 
+/* ====== 타로 로딩 오버레이 ====== */
+@keyframes fortuneOrbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes fortuneOrbitReverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+@keyframes fortuneFloat {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%     { transform: translateY(-9px) scale(1.04); }
+}
+@keyframes fortuneGlow {
+  0%,100% { box-shadow: 0 0 18px rgba(201,168,76,0.25), 0 0 0 1px rgba(201,168,76,0.4); }
+  50%     { box-shadow: 0 0 48px rgba(201,168,76,0.75), 0 0 80px rgba(160,100,200,0.2), 0 0 0 1px rgba(201,168,76,0.7); }
+}
+@keyframes loadingDot {
+  0%,80%,100% { transform: scale(0.5); opacity: 0.3; }
+  40%         { transform: scale(1.2); opacity: 1; }
+}
+@keyframes loadingTextFade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes starSpawn {
+  0%   { opacity:0; transform:translate(0,0) scale(0.3); }
+  20%  { opacity:1; }
+  100% { opacity:0; transform:translate(var(--sx),var(--sy)) scale(0); }
+}
+/* 카드 뒤집기 광채 */
+@keyframes cardFlipGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+  25%  { box-shadow: 0 0 0 0 rgba(201,168,76,0), 0 0 40px 14px rgba(201,168,76,0.7); }
+  70%  { box-shadow: 0 0 0 0 rgba(201,168,76,0), 0 0 20px 4px rgba(201,168,76,0.2); }
+  100% { box-shadow: none; }
+}
+/* 결과 섹션 등장 */
+@keyframes resultReveal {
+  from { opacity:0; transform:translateY(28px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
 </style>
 </head>
 <body>
+
+<!-- 타로 로딩 오버레이 -->
+<div id="tarot-loading-overlay" style="
+  display:none;position:fixed;inset:0;z-index:8000;
+  background:rgba(10,10,20,0.97);
+  flex-direction:column;align-items:center;justify-content:center;">
+
+  <!-- 중심 마법진 -->
+  <div style="position:relative;width:180px;height:180px;margin-bottom:36px;">
+    <!-- 외부 회전 링 -->
+    <div style="position:absolute;inset:0;border-radius:50%;
+      border:1px solid rgba(201,168,76,0.25);
+      animation:fortuneOrbit 5s linear infinite;">
+      <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+        font-size:16px;color:rgba(201,168,76,0.9);">✦</span>
+      <span style="position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+        font-size:16px;color:rgba(201,168,76,0.9);">✦</span>
+      <span style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+        font-size:13px;color:rgba(201,168,76,0.6);">◆</span>
+      <span style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+        font-size:13px;color:rgba(201,168,76,0.6);">◆</span>
+    </div>
+    <!-- 중간 역방향 링 -->
+    <div style="position:absolute;inset:22px;border-radius:50%;
+      border:1px dashed rgba(160,100,220,0.3);
+      animation:fortuneOrbitReverse 3.5s linear infinite;">
+      <span style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);
+        font-size:10px;color:rgba(160,100,220,0.7);">☽</span>
+      <span style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+        font-size:10px;color:rgba(160,100,220,0.7);">☾</span>
+    </div>
+    <!-- 중심 카드 -->
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+      <div style="
+        width:64px;height:100px;
+        background:linear-gradient(160deg,#0F0F1A 0%,#1a1030 100%);
+        border:1px solid rgba(201,168,76,0.6);
+        border-radius:9px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:30px;color:rgba(201,168,76,0.85);
+        animation:fortuneFloat 2.2s ease-in-out infinite,fortuneGlow 2.2s ease-in-out infinite;
+      ">✦</div>
+    </div>
+  </div>
+
+  <!-- 로딩 텍스트 -->
+  <div id="tarot-loading-text" style="
+    height:22px;
+    font-size:13px;color:rgba(201,168,76,0.9);
+    letter-spacing:0.18em;
+    font-family:'Cinzel Decorative',serif;
+    text-align:center;
+    animation:loadingTextFade 1.8s ease-in-out forwards;">
+  </div>
+
+  <!-- 점 3개 -->
+  <div style="display:flex;gap:7px;margin-top:20px;">
+    <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);
+      animation:loadingDot 1.2s ease-in-out 0s infinite;"></div>
+    <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);
+      animation:loadingDot 1.2s ease-in-out 0.2s infinite;"></div>
+    <div style="width:5px;height:5px;border-radius:50%;background:var(--gold);
+      animation:loadingDot 1.2s ease-in-out 0.4s infinite;"></div>
+  </div>
+</div>
 
 <!-- 스플래시 화면 -->
 <div id="screen-splash" onclick="exitSplash()" style="
@@ -3412,11 +3522,89 @@ function setSpread(n,btn){
 // 유저 픽 방식 전용 변수
 let deckPool=[], pickedCards=[], pickCount=0;
 
+/* ── 타로 로딩 오버레이 ── */
+const _tarotLoadingMsgs = [
+  '운명의 실이 엮이고 있습니다',
+  '별의 흐름을 읽는 중...',
+  '카드가 당신을 부르고 있습니다',
+  '우주의 목소리를 듣는 중...',
+  '당신의 기운을 감지하는 중...',
+  '78장의 운명을 섞고 있습니다',
+];
+let _tarotLoadingTimer = null;
+let _tarotLoadingMsgTimer = null;
+
+function showTarotLoading() {
+  const overlay = document.getElementById('tarot-loading-overlay');
+  overlay.style.display = 'flex';
+  // 텍스트 순환
+  let msgIdx = 0;
+  const textEl = document.getElementById('tarot-loading-text');
+  function cycleMsg() {
+    textEl.style.animation = 'none';
+    textEl.offsetHeight; // reflow
+    textEl.textContent = _tarotLoadingMsgs[msgIdx % _tarotLoadingMsgs.length];
+    textEl.style.animation = 'loadingTextFade 1.8s ease-in-out forwards';
+    msgIdx++;
+    _tarotLoadingMsgTimer = setTimeout(cycleMsg, 1700);
+  }
+  cycleMsg();
+}
+
+function hideTarotLoading() {
+  clearTimeout(_tarotLoadingMsgTimer);
+  const overlay = document.getElementById('tarot-loading-overlay');
+  overlay.style.transition = 'opacity 0.5s ease';
+  overlay.style.opacity = '0';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.style.opacity = '1';
+    overlay.style.transition = '';
+  }, 500);
+}
+
+/* ── 카드 뒤집기 파티클 ── */
+function spawnCardSparkles(sceneEl) {
+  const rect = sceneEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ['#C9A84C','#E8C97A','#fff','#b08aff','#70C49A'];
+  const symbols = ['✦','★','◆','✧','·'];
+  for (let k = 0; k < 12; k++) {
+    const el = document.createElement('div');
+    const angle = (k / 12) * Math.PI * 2;
+    const dist = 40 + Math.random() * 70;
+    const dx = Math.round(Math.cos(angle) * dist);
+    const dy = Math.round(Math.sin(angle) * dist);
+    const color = colors[k % colors.length];
+    const sym = symbols[k % symbols.length];
+    const dur = 0.55 + Math.random() * 0.4;
+    el.style.cssText = `
+      position:fixed;
+      left:${cx}px;top:${cy}px;
+      font-size:${8+Math.random()*10}px;
+      color:${color};
+      pointer-events:none;z-index:9000;
+      --sx:${dx}px;--sy:${dy}px;
+      animation:starSpawn ${dur}s ease-out both;
+      transform-origin:center;
+    `;
+    el.textContent = sym;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 50);
+  }
+  // 카드 자체 글로우
+  sceneEl.style.animation = 'cardFlipGlow 1s ease forwards';
+  setTimeout(() => { sceneEl.style.animation = ''; }, 1100);
+}
+
 function doTarot(){
   const btn=document.getElementById('tarot-btn');
   btn.disabled=true; btn.textContent='섞는 중...';
   document.getElementById('tarot-result').style.display='none';
   document.getElementById('tarot-deck-area').style.display='none';
+
+  showTarotLoading();
 
   setTimeout(()=>{
     // 78장 전체 덱 섞기
@@ -3426,9 +3614,12 @@ function doTarot(){
     pickCount=0;
     drawnCards=[];
     flippedCount=0;
-    renderPickDeck();
-    btn.disabled=false; btn.textContent='✦ 카드 뽑기';
-  }, 700);
+    hideTarotLoading();
+    setTimeout(()=>{
+      renderPickDeck();
+      btn.disabled=false; btn.textContent='✦ 카드 뽑기';
+    }, 520);
+  }, 2200);
 }
 
 function renderPickDeck(){
@@ -3583,9 +3774,12 @@ function flipCard(i){
   const flip=document.getElementById(`flip-${i}`);
   if(flip.classList.contains('flipped'))return;
   flip.classList.add('flipped');
-  document.getElementById(`scene-${i}`).style.cursor='default';
+  const scene=document.getElementById(`scene-${i}`);
+  scene.style.cursor='default';
+  // 파티클 + 글로우 연출
+  spawnCardSparkles(scene);
   flippedCount++;
-  if(flippedCount===spread) setTimeout(()=>startReading(),900);
+  if(flippedCount===spread) setTimeout(()=>startReading(),1000);
 }
 
 // 
@@ -3984,7 +4178,15 @@ function startReading(){
   const q=document.getElementById('tarot-q').value.trim();
   const cards=drawnCards;
 
-  document.getElementById('tarot-result').style.display='block';
+  const resultEl = document.getElementById('tarot-result');
+  resultEl.style.opacity = '0';
+  resultEl.style.transform = 'translateY(24px)';
+  resultEl.style.display = 'block';
+  setTimeout(() => {
+    resultEl.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    resultEl.style.opacity = '1';
+    resultEl.style.transform = 'translateY(0)';
+  }, 50);
 
   // 원소 분포 분석
   const elemCount={};
@@ -4063,12 +4265,14 @@ function startReading(){
   const hasRev=cards.some(c=>c.isRev);
 
   document.getElementById('tarot-reading-sections').innerHTML=`
-    <div style="margin-bottom:16px;">
+    <div style="margin-bottom:16px;animation:resultReveal 0.6s ease 0.1s both;">
       <div class="tag">카드 해석</div>
       ${cardHtml}
     </div>
-    ${elemHtml}
-    <div style="padding:13px 14px;background:rgba(201,168,76,0.06);border:0.5px solid var(--gold);border-radius:10px;margin-bottom:12px;">
+    <div style="animation:resultReveal 0.6s ease 0.3s both;">
+      ${elemHtml}
+    </div>
+    <div style="padding:13px 14px;background:rgba(201,168,76,0.06);border:0.5px solid var(--gold);border-radius:10px;margin-bottom:12px;animation:resultReveal 0.6s ease 0.5s both;">
       <div style="font-size:9px;color:var(--gold);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:6px;">✦ 종합 메시지</div>
       <div style="font-size:13px;color:var(--text);line-height:1.9;margin-bottom:6px;">${hasRev?'역방향 카드가 포함되어 있습니다. 내면의 저항이나 에너지 흐름의 막힘을 나타냅니다. 외부 행동보다 내면 점검이 우선입니다.':'모든 카드가 정방향입니다. 에너지가 자연스럽게 흐르고 있습니다.'}</div>
       <div style="font-size:11px;color:var(--text-2);">${ratioMsg}</div>
