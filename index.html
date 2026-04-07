@@ -5315,7 +5315,7 @@ async function runMixAiAnalysis(){
 
     const 본문 = tier==='free' ? get('본문','지침')
       : get('본문','패턴분석');
-    const 패턴분석 = tier!=='free' ? get('패턴분석','숨겨진나') : '';
+    const 패턴분석 = tier==='premium' ? get('패턴분석','숨겨진나') : tier==='paid' ? get('패턴분석','타임라인') : '';
     const 숨겨진나 = tier==='premium' ? get('숨겨진나','타임라인') : '';
     const 타임라인 = tier!=='free' ? get('타임라인', tier==='premium'?'개운법':'지침') : '';
     const 개운법 = tier==='premium' ? get('개운법','지침') : '';

@@ -28,8 +28,14 @@ export default async function handler(req, res) {
       }
     );
     const data = await response.json();
-    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
+    const parts = data.candidates?.[0]?.content?.parts;
+    if (parts) {
+      // thinking 모드에서 parts[0]이 thought(thinking 내용)이고 parts[1]이 실제 응답일 수 있음
+      // thought:true 가 아닌 첫 번째 텍스트 파트를 찾아야 함
+      const textPart = parts.find(p => p.text && !p.thought);
+      if (textPart) {
+        return res.status(200).json({ text: textPart.text });
+      }
     }
     return res.status(500).json({ error: data.error?.message || 'Gemini 오류' });
   } catch (err) {
