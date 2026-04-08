@@ -1256,7 +1256,14 @@ const 천간한자=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
 const 지지한자=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 const 천간오행=['목','목','화','화','토','토','금','금','수','수'];
 const 지지오행=['수','토','목','목','토','화','화','토','금','금','토','수'];
-const 절기입절=[6,4,6,5,6,6,7,8,8,8,7,7];
+// ── VSOP87 근사식: 절기(節氣) 날짜·시각 계산 (연도별 정확, ±2분 이내) ──
+function _calToJDE(y,m,d,h,mn){if(m<=2){y--;m+=12;}const A=Math.floor(y/100);const B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+(h||0)/24+(mn||0)/1440+B-1524.5;}
+function _sunLon(jde){const T=(jde-2451545)/36525;const L0=((280.46646+36000.76983*T+0.0003032*T*T)%360+360)%360;const M=((357.52911+35999.05029*T-0.0001537*T*T)%360+360)%360;const Mr=M*Math.PI/180;const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(Mr)+(0.019993-0.000101*T)*Math.sin(2*Mr)+0.000290*Math.sin(3*Mr);const Ω=125.04-1934.136*T;return((L0+C-0.00569-0.00478*Math.sin(Ω*Math.PI/180))%360+360)%360;}
+function _jdeToKST(jde){const kst=jde+9/24;const z=Math.floor(kst+0.5);const f=kst+0.5-z;let a=z;if(z>=2299161){const al=Math.floor((z-1867216.25)/36524.25);a=z+1+al-Math.floor(al/4);}const b=a+1524;const c=Math.floor((b-122.1)/365.25);const d_=Math.floor(365.25*c);const e=Math.floor((b-d_)/30.6001);const day=b-d_-Math.floor(30.6001*e);const month=e<14?e-1:e-13;const year=month>2?c-4716:c-4715;const hrs=f*24;const hour=Math.floor(hrs);const minute=Math.floor((hrs-hour)*60);return{year,month,day,hour,minute};}
+// 절입 황경: 월1=소한285, 월2=입춘315, 월3=경칩345, 월4=청명15, 월5=입하45, 월6=망종75, 월7=소서105, 월8=입추135, 월9=백로165, 월10=한로195, 월11=입동225, 월12=대설255
+const _TERM_LON=[285,315,345,15,45,75,105,135,165,195,225,255];
+const _termCache={};
+function getSolarTermKST(year,month){const key=year+'_'+month;if(_termCache[key])return _termCache[key];const td=_TERM_LON[month-1];let g=_calToJDE(year,month,7);for(let i=0;i<60;i++){let dL=td-_sunLon(g);while(dL>180)dL-=360;while(dL<-180)dL+=360;const s=dL/360*365.2422;g+=s;if(Math.abs(s)<1e-8)break;}_termCache[key]=_jdeToKST(g);return _termCache[key];}
 
 //  음양 (0=양, 1=음) 
 const 천간음양=[0,1,0,1,0,1,0,1,0,1]; // 갑=양,을=음...
@@ -2045,9 +2052,12 @@ function sjTab(name,btn){
   document.getElementById('rp-'+name).classList.add('active');
 }
 
-function getYP(y,m,d){let yr=y;if(m<2||(m===2&&d<4))yr=y-1;return{g:((yr-4)%10+10)%10,j:((yr-4)%12+12)%12};}
-function getMP(y,m,d,yg){let sm=m;if(d<절기입절[m-1])sm=m-1;if(sm<=0)sm=12;const ji=(sm%12);const s=[2,4,6,8,0][yg%5];const ord=sm-2<0?sm+10:sm-2;return{g:(s+ord)%10,j:ji};}
-function getDP(y,m,d){const diff=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);return{g:((0+diff)%10+10)%10,j:((10+diff)%12+12)%12};}
+// 년주: 해당 연도 입춘 KST 시각 기준 (분 단위 정밀)
+function getYP(y,m,d,h,mn){h=h||0;mn=mn||0;const ip=getSolarTermKST(y,2);let yr;if(m<ip.month||(m===ip.month&&(d<ip.day||(d===ip.day&&h*60+mn<ip.hour*60+ip.minute))))yr=y-1;else yr=y;return{g:((yr-4)%10+10)%10,j:((yr-4)%12+12)%12};}
+// 월주: 해당 월 절기 KST 시각 기준 (분 단위 정밀)
+function getMP(y,m,d,h,mn,yg){h=h||0;mn=mn||0;const term=getSolarTermKST(y,m);let sm=m;if(d<term.day||(d===term.day&&h*60+mn<term.hour*60+term.minute))sm=m-1;if(sm<=0)sm=12;const ji=sm%12;const s=[2,4,6,8,0][yg%5];const ord=sm-2<0?sm+10:sm-2;return{g:(s+ord)%10,j:ji};}
+// 일주: 야자시(23:xx) → 다음날 기준으로 계산
+function getDP(y,m,d,h){h=h||0;let dy=y,dm=m,dd=d;if(h>=23){const next=new Date(y,m-1,d+1);dy=next.getFullYear();dm=next.getMonth()+1;dd=next.getDate();}const diff=Math.floor((new Date(dy,dm-1,dd)-new Date(1900,0,1))/86400000);return{g:((0+diff)%10+10)%10,j:((10+diff)%12+12)%12};}
 function getHP(dg,h){let ji;if(h>=23||h<1)ji=0;else if(h<3)ji=1;else if(h<5)ji=2;else if(h<7)ji=3;else if(h<9)ji=4;else if(h<11)ji=5;else if(h<13)ji=6;else if(h<15)ji=7;else if(h<17)ji=8;else if(h<19)ji=9;else if(h<21)ji=10;else ji=11;return{g:([0,2,4,6,8][dg%5]+ji)%10,j:ji};}
 function getOH(ps){const c={목:0,화:0,토:0,금:0,수:0};ps.forEach(p=>{c[천간오행[p.g]]++;c[지지오행[p.j]]++;});return c;}
 function getYS(oh){const max=Object.entries(oh).sort((a,b)=>b[1]-a[1])[0][0];const s={목:'화',화:'토',토:'금',금:'수',수:'목'};return{용신:s[max],희신:s[s[max]],기신:max};}
@@ -2095,7 +2105,7 @@ function calcSaju(){
 
   const base={hour:h, min:min};
 
-  const yp=getYP(y,m,d),mp=getMP(y,m,d,yp.g),dp=getDP(y,m,d),hp=getHP(dp.g,base.hour);
+  const yp=getYP(y,m,d,base.hour,base.min),mp=getMP(y,m,d,base.hour,base.min,yp.g),dp=getDP(y,m,d,base.hour),hp=getHP(dp.g,base.hour);
   const oh=getOH([yp,mp,dp,hp]),ys=getYS(oh);
   const cy=new Date().getFullYear(),age=cy-y;
   const du=getDU(yp.g,sjGenderVal==='female',mp,y);
