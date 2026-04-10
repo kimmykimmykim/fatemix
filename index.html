@@ -3363,162 +3363,123 @@ function makeCardSVG(card, w=80, h=130, isWide=false) {
     '별':   { bg:'#080a04', border:'#8A9A3A', accent:'#C9D46A', glow:'rgba(201,212,106,0.18)', sym:'✦', label:'PENTACLES' },
   }[suit] || { bg:'#0a0a0a', border:'#BBBBBB', accent:'#DDDDDD', glow:'rgba(200,200,200,0.1)', sym:'◇', label:'' };
 
-  // 슈트별 장식 SVG — 목판화 느낌의 풍부한 아트
+  // 슈트별 장식 SVG — 심볼+숫자 통일 디자인 (어둡고 신비로운 느낌)
   function makeSuitArt(suit, w, h, isRev) {
     const cx = w/2, cy = h/2;
     const rot = isRev ? `rotate(180,${cx},${cy})` : '';
+    const ROMAN = {2:'II',3:'III',4:'IV',5:'V',6:'VI',7:'VII',8:'VIII',9:'IX',10:'X'};
+    const rn = ROMAN[num] || numLabel;
 
     if (suit === '완드') {
-      const FG='#E8993D', FG2='#C47A3A', FG3='#7A4A1A', FILL='#1a0e05';
+      const C = '#E8993D', C2 = '#C47A3A', BG = '#0e0805';
       return `<g transform="${rot}">
-        <radialGradient id="wg${w}" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#3A1A05" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="#0e0805" stop-opacity="0"/>
+        <radialGradient id="wga${w}n${num}" cx="50%" cy="48%" r="54%">
+          <stop offset="0%" stop-color="#3A1A05" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="${BG}" stop-opacity="0"/>
         </radialGradient>
-        <ellipse cx="${cx}" cy="${cy}" rx="${w*0.44}" ry="${h*0.42}" fill="url(#wg${w})"/>
-        <!-- 지팡이 몸통 — 굵게 -->
-        <line x1="${cx}" y1="${h*0.1}" x2="${cx}" y2="${h*0.88}" stroke="${FG2}" stroke-width="6" stroke-linecap="round"/>
-        <line x1="${cx}" y1="${h*0.1}" x2="${cx}" y2="${h*0.88}" stroke="${FG}" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
-        <!-- 마디 — 굵게 -->
-        <rect x="${cx-w*0.1}" y="${h*0.27}" width="${w*0.2}" height="${h*0.058}" rx="3" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <rect x="${cx-w*0.1}" y="${h*0.49}" width="${w*0.2}" height="${h*0.058}" rx="3" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <rect x="${cx-w*0.1}" y="${h*0.67}" width="${w*0.2}" height="${h*0.058}" rx="3" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <!-- 상단 불꽃 — 채움 -->
-        <path d="M${cx},${h*0.06} Q${cx-w*0.18},${h*0.01} ${cx-w*0.1},${h*0.14} Q${cx},${h*0.05} ${cx+w*0.1},${h*0.14} Q${cx+w*0.18},${h*0.01} ${cx},${h*0.06}Z" fill="${FG}" opacity="1"/>
-        <path d="M${cx},${h*0.09} Q${cx-w*0.09},${h*0.06} ${cx-w*0.05},${h*0.14} Q${cx},${h*0.08} ${cx+w*0.05},${h*0.14} Q${cx+w*0.09},${h*0.06} ${cx},${h*0.09}Z" fill="#fff" opacity="0.65"/>
-        <!-- 왼쪽 잎 — 선 굵게 -->
-        <path d="M${cx-w*0.08},${h*0.21} Q${cx-w*0.38},${h*0.16} ${cx-w*0.33},${h*0.32} Q${cx-w*0.2},${h*0.26} ${cx-w*0.08},${h*0.29}Z" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <path d="M${cx-w*0.08},${h*0.21} Q${cx-w*0.24},${h*0.22} ${cx-w*0.19},${h*0.29}" stroke="${FG}" stroke-width="1.2" fill="none" opacity="0.7"/>
-        <path d="M${cx-w*0.08},${h*0.41} Q${cx-w*0.38},${h*0.37} ${cx-w*0.33},${h*0.54} Q${cx-w*0.2},${h*0.47} ${cx-w*0.08},${h*0.5}Z" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <path d="M${cx-w*0.08},${h*0.41} Q${cx-w*0.24},${h*0.42} ${cx-w*0.19},${h*0.5}" stroke="${FG}" stroke-width="1.2" fill="none" opacity="0.7"/>
-        <path d="M${cx-w*0.08},${h*0.6} Q${cx-w*0.34},${h*0.56} ${cx-w*0.3},${h*0.73} Q${cx-w*0.18},${h*0.66} ${cx-w*0.08},${h*0.69}Z" fill="${FILL}" stroke="${FG2}" stroke-width="1.5"/>
-        <!-- 오른쪽 잎 -->
-        <path d="M${cx+w*0.08},${h*0.21} Q${cx+w*0.38},${h*0.16} ${cx+w*0.33},${h*0.32} Q${cx+w*0.2},${h*0.26} ${cx+w*0.08},${h*0.29}Z" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <path d="M${cx+w*0.08},${h*0.21} Q${cx+w*0.24},${h*0.22} ${cx+w*0.19},${h*0.29}" stroke="${FG}" stroke-width="1.2" fill="none" opacity="0.7"/>
-        <path d="M${cx+w*0.08},${h*0.41} Q${cx+w*0.38},${h*0.37} ${cx+w*0.33},${h*0.54} Q${cx+w*0.2},${h*0.47} ${cx+w*0.08},${h*0.5}Z" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <path d="M${cx+w*0.08},${h*0.41} Q${cx+w*0.24},${h*0.42} ${cx+w*0.19},${h*0.5}" stroke="${FG}" stroke-width="1.2" fill="none" opacity="0.7"/>
-        <path d="M${cx+w*0.08},${h*0.6} Q${cx+w*0.34},${h*0.56} ${cx+w*0.3},${h*0.73} Q${cx+w*0.18},${h*0.66} ${cx+w*0.08},${h*0.69}Z" fill="${FILL}" stroke="${FG2}" stroke-width="1.5"/>
-        <!-- 하단 땅 선 -->
-        <path d="M${cx-w*0.32},${h*0.91} Q${cx},${h*0.87} ${cx+w*0.32},${h*0.91}" stroke="${FG2}" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <ellipse cx="${cx}" cy="${cy}" rx="${w*0.44}" ry="${h*0.44}" fill="url(#wga${w}n${num})"/>
+        <line x1="${cx}" y1="${h*0.2}" x2="${cx}" y2="${h*0.72}" stroke="${C2}" stroke-width="5" stroke-linecap="round"/>
+        <line x1="${cx}" y1="${h*0.2}" x2="${cx}" y2="${h*0.72}" stroke="${C}" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+        <polygon points="${cx},${h*0.15} ${cx-w*0.1},${h*0.23} ${cx},${h*0.31} ${cx+w*0.1},${h*0.23}" fill="${BG}" stroke="${C}" stroke-width="1.8"/>
+        <circle cx="${cx}" cy="${h*0.23}" r="${w*0.04}" fill="${C}" opacity="0.9"/>
+        <line x1="${cx-w*0.26}" y1="${h*0.42}" x2="${cx+w*0.26}" y2="${h*0.42}" stroke="${C}" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+        <circle cx="${cx-w*0.26}" cy="${h*0.42}" r="${w*0.033}" fill="${C}" opacity="0.72"/>
+        <circle cx="${cx+w*0.26}" cy="${h*0.42}" r="${w*0.033}" fill="${C}" opacity="0.72"/>
+        <line x1="${cx-w*0.17}" y1="${h*0.59}" x2="${cx+w*0.17}" y2="${h*0.59}" stroke="${C2}" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+        <ellipse cx="${cx}" cy="${h*0.72}" rx="${w*0.07}" ry="${h*0.021}" fill="${BG}" stroke="${C}" stroke-width="1.4"/>
+        <text x="${cx}" y="${h*0.87}" text-anchor="middle" dominant-baseline="central"
+          font-size="${w*0.26}" fill="${C}" font-family="Cormorant Garamond,serif" font-weight="700" opacity="0.88">${rn}</text>
+        <circle cx="${cx-w*0.36}" cy="${h*0.3}" r="${w*0.022}" fill="${C}" opacity="0.45"/>
+        <circle cx="${cx+w*0.38}" cy="${h*0.25}" r="${w*0.016}" fill="${C2}" opacity="0.36"/>
+        <circle cx="${cx-w*0.3}" cy="${h*0.66}" r="${w*0.018}" fill="${C2}" opacity="0.33"/>
+        <circle cx="${cx+w*0.32}" cy="${h*0.63}" r="${w*0.014}" fill="${C}" opacity="0.3"/>
       </g>`;
     }
 
     if (suit === '컵') {
-      const FG='#7EB8F5', FG2='#4A7EC5', FG3='#1A3A6A', FILL='#050a12';
-      const cupTop=h*0.17, cupBot=h*0.58, cupW=w*0.33, stemTop=h*0.61, baseY=h*0.78;
+      const C = '#7EB8F5', C2 = '#4A7EC5', BG = '#050a12';
+      const cTop = h*0.18, cW = w*0.3, cBot = h*0.52;
       return `<g transform="${rot}">
-        <radialGradient id="cg${w}" cx="50%" cy="35%" r="45%">
-          <stop offset="0%" stop-color="#0A1E3A" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="#050a12" stop-opacity="0"/>
+        <radialGradient id="cga${w}n${num}" cx="50%" cy="42%" r="52%">
+          <stop offset="0%" stop-color="#0A1E3A" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="${BG}" stop-opacity="0"/>
         </radialGradient>
-        <ellipse cx="${cx}" cy="${h*0.38}" rx="${w*0.44}" ry="${h*0.34}" fill="url(#cg${w})"/>
-        <!-- 컵 몸체 — 굵게 -->
-        <path d="M${cx-cupW},${cupTop} L${cx-cupW*0.82},${cupBot} Q${cx},${cupBot+h*0.035} ${cx+cupW*0.82},${cupBot} L${cx+cupW},${cupTop}Z"
-          fill="${FILL}" stroke="${FG}" stroke-width="2.5"/>
-        <!-- 컵 내부 물 -->
-        <path d="M${cx-cupW*0.78},${h*0.28} Q${cx},${h*0.33} ${cx+cupW*0.78},${h*0.28} L${cx+cupW*0.78},${cupTop+h*0.015} Q${cx},${cupTop+h*0.05} ${cx-cupW*0.78},${cupTop+h*0.015}Z"
-          fill="${FG2}" opacity="0.4"/>
-        <!-- 컵 입구 굵은 테두리 -->
-        <line x1="${cx-cupW}" y1="${cupTop}" x2="${cx+cupW}" y2="${cupTop}" stroke="${FG}" stroke-width="3.5" stroke-linecap="round"/>
-        <!-- 반사 하이라이트 -->
-        <path d="M${cx-cupW*0.58},${h*0.22} Q${cx-cupW*0.32},${h*0.19} ${cx-cupW*0.08},${h*0.27}" stroke="#fff" stroke-width="1.4" fill="none" opacity="0.5"/>
-        <!-- 줄기 -->
-        <line x1="${cx}" y1="${stemTop}" x2="${cx}" y2="${baseY-h*0.02}" stroke="${FG}" stroke-width="3.5" stroke-linecap="round"/>
-        <!-- 받침 -->
-        <ellipse cx="${cx}" cy="${baseY}" rx="${cupW*0.6}" ry="${h*0.035}" fill="${FILL}" stroke="${FG}" stroke-width="2.2"/>
-        <line x1="${cx-cupW*0.6}" y1="${baseY}" x2="${cx+cupW*0.6}" y2="${baseY}" stroke="${FG}" stroke-width="3" stroke-linecap="round"/>
-        <!-- 물결 장식 (컵 위) -->
-        <path d="M${cx-cupW*0.55},${cupTop-h*0.07} Q${cx-cupW*0.28},${cupTop-h*0.12} ${cx},${cupTop-h*0.07} Q${cx+cupW*0.28},${cupTop-h*0.02} ${cx+cupW*0.55},${cupTop-h*0.07}" stroke="${FG}" stroke-width="1.8" fill="none" opacity="0.85"/>
-        <!-- 별빛 점 — 더 크게 -->
-        <circle cx="${cx-cupW*0.72}" cy="${h*0.14}" r="${w*0.04}" fill="${FG}" opacity="0.75"/>
-        <circle cx="${cx+cupW*0.82}" cy="${h*0.21}" r="${w*0.03}" fill="${FG}" opacity="0.65"/>
-        <circle cx="${cx-cupW*0.42}" cy="${h*0.09}" r="${w*0.025}" fill="${FG}" opacity="0.55"/>
-        <circle cx="${cx+cupW*0.52}" cy="${h*0.11}" r="${w*0.02}" fill="${FG}" opacity="0.5"/>
-        <!-- 하단 물결 -->
-        <path d="M${cx-cupW*0.65},${baseY+h*0.045} Q${cx-cupW*0.32},${baseY+h*0.08} ${cx},${baseY+h*0.045} Q${cx+cupW*0.32},${baseY+h*0.01} ${cx+cupW*0.65},${baseY+h*0.045}" stroke="${FG2}" stroke-width="1.4" fill="none" opacity="0.65"/>
+        <ellipse cx="${cx}" cy="${h*0.44}" rx="${w*0.44}" ry="${h*0.43}" fill="url(#cga${w}n${num})"/>
+        <path d="M${cx-cW},${cTop} L${cx-cW*0.72},${cBot} Q${cx},${cBot+h*0.034} ${cx+cW*0.72},${cBot} L${cx+cW},${cTop}Z"
+          fill="${BG}" stroke="${C}" stroke-width="2.2"/>
+        <line x1="${cx-cW}" y1="${cTop}" x2="${cx+cW}" y2="${cTop}" stroke="${C}" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M${cx-cW*0.82},${cTop+h*0.04} Q${cx},${cTop+h*0.085} ${cx+cW*0.82},${cTop+h*0.04}" stroke="${C2}" stroke-width="1.4" fill="none" opacity="0.65"/>
+        <path d="M${cx-cW*0.5},${cTop+h*0.066} Q${cx-cW*0.26},${cTop+h*0.036} ${cx-cW*0.05},${cTop+h*0.1}" stroke="#fff" stroke-width="1.1" fill="none" opacity="0.33"/>
+        <line x1="${cx}" y1="${cBot}" x2="${cx}" y2="${h*0.7}" stroke="${C}" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="${cx}" cy="${h*0.71}" rx="${cW*0.65}" ry="${h*0.028}" fill="${BG}" stroke="${C}" stroke-width="1.9"/>
+        <line x1="${cx-cW*0.65}" y1="${h*0.71}" x2="${cx+cW*0.65}" y2="${h*0.71}" stroke="${C}" stroke-width="2.7" stroke-linecap="round"/>
+        <text x="${cx}" y="${h*0.87}" text-anchor="middle" dominant-baseline="central"
+          font-size="${w*0.26}" fill="${C}" font-family="Cormorant Garamond,serif" font-weight="700" opacity="0.88">${rn}</text>
+        <circle cx="${cx-w*0.38}" cy="${h*0.2}" r="${w*0.026}" fill="${C}" opacity="0.5"/>
+        <circle cx="${cx+w*0.36}" cy="${h*0.16}" r="${w*0.019}" fill="${C}" opacity="0.4"/>
+        <circle cx="${cx-w*0.26}" cy="${h*0.76}" r="${w*0.016}" fill="${C2}" opacity="0.34"/>
+        <circle cx="${cx+w*0.3}" cy="${h*0.79}" r="${w*0.013}" fill="${C2}" opacity="0.28"/>
       </g>`;
     }
 
     if (suit === '검') {
-      const FG='#C8C8F0', FG2='#9898CC', FG3='#5555AA', FILL='#0a0a0e';
-      const bladeW=w*0.12;
+      const C = '#C8C8F0', C2 = '#9898CC', BG = '#0a0a0e';
+      const sTop = h*0.14, bW = w*0.095;
       return `<g transform="${rot}">
-        <radialGradient id="sg${w}" cx="50%" cy="40%" r="42%">
-          <stop offset="0%" stop-color="#1A1A38" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="#0a0a0e" stop-opacity="0"/>
+        <radialGradient id="sga${w}n${num}" cx="50%" cy="38%" r="48%">
+          <stop offset="0%" stop-color="#1A1A38" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="${BG}" stop-opacity="0"/>
         </radialGradient>
-        <ellipse cx="${cx}" cy="${h*0.4}" rx="${w*0.42}" ry="${h*0.36}" fill="url(#sg${w})"/>
-        <!-- 검날 — 훨씬 넓고 굵게 -->
-        <polygon points="${cx},${h*0.07} ${cx-bladeW},${h*0.61} ${cx+bladeW},${h*0.61}" fill="${FILL}" stroke="${FG}" stroke-width="2.5"/>
-        <!-- 날 안쪽 라인 (입체감) -->
-        <polygon points="${cx},${h*0.1} ${cx-bladeW*0.45},${h*0.59} ${cx+bladeW*0.45},${h*0.59}" fill="none" stroke="${FG}" stroke-width="0.8" opacity="0.5"/>
-        <!-- 날 중심 하이라이트 -->
-        <line x1="${cx}" y1="${h*0.07}" x2="${cx}" y2="${h*0.58}" stroke="#fff" stroke-width="1.2" opacity="0.4"/>
-        <path d="M${cx},${h*0.07} L${cx-bladeW*0.35},${h*0.46}" stroke="#fff" stroke-width="0.8" opacity="0.3"/>
-        <!-- 가드 — 굵게 -->
-        <rect x="${cx-w*0.3}" y="${h*0.59}" width="${w*0.6}" height="${h*0.056}" rx="4" fill="${FILL}" stroke="${FG}" stroke-width="2.2"/>
-        <!-- 가드 끝 장식 -->
-        <circle cx="${cx-w*0.28}" cy="${h*0.618}" r="${w*0.055}" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <circle cx="${cx+w*0.28}" cy="${h*0.618}" r="${w*0.055}" fill="${FILL}" stroke="${FG}" stroke-width="1.8"/>
-        <circle cx="${cx-w*0.28}" cy="${h*0.618}" r="${w*0.026}" fill="${FG}" opacity="0.9"/>
-        <circle cx="${cx+w*0.28}" cy="${h*0.618}" r="${w*0.026}" fill="${FG}" opacity="0.9"/>
-        <!-- 손잡이 -->
-        <rect x="${cx-w*0.09}" y="${h*0.646}" width="${w*0.18}" height="${h*0.148}" rx="4" fill="${FILL}" stroke="${FG2}" stroke-width="1.8"/>
-        <!-- 손잡이 감기 선 -->
-        <line x1="${cx-w*0.09}" y1="${h*0.672}" x2="${cx+w*0.09}" y2="${h*0.672}" stroke="${FG2}" stroke-width="1.2" opacity="0.75"/>
-        <line x1="${cx-w*0.09}" y1="${h*0.696}" x2="${cx+w*0.09}" y2="${h*0.696}" stroke="${FG2}" stroke-width="1.2" opacity="0.75"/>
-        <line x1="${cx-w*0.09}" y1="${h*0.72}" x2="${cx+w*0.09}" y2="${h*0.72}" stroke="${FG2}" stroke-width="1.2" opacity="0.75"/>
-        <!-- 폼멜 -->
-        <ellipse cx="${cx}" cy="${h*0.806}" rx="${w*0.13}" ry="${h*0.046}" fill="${FILL}" stroke="${FG}" stroke-width="2"/>
-        <ellipse cx="${cx}" cy="${h*0.806}" rx="${w*0.07}" ry="${h*0.024}" fill="${FG2}" opacity="0.65"/>
-        <!-- 바람선 — 굵고 뚜렷하게 -->
-        <path d="M${cx-w*0.44},${h*0.19} Q${cx-w*0.28},${h*0.15} ${cx-bladeW},${h*0.24}" stroke="${FG2}" stroke-width="1.6" fill="none" opacity="0.75"/>
-        <path d="M${cx-w*0.46},${h*0.34} Q${cx-w*0.3},${h*0.3} ${cx-bladeW},${h*0.41}" stroke="${FG2}" stroke-width="1.4" fill="none" opacity="0.6"/>
-        <path d="M${cx-w*0.4},${h*0.49} Q${cx-w*0.25},${h*0.46} ${cx-bladeW},${h*0.53}" stroke="${FG3}" stroke-width="1.2" fill="none" opacity="0.5"/>
-        <path d="M${cx+w*0.44},${h*0.19} Q${cx+w*0.28},${h*0.15} ${cx+bladeW},${h*0.24}" stroke="${FG2}" stroke-width="1.6" fill="none" opacity="0.75"/>
-        <path d="M${cx+w*0.46},${h*0.34} Q${cx+w*0.3},${h*0.3} ${cx+bladeW},${h*0.41}" stroke="${FG2}" stroke-width="1.4" fill="none" opacity="0.6"/>
-        <path d="M${cx+w*0.4},${h*0.49} Q${cx+w*0.25},${h*0.46} ${cx+bladeW},${h*0.53}" stroke="${FG3}" stroke-width="1.2" fill="none" opacity="0.5"/>
+        <ellipse cx="${cx}" cy="${h*0.4}" rx="${w*0.42}" ry="${h*0.38}" fill="url(#sga${w}n${num})"/>
+        <polygon points="${cx},${sTop} ${cx-bW},${h*0.56} ${cx+bW},${h*0.56}" fill="${BG}" stroke="${C}" stroke-width="2.2"/>
+        <line x1="${cx}" y1="${sTop+h*0.025}" x2="${cx}" y2="${h*0.54}" stroke="#fff" stroke-width="0.9" opacity="0.26"/>
+        <rect x="${cx-w*0.27}" y="${h*0.535}" width="${w*0.54}" height="${h*0.046}" rx="3" fill="${BG}" stroke="${C}" stroke-width="1.9"/>
+        <circle cx="${cx-w*0.26}" cy="${h*0.558}" r="${w*0.045}" fill="${BG}" stroke="${C}" stroke-width="1.4"/>
+        <circle cx="${cx+w*0.26}" cy="${h*0.558}" r="${w*0.045}" fill="${BG}" stroke="${C}" stroke-width="1.4"/>
+        <circle cx="${cx-w*0.26}" cy="${h*0.558}" r="${w*0.021}" fill="${C}" opacity="0.85"/>
+        <circle cx="${cx+w*0.26}" cy="${h*0.558}" r="${w*0.021}" fill="${C}" opacity="0.85"/>
+        <rect x="${cx-w*0.077}" y="${h*0.581}" width="${w*0.154}" height="${h*0.13}" rx="3.5" fill="${BG}" stroke="${C2}" stroke-width="1.5"/>
+        <line x1="${cx-w*0.077}" y1="${h*0.606}" x2="${cx+w*0.077}" y2="${h*0.606}" stroke="${C2}" stroke-width="0.9" opacity="0.62"/>
+        <line x1="${cx-w*0.077}" y1="${h*0.629}" x2="${cx+w*0.077}" y2="${h*0.629}" stroke="${C2}" stroke-width="0.9" opacity="0.62"/>
+        <line x1="${cx-w*0.077}" y1="${h*0.652}" x2="${cx+w*0.077}" y2="${h*0.652}" stroke="${C2}" stroke-width="0.9" opacity="0.62"/>
+        <ellipse cx="${cx}" cy="${h*0.724}" rx="${w*0.105}" ry="${h*0.036}" fill="${BG}" stroke="${C}" stroke-width="1.7"/>
+        <ellipse cx="${cx}" cy="${h*0.724}" rx="${w*0.052}" ry="${h*0.018}" fill="${C2}" opacity="0.58"/>
+        <path d="M${cx-w*0.43},${h*0.24} Q${cx-w*0.25},${h*0.21} ${cx-bW},${h*0.3}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.5"/>
+        <path d="M${cx-w*0.41},${h*0.38} Q${cx-w*0.24},${h*0.35} ${cx-bW},${h*0.44}" stroke="${C2}" stroke-width="1.1" fill="none" opacity="0.4"/>
+        <path d="M${cx+w*0.43},${h*0.24} Q${cx+w*0.25},${h*0.21} ${cx+bW},${h*0.3}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.5"/>
+        <path d="M${cx+w*0.41},${h*0.38} Q${cx+w*0.24},${h*0.35} ${cx+bW},${h*0.44}" stroke="${C2}" stroke-width="1.1" fill="none" opacity="0.4"/>
+        <text x="${cx}" y="${h*0.87}" text-anchor="middle" dominant-baseline="central"
+          font-size="${w*0.26}" fill="${C}" font-family="Cormorant Garamond,serif" font-weight="700" opacity="0.88">${rn}</text>
       </g>`;
     }
 
     if (suit === '별') {
-      const FG='#C9D46A', FG2='#9AAA44', FG3='#5A6A1A', FILL='#080a04';
+      const C = '#C9D46A', C2 = '#8A9A3A', BG = '#080a04';
       return `<g transform="${rot}">
-        <radialGradient id="pg${w}" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#222A06" stop-opacity="0.95"/>
-          <stop offset="100%" stop-color="#080a04" stop-opacity="0"/>
+        <radialGradient id="pga${w}n${num}" cx="50%" cy="50%" r="52%">
+          <stop offset="0%" stop-color="#222A06" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="${BG}" stop-opacity="0"/>
         </radialGradient>
-        <ellipse cx="${cx}" cy="${cy}" rx="${w*0.44}" ry="${h*0.42}" fill="url(#pg${w})"/>
-        <!-- 외부 원 — 굵게 -->
-        <circle cx="${cx}" cy="${cy}" r="${w*0.4}" fill="none" stroke="${FG2}" stroke-width="2" stroke-dasharray="4 3" opacity="0.8"/>
-        <!-- 내부 원 -->
-        <circle cx="${cx}" cy="${cy}" r="${w*0.28}" fill="none" stroke="${FG3}" stroke-width="1.2" opacity="0.6"/>
-        <!-- 5각별 — 훨씬 크게, 굵게 -->
-        <polygon points="${star5(cx,cy,w*0.38,w*0.16)}" fill="${FILL}" stroke="${FG}" stroke-width="2.5"/>
-        <!-- 별 안 라인 (입체감) -->
-        <polygon points="${star5(cx,cy,w*0.38,w*0.16)}" fill="none" stroke="${FG2}" stroke-width="0.8" opacity="0.5"
-          transform="rotate(36,${cx},${cy})"/>
-        <!-- 중심 원 — 크게 -->
-        <circle cx="${cx}" cy="${cy}" r="${w*0.12}" fill="${FILL}" stroke="${FG}" stroke-width="2"/>
-        <circle cx="${cx}" cy="${cy}" r="${w*0.07}" fill="${FG}" opacity="0.85"/>
-        <!-- 꼭지점 장식 -->
+        <ellipse cx="${cx}" cy="${cy*0.92}" rx="${w*0.44}" ry="${h*0.42}" fill="url(#pga${w}n${num})"/>
+        <circle cx="${cx}" cy="${cy*0.92}" r="${w*0.39}" fill="none" stroke="${C2}" stroke-width="1.6" stroke-dasharray="4 2.5" opacity="0.66"/>
+        <polygon points="${star5(cx,cy*0.92,w*0.36,w*0.15)}" fill="${BG}" stroke="${C}" stroke-width="2.2"/>
+        <circle cx="${cx}" cy="${cy*0.92}" r="${w*0.15}" fill="none" stroke="${C2}" stroke-width="1" opacity="0.46"/>
+        <circle cx="${cx}" cy="${cy*0.92}" r="${w*0.06}" fill="${C}" opacity="0.86"/>
         ${[0,1,2,3,4].map(i=>{
           const a=(i*72-90)*Math.PI/180;
-          const px=cx+Math.cos(a)*w*0.38, py=cy+Math.sin(a)*w*0.38;
-          return `<circle cx="${px}" cy="${py}" r="${w*0.055}" fill="${FILL}" stroke="${FG}" stroke-width="1.6"/>
-                  <circle cx="${px}" cy="${py}" r="${w*0.026}" fill="${FG}" opacity="0.85"/>`;
+          const px=(cx+Math.cos(a)*w*0.36).toFixed(1), py=(cy*0.92+Math.sin(a)*w*0.36).toFixed(1);
+          return `<circle cx="${px}" cy="${py}" r="${w*0.042}" fill="${BG}" stroke="${C}" stroke-width="1.4"/>
+                  <circle cx="${px}" cy="${py}" r="${w*0.02}" fill="${C}" opacity="0.82"/>`;
         }).join('')}
-        <!-- 코너 잎사귀 — 굵게 -->
-        <path d="M${cx-w*0.44},${h*0.17} Q${cx-w*0.36},${h*0.1} ${cx-w*0.3},${h*0.21}" stroke="${FG2}" stroke-width="1.5" fill="none" opacity="0.75"/>
-        <path d="M${cx+w*0.44},${h*0.17} Q${cx+w*0.36},${h*0.1} ${cx+w*0.3},${h*0.21}" stroke="${FG2}" stroke-width="1.5" fill="none" opacity="0.75"/>
-        <path d="M${cx-w*0.44},${h*0.83} Q${cx-w*0.36},${h*0.9} ${cx-w*0.3},${h*0.79}" stroke="${FG2}" stroke-width="1.5" fill="none" opacity="0.75"/>
-        <path d="M${cx+w*0.44},${h*0.83} Q${cx+w*0.36},${h*0.9} ${cx+w*0.3},${h*0.79}" stroke="${FG2}" stroke-width="1.5" fill="none" opacity="0.75"/>
-        <!-- 땅 선 -->
-        <line x1="${cx-w*0.44}" y1="${h*0.93}" x2="${cx+w*0.44}" y2="${h*0.93}" stroke="${FG3}" stroke-width="1.2" opacity="0.55"/>
-        <line x1="${cx-w*0.36}" y1="${h*0.96}" x2="${cx+w*0.36}" y2="${h*0.96}" stroke="${FG3}" stroke-width="0.8" opacity="0.35"/>
+        <path d="M${cx-w*0.43},${h*0.1} Q${cx-w*0.35},${h*0.04} ${cx-w*0.28},${h*0.14}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.64"/>
+        <path d="M${cx+w*0.43},${h*0.1} Q${cx+w*0.35},${h*0.04} ${cx+w*0.28},${h*0.14}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.64"/>
+        <path d="M${cx-w*0.43},${h*0.74} Q${cx-w*0.35},${h*0.8} ${cx-w*0.28},${h*0.7}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.64"/>
+        <path d="M${cx+w*0.43},${h*0.74} Q${cx+w*0.35},${h*0.8} ${cx+w*0.28},${h*0.7}" stroke="${C2}" stroke-width="1.3" fill="none" opacity="0.64"/>
+        <text x="${cx}" y="${h*0.9}" text-anchor="middle" dominant-baseline="central"
+          font-size="${w*0.26}" fill="${C}" font-family="Cormorant Garamond,serif" font-weight="700" opacity="0.88">${rn}</text>
       </g>`;
     }
-    return `<text x="${cx}" y="${h*0.45}" text-anchor="middle" font-size="${w*0.25}" dominant-baseline="middle" fill="#CCCCCC">◈</text>`;
+    return `<text x="${cx}" y="${h*0.5}" text-anchor="middle" dominant-baseline="middle" font-size="${w*0.25}" fill="#CCCCCC">◈</text>`;
   }
 
   const suitArt = makeSuitArt(suit, w, artH, isRev);
