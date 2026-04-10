@@ -3983,6 +3983,9 @@ function doTarot(){
   btn.disabled=true; btn.textContent='섞는 중...';
   document.getElementById('tarot-result').style.display='none';
   document.getElementById('tarot-deck-area').style.display='none';
+  // 이전 슬롯 행 초기화
+  const _oldSlot=document.getElementById('tarot-slot-row');
+  if(_oldSlot) _oldSlot.remove();
 
   showTarotLoading();
 
@@ -4014,60 +4017,69 @@ function doTarot(){
 function renderPickDeck(){
   const w=54, h=88;
   const deckEl=document.getElementById('tarot-deck-cards');
-  const total=deckPool.length; // 78
-
   const guideEl=document.getElementById('tarot-deck-guide');
-  if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요 (${pickedCards.length}/${spread})`;
+  const deckArea=document.getElementById('tarot-deck-area');
 
-  // 가로 부채꼴 — 카드 간격 넓게, 겹침 최소화
-  const CONTAINER_W = Math.min(window.innerWidth - 24, 480);
-  const CONTAINER_H = 240;
-  // 카드가 펼쳐지는 총 폭 — 컨테이너보다 살짝 작게 (양쪽 여백)
-  const spread_px = CONTAINER_W - w - 16;
-  const step = spread_px / (total - 1);
-  const maxRot = 22; // 양 끝 최대 회전각 (살짝 줄여서 덜 눕힘)
-
-  deckEl.style.cssText = `position:relative;width:${CONTAINER_W}px;height:${CONTAINER_H}px;margin:0 auto;overflow:visible;`;
-
-  deckEl.innerHTML = deckPool.map((card, i) => {
-    const isPicked = pickedCards.includes(i);
-    const t = total > 1 ? i / (total - 1) : 0.5;
-    const x = 8 + step * i;
-    // 중앙에서 멀수록 회전
-    const rotDeg = (t - 0.5) * maxRot * 2;
-    // 호 모양 — 중앙이 살짝 위로 올라옴 (아크 높이 키움)
-    const arcY = Math.pow(t - 0.5, 2) * 70;
-    const y = (CONTAINER_H - h) / 2 + arcY - 28;
-
-    return `<div id="deck-scene-${i}"
-      onclick="pickCard(${i})"
-      style="
-        position:absolute;
-        left:${x}px;
-        top:${y}px;
+  // ── ① 상단 슬롯 행 (뽑은 카드 자리표시) ────────────────────────
+  let slotRow=document.getElementById('tarot-slot-row');
+  if(!slotRow){
+    slotRow=document.createElement('div');
+    slotRow.id='tarot-slot-row';
+    deckArea.insertBefore(slotRow,guideEl);
+  }
+  const posNames=spPos[spread];
+  slotRow.style.cssText='display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:0 4px;';
+  slotRow.innerHTML=posNames.map((p,i)=>`
+    <div style="text-align:center;flex-shrink:0;">
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:3px;width:${w}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p}</div>
+      <div id="tarot-slot-${i}" style="
         width:${w}px;height:${h}px;
-        transform:rotate(${rotDeg}deg) scale(${isPicked ? 0.82 : 1});
-        transform-origin:center bottom;
-        opacity:${isPicked ? 0.22 : 1};
-        cursor:${isPicked ? 'default' : 'pointer'};
-        pointer-events:${isPicked ? 'none' : 'auto'};
-        transition:transform 0.2s ease, opacity 0.3s ease, box-shadow 0.2s ease;
-        z-index:${isPicked ? 0 : i + 1};
+        border:1.5px dashed rgba(201,168,76,0.3);
         border-radius:6px;
-        overflow:hidden;
-        border:1px solid rgba(201,168,76,${isPicked ? 0.15 : 0.5});
-        box-shadow:${isPicked ? 'none' : '0 3px 10px rgba(0,0,0,0.75), 0 0 0 0.5px rgba(201,168,76,0.2)'};
-      "
-      onmouseenter="if(!${isPicked})this.style.zIndex=${total+10};this.style.transform='rotate(${rotDeg}deg) scale(1.08) translateY(-8px)';"
-      onmouseleave="if(!${isPicked})this.style.zIndex=${i+1};this.style.transform='rotate(${rotDeg}deg) scale(1)';"
-      >
-      ${makeCardBackSVG(w, h)}
-      ${isPicked ? `<div style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#000;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:10;">✓</div>` : ''}
-    </div>`;
+        background:rgba(201,168,76,0.04);
+        display:flex;align-items:center;justify-content:center;
+        font-size:18px;color:rgba(201,168,76,0.28);
+        position:relative;overflow:hidden;
+        transition:border-color 0.3s,background 0.3s;
+      ">✦</div>
+    </div>`).join('');
+
+  // ── ② 덱 카드 — 20장, 간격 넓게(최소 30px), 부채꼴 ────────────
+  const visible=Math.min(deckPool.length,20);
+  const CONTAINER_W=Math.min(window.innerWidth-24,480);
+  const CONTAINER_H=210;
+  const naturalStep=(CONTAINER_W-w-16)/(visible-1);
+  const step=Math.max(naturalStep,30);       // 최소 30px 간격
+  const totalW=Math.ceil(w+step*(visible-1)+16);
+  const maxRot=16;
+
+  deckEl.style.cssText=`position:relative;width:${totalW}px;height:${CONTAINER_H}px;margin:0 auto;overflow:visible;`;
+
+  deckEl.innerHTML=Array.from({length:visible},(_,i)=>{
+    const t=visible>1?i/(visible-1):0.5;
+    const x=8+step*i;
+    const rotDeg=(t-0.5)*maxRot*2;
+    const arcY=Math.pow(t-0.5,2)*45;
+    const y=(CONTAINER_H-h)/2+arcY-18;
+    return `<div id="deck-scene-${i}"
+      data-rot="${rotDeg.toFixed(2)}"
+      onclick="pickCard(${i})"
+      style="position:absolute;left:${x}px;top:${y}px;
+        width:${w}px;height:${h}px;
+        transform:rotate(${rotDeg}deg);transform-origin:center bottom;
+        cursor:pointer;
+        transition:transform 0.2s ease,box-shadow 0.2s ease;
+        z-index:${i+1};border-radius:6px;overflow:hidden;
+        border:1px solid rgba(201,168,76,0.5);
+        box-shadow:0 3px 10px rgba(0,0,0,0.75),0 0 0 0.5px rgba(201,168,76,0.2);"
+      onmouseenter="this.style.zIndex=${visible+10};this.style.transform='rotate(${rotDeg}deg) scale(1.12) translateY(-10px)';"
+      onmouseleave="this.style.zIndex=${i+1};this.style.transform='rotate(${rotDeg}deg)';"
+    >${makeCardBackSVG(w,h)}</div>`;
   }).join('');
 
-  document.getElementById('tarot-deck-area').style.display='block';
-  window.scrollTo({top:document.getElementById('tarot-deck-area').offsetTop-20,behavior:'smooth'});
+  if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요`;
+  deckArea.style.display='block';
+  window.scrollTo({top:deckArea.offsetTop-20,behavior:'smooth'});
 }
 
 function pickCard(i){
@@ -4077,40 +4089,99 @@ function pickCard(i){
   const scene=document.getElementById(`deck-scene-${i}`);
   if(!scene) return;
 
-  // 위로 툭 튀어오름
-  scene.style.transition='transform 0.15s ease, opacity 0.3s ease';
-  scene.style.transform='scale(1.2) translateY(-20px)';
+  // 즉시 클릭 불가 (중복 방지)
+  scene.removeAttribute('onclick');
+  scene.removeAttribute('onmouseenter');
+  scene.removeAttribute('onmouseleave');
+  scene.style.pointerEvents='none';
+  scene.style.cursor='default';
+
+  const slotIdx=pickedCards.length;
+  pickedCards.push(i);
+  pickCount++;
+
+  const guideEl=document.getElementById('tarot-deck-guide');
+  if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요 (${pickedCards.length}/${spread})`;
+
+  const rotDeg=parseFloat(scene.dataset.rot||'0');
+  const w=54, h=88;
+
+  // ① 위로 팝
+  scene.style.transition='transform 0.14s cubic-bezier(0.34,1.56,0.64,1)';
+  scene.style.transform=`rotate(${rotDeg}deg) scale(1.18) translateY(-14px)`;
+  scene.style.zIndex='500';
 
   setTimeout(()=>{
-    pickedCards.push(i);
-    pickCount++;
+    const cardRect=scene.getBoundingClientRect();
 
-    // 선택됨 — 흐리게
-    scene.style.transform='scale(0.85)';
-    scene.style.opacity='0.25';
-    scene.style.cursor='default';
-    scene.style.pointerEvents='none';
-    scene.style.zIndex='0';
+    // ② fixed 클론 생성 (회전 없이 수평으로 날아가게)
+    const clone=document.createElement('div');
+    clone.style.cssText=`
+      position:fixed;
+      left:${cardRect.left}px;top:${cardRect.top}px;
+      width:${cardRect.width}px;height:${cardRect.height}px;
+      border-radius:6px;overflow:hidden;
+      border:1.5px solid rgba(201,168,76,0.85);
+      box-shadow:0 8px 32px rgba(0,0,0,0.9),0 0 18px rgba(201,168,76,0.5);
+      z-index:9999;pointer-events:none;
+      transform:none;transition:none;
+    `;
+    clone.innerHTML=makeCardBackSVG(cardRect.width,cardRect.height);
+    document.body.appendChild(clone);
 
-    // 체크 뱃지
-    const badge=document.createElement('div');
-    badge.style.cssText='position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:var(--gold);color:#000;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:10;animation:badgePop 0.25s cubic-bezier(0.34,1.56,0.64,1) both;';
-    badge.textContent='✓';
-    scene.appendChild(badge);
+    // ③ 원본 덱 카드 수축 → 제거 (빈 공간으로 남지 않음)
+    scene.style.transition='transform 0.26s ease,opacity 0.26s ease';
+    scene.style.transform=`rotate(${rotDeg}deg) scale(0)`;
+    scene.style.opacity='0';
+    setTimeout(()=>{ if(scene.parentNode) scene.remove(); },260);
 
-    // 안내 업데이트
-    const guideEl=document.getElementById('tarot-deck-guide');
-    if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요 (${pickedCards.length}/${spread})`;
+    // ④ 슬롯으로 날아가기
+    const slotEl=document.getElementById(`tarot-slot-${slotIdx}`);
+    if(slotEl){
+      const slotRect=slotEl.getBoundingClientRect();
+      const tx=slotRect.left+(slotRect.width-cardRect.width)/2;
+      const ty=slotRect.top+(slotRect.height-cardRect.height)/2;
 
-    if(pickedCards.length===spread){
-      drawnCards=pickedCards.map(idx=>deckPool[idx]);
-      if(guideEl) guideEl.textContent='✦ 카드를 클릭해서 펼쳐보세요';
-      setTimeout(()=>renderRevealDeck(),600);
+      // double-RAF: DOM 페인트 완료 후 transition 시작
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        clone.style.transition='left 0.46s cubic-bezier(0.4,0,0.2,1),top 0.46s cubic-bezier(0.4,0,0.2,1)';
+        clone.style.left=`${tx}px`;
+        clone.style.top=`${ty}px`;
+      }));
+
+      setTimeout(()=>{
+        clone.remove();
+        // 슬롯 채움 (카드 뒷면 + 번호 뱃지)
+        slotEl.style.border='1.5px solid rgba(201,168,76,0.7)';
+        slotEl.style.background='rgba(201,168,76,0.1)';
+        slotEl.style.display='block';
+        slotEl.innerHTML=makeCardBackSVG(w,h)
+          +`<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;">
+              <div style="background:rgba(0,0,0,0.65);border-radius:4px;padding:1px 6px;font-size:8.5px;color:var(--gold);font-weight:700;">${slotIdx+1}</div>
+            </div>`;
+
+        if(pickedCards.length===spread){
+          drawnCards=pickedCards.map(idx=>deckPool[idx]);
+          if(guideEl) guideEl.textContent='✦ 카드를 클릭해서 펼쳐보세요';
+          setTimeout(()=>renderRevealDeck(),680);
+        }
+      },490);
+    } else {
+      clone.remove();
+      if(pickedCards.length===spread){
+        drawnCards=pickedCards.map(idx=>deckPool[idx]);
+        if(guideEl) guideEl.textContent='✦ 카드를 클릭해서 펼쳐보세요';
+        setTimeout(()=>renderRevealDeck(),680);
+      }
     }
-  }, 140);
+  },150);
 }
 
 function renderRevealDeck(){
+  // 슬롯 행 제거 (reveal 단계에서는 불필요)
+  const slotRow=document.getElementById('tarot-slot-row');
+  if(slotRow) slotRow.remove();
+
   const pos=spPos[spread];
   const w=140, h=220;
   const deckEl=document.getElementById('tarot-deck-cards');
