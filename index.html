@@ -634,6 +634,11 @@ body::before{
         <div class="menu-name">점성술</div>
         <div class="menu-desc" style="font-size:11px;">태어난 순간 행성들의 위치로 성격·재능·인연의 패턴을 읽는 서양 점성술</div>
       </div>
+      <div class="menu-item" onclick="go('gunghap')" style="padding:14px 10px;">
+        <div class="menu-icon">💞</div>
+        <div class="menu-name">궁합</div>
+        <div class="menu-desc" style="font-size:11px;">두 사주의 오행 충·합·극 관계로 인연의 깊이와 함께하는 삶의 흐름을 읽음</div>
+      </div>
     </div>
   </div>
 
@@ -1136,6 +1141,116 @@ body::before{
       <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:12px;">✦ 지금 이 순간, 당신에게 전하는 말</div>
       <div class="result-text" id="mixt-action" style="font-size:14px;line-height:2.3;"></div>
     </div>
+  </div>
+</div>
+</div>
+
+<!--
+     궁합 화면
+ -->
+<div id="screen-gunghap" class="screen">
+<div class="container">
+  <button class="back-btn" onclick="go('home')">← 홈으로</button>
+  <div class="page-title">궁합 분석</div>
+  <div class="page-subtitle">두 사주의 만남, 운명의 조화</div>
+
+  <!-- 내 정보 -->
+  <div class="card" style="border-color:rgba(201,168,76,0.4);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span style="font-size:18px;">🧧</span>
+      <div>
+        <div style="font-size:10px;color:var(--gold);letter-spacing:0.14em;">나의 정보</div>
+        <div style="font-size:12px;color:var(--text-3);">내 사주를 입력하세요</div>
+      </div>
+    </div>
+    <div class="label">이름 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택)</span></div>
+    <input class="input" type="text" id="gg-a-name" placeholder="이름" style="margin-bottom:14px;">
+    <div class="label">생년월일</div>
+    <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">년</div>
+        <input class="input" type="number" id="gg-a-year" min="1900" max="2050" placeholder="예) 1990"></div>
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">월</div>
+        <input class="input" type="number" id="gg-a-month" min="1" max="12" placeholder="1~12"></div>
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">일</div>
+        <input class="input" type="number" id="gg-a-day" min="1" max="31" placeholder="1~31"></div>
+    </div>
+    <div class="label">성별</div>
+    <div class="gender-row" style="margin-bottom:14px;">
+      <button class="gender-btn active gg-a-gender-btn" onclick="ggSetAGender('male',this)">남성</button>
+      <button class="gender-btn gg-a-gender-btn" onclick="ggSetAGender('female',this)">여성</button>
+    </div>
+    <div class="label">태어난 시간 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택 — 모르면 그냥 넘어가세요)</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(23,this)" style="padding:8px 2px;font-size:12px;">자시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(1,this)"  style="padding:8px 2px;font-size:12px;">축시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(3,this)"  style="padding:8px 2px;font-size:12px;">인시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(5,this)"  style="padding:8px 2px;font-size:12px;">묘시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(7,this)"  style="padding:8px 2px;font-size:12px;">진시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(9,this)"  style="padding:8px 2px;font-size:12px;">사시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(11,this)" style="padding:8px 2px;font-size:12px;">오시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(13,this)" style="padding:8px 2px;font-size:12px;">미시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(15,this)" style="padding:8px 2px;font-size:12px;">신시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(17,this)" style="padding:8px 2px;font-size:12px;">유시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(19,this)" style="padding:8px 2px;font-size:12px;">술시</button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(21,this)" style="padding:8px 2px;font-size:12px;">해시</button>
+    </div>
+  </div>
+
+  <!-- 상대방 정보 -->
+  <div class="card" style="border-color:rgba(232,112,112,0.4);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <span style="font-size:18px;">💞</span>
+      <div>
+        <div style="font-size:10px;color:#E87070;letter-spacing:0.14em;">상대방 정보</div>
+        <div style="font-size:12px;color:var(--text-3);">상대의 사주를 입력하세요</div>
+      </div>
+    </div>
+    <div class="label">이름 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택)</span></div>
+    <input class="input" type="text" id="gg-b-name" placeholder="이름" style="margin-bottom:14px;">
+    <div class="label">생년월일</div>
+    <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">년</div>
+        <input class="input" type="number" id="gg-b-year" min="1900" max="2050" placeholder="예) 1992"></div>
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">월</div>
+        <input class="input" type="number" id="gg-b-month" min="1" max="12" placeholder="1~12"></div>
+      <div><div style="font-size:11px;color:var(--text-3);margin-bottom:5px;">일</div>
+        <input class="input" type="number" id="gg-b-day" min="1" max="31" placeholder="1~31"></div>
+    </div>
+    <div class="label">성별</div>
+    <div class="gender-row" style="margin-bottom:14px;">
+      <button class="gender-btn gg-b-gender-btn" onclick="ggSetBGender('male',this)">남성</button>
+      <button class="gender-btn active gg-b-gender-btn" onclick="ggSetBGender('female',this)">여성</button>
+    </div>
+    <div class="label">태어난 시간 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택 — 모르면 그냥 넘어가세요)</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(23,this)" style="padding:8px 2px;font-size:12px;">자시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(1,this)"  style="padding:8px 2px;font-size:12px;">축시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(3,this)"  style="padding:8px 2px;font-size:12px;">인시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(5,this)"  style="padding:8px 2px;font-size:12px;">묘시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(7,this)"  style="padding:8px 2px;font-size:12px;">진시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(9,this)"  style="padding:8px 2px;font-size:12px;">사시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(11,this)" style="padding:8px 2px;font-size:12px;">오시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(13,this)" style="padding:8px 2px;font-size:12px;">미시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(15,this)" style="padding:8px 2px;font-size:12px;">신시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(17,this)" style="padding:8px 2px;font-size:12px;">유시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(19,this)" style="padding:8px 2px;font-size:12px;">술시</button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(21,this)" style="padding:8px 2px;font-size:12px;">해시</button>
+    </div>
+  </div>
+
+  <button class="primary-btn" onclick="calcGunghap()">💞 궁합 사주 계산</button>
+
+  <!-- 사주 결과 카드 -->
+  <div id="gung-result-card" class="card" style="display:none;margin-top:16px;">
+    <div id="gung-pillars-display"></div>
+    <div style="margin-top:16px;">
+      <button class="ghost-btn" id="gung-ai-btn" onclick="calcGunghapAI(this)">✦ AI 궁합 심층 분석</button>
+    </div>
+  </div>
+
+  <!-- AI 분석 결과 카드 -->
+  <div id="gung-ai-result" class="card" style="display:none;margin-top:16px;">
+    <div id="gung-ai-content"></div>
   </div>
 </div>
 </div>
@@ -9495,6 +9610,247 @@ function refreshTodayFortune() {
     `today_fortune_${dateKey}`);
 }
 
+// =============================================
+// === 궁합 ===
+// =============================================
+let ggAGender = 'male', ggBGender = 'female';
+let ggAShijinHour = -1, ggBShijinHour = -1;
+let ggAData = null, ggBData = null;
+
+function ggSetAGender(g, btn) {
+  ggAGender = g;
+  document.querySelectorAll('.gg-a-gender-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function ggSetBGender(g, btn) {
+  ggBGender = g;
+  document.querySelectorAll('.gg-b-gender-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function ggSelectAShijin(hourVal, btn) {
+  if (ggAShijinHour === hourVal) {
+    ggAShijinHour = -1;
+    btn.classList.remove('active');
+  } else {
+    ggAShijinHour = hourVal;
+    document.querySelectorAll('.gg-a-shi-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+function ggSelectBShijin(hourVal, btn) {
+  if (ggBShijinHour === hourVal) {
+    ggBShijinHour = -1;
+    btn.classList.remove('active');
+  } else {
+    ggBShijinHour = hourVal;
+    document.querySelectorAll('.gg-b-shi-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+
+function calcGunghap() {
+  const ay = +document.getElementById('gg-a-year').value;
+  const am = +document.getElementById('gg-a-month').value;
+  const ad = +document.getElementById('gg-a-day').value;
+  const by = +document.getElementById('gg-b-year').value;
+  const bm = +document.getElementById('gg-b-month').value;
+  const bd = +document.getElementById('gg-b-day').value;
+  if (!ay || !am || !ad) { alert('나의 생년월일을 입력해주세요.'); return; }
+  if (!by || !bm || !bd) { alert('상대방의 생년월일을 입력해주세요.'); return; }
+
+  const aName = document.getElementById('gg-a-name').value.trim() || '나';
+  const bName = document.getElementById('gg-b-name').value.trim() || '상대방';
+
+  const ah = ggAShijinHour >= 0 ? ggAShijinHour : 12;
+  const bh = ggBShijinHour >= 0 ? ggBShijinHour : 12;
+
+  const ayp = getYP(ay, am, ad), amp = getMP(ay, am, ad, ayp.g), adp = getDP(ay, am, ad), ahp = getHP(adp.g, ah);
+  const aoh = getOH([ayp, amp, adp, ahp]);
+
+  const byp = getYP(by, bm, bd), bmp = getMP(by, bm, bd, byp.g), bdp = getDP(by, bm, bd), bhp = getHP(bdp.g, bh);
+  const boh = getOH([byp, bmp, bdp, bhp]);
+
+  ggAData = { name: aName, y: ay, m: am, d: ad, h: ah, gender: ggAGender, yp: ayp, mp: amp, dp: adp, hp: ahp, oh: aoh, hasShijin: ggAShijinHour >= 0 };
+  ggBData = { name: bName, y: by, m: bm, d: bd, h: bh, gender: ggBGender, yp: byp, mp: bmp, dp: bdp, hp: bhp, oh: boh, hasShijin: ggBShijinHour >= 0 };
+
+  renderGungResult();
+  document.getElementById('gung-result-card').style.display = 'block';
+  document.getElementById('gung-ai-result').style.display = 'none';
+  document.getElementById('gung-ai-btn').disabled = false;
+  document.getElementById('gung-ai-btn').textContent = '✦ AI 궁합 심층 분석';
+  document.getElementById('gung-result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderGungResult() {
+  const A = ggAData, B = ggBData;
+  const lb = ['년주', '월주', '일주', '시주'];
+
+  function pillarHTML(p, i, isDayMaster) {
+    return `<div class="pillar-box${isDayMaster ? ' ilgan' : ''}">
+      <div class="p-label">${lb[i]}</div>
+      <div class="p-gan">${천간[p.g]}</div>
+      <div class="p-ji">${지지[p.j]}</div>
+      <div class="p-hanja">${천간한자[p.g]}${지지한자[p.j]}</div>
+    </div>`;
+  }
+
+  function ohaengBadge(oh) {
+    const oc = { 목: 'o-mok', 화: 'o-hwa', 토: 'o-to', 금: 'o-geum', 수: 'o-su' };
+    return Object.entries(oh).map(([k, v]) =>
+      `<span class="ob ${oc[k]}">${k} ${v}${v === 0 ? '⚠' : ''}</span>`).join('');
+  }
+
+  // 합충극 분석
+  const 천간합 = [[0,5],[1,6],[2,7],[3,8],[4,9]]; // 갑기합, 을경합, 병신합, 정임합, 무계합
+  const 지지합 = [[0,11],[1,10],[2,9],[3,8],[4,7],[5,6]]; // 자축합, 인해합, 묘술합, 진유합, 사신합, 오미합
+  const 지지충 = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]]; // 자오충, 축미충, 인신충, 묘유충, 진술충, 사해충
+
+  const aPillars = [A.yp, A.mp, A.dp, A.hp];
+  const bPillars = [B.yp, B.mp, B.dp, B.hp];
+
+  let hapList = [], chungList = [];
+  aPillars.forEach((ap, ai) => {
+    bPillars.forEach((bp, bi) => {
+      const aLb = lb[ai], bLb = lb[bi];
+      천간합.forEach(([x, y]) => {
+        if ((ap.g === x && bp.g === y) || (ap.g === y && bp.g === x))
+          hapList.push(`${aLb}天干(${천간[ap.g]})↔${bLb}天干(${천간[bp.g]}) 합`);
+      });
+      지지합.forEach(([x, y]) => {
+        if ((ap.j === x && bp.j === y) || (ap.j === y && bp.j === x))
+          hapList.push(`${aLb}地支(${지지[ap.j]})↔${bLb}地支(${지지[bp.j]}) 합`);
+      });
+      지지충.forEach(([x, y]) => {
+        if ((ap.j === x && bp.j === y) || (ap.j === y && bp.j === x))
+          chungList.push(`${aLb}地支(${지지[ap.j]})↔${bLb}地支(${지지[bp.j]}) 충`);
+      });
+    });
+  });
+
+  const hapHTML = hapList.length
+    ? hapList.map(s => `<span style="display:inline-block;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.35);color:var(--gold);border-radius:6px;padding:3px 8px;font-size:12px;margin:2px;">${s}</span>`).join('')
+    : '<span style="color:var(--text-3);font-size:13px;">해당 없음</span>';
+  const chungHTML = chungList.length
+    ? chungList.map(s => `<span style="display:inline-block;background:rgba(232,112,112,0.1);border:0.5px solid rgba(232,112,112,0.35);color:#E87070;border-radius:6px;padding:3px 8px;font-size:12px;margin:2px;">${s}</span>`).join('')
+    : '<span style="color:var(--text-3);font-size:13px;">해당 없음</span>';
+
+  document.getElementById('gung-pillars-display').innerHTML = `
+    <div style="margin-bottom:20px;">
+      <!-- A 사주 -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:8px;">${A.name} (${A.gender === 'male' ? '남' : '여'} · ${A.y}년생${A.hasShijin ? '' : ' · 시간 미입력'})</div>
+        <div class="pillars-row">${aPillars.map((p, i) => pillarHTML(p, i, i === 2)).join('')}</div>
+        <div class="ohaeng-row" style="margin-top:8px;">${ohaengBadge(A.oh)}</div>
+      </div>
+      <div style="text-align:center;font-size:22px;margin:4px 0;opacity:0.6;">💞</div>
+      <!-- B 사주 -->
+      <div style="margin-top:16px;">
+        <div style="font-size:11px;color:#E87070;letter-spacing:0.12em;margin-bottom:8px;">${B.name} (${B.gender === 'male' ? '남' : '여'} · ${B.y}년생${B.hasShijin ? '' : ' · 시간 미입력'})</div>
+        <div class="pillars-row">${bPillars.map((p, i) => pillarHTML(p, i, i === 2)).join('')}</div>
+        <div class="ohaeng-row" style="margin-top:8px;">${ohaengBadge(B.oh)}</div>
+      </div>
+    </div>
+
+    <!-- 합충 분석 -->
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:16px;">
+      <div style="font-size:12px;color:var(--text-3);letter-spacing:0.1em;margin-bottom:8px;">✦ 합(合) — 연결의 기운</div>
+      <div style="flex-wrap:wrap;display:flex;gap:4px;">${hapHTML}</div>
+      <div style="font-size:12px;color:var(--text-3);letter-spacing:0.1em;margin:12px 0 8px;">✦ 충(沖) — 긴장과 자극</div>
+      <div style="flex-wrap:wrap;display:flex;gap:4px;">${chungHTML}</div>
+    </div>`;
+}
+
+async function calcGunghapAI(btn) {
+  if (!ggAData || !ggBData) return;
+  btn.disabled = true;
+  btn.textContent = '✦ 분석 중 ···';
+
+  const aiResult = document.getElementById('gung-ai-result');
+  const aiContent = document.getElementById('gung-ai-content');
+  aiResult.style.display = 'block';
+  aiContent.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-3);">✦ 두 사주의 인연을 읽는 중 ···</div>';
+  aiResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const A = ggAData, B = ggBData;
+  const lb = ['년주', '월주', '일주', '시주'];
+
+  function sajuText(d) {
+    const ps = [d.yp, d.mp, d.dp, d.hp];
+    return ps.map((p, i) => `${lb[i]}: ${천간[p.g]}${지지[p.j]}(${천간오행[p.g]}/${지지오행[p.j]})`).join(', ')
+      + ` | 오행: 목${d.oh['목']} 화${d.oh['화']} 토${d.oh['토']} 금${d.oh['금']} 수${d.oh['수']}`;
+  }
+
+  const sys = `당신은 명리학 궁합 전문가입니다. 두 사람의 사주를 분석하여 궁합을 풀어주세요.
+반드시 아래 형식을 정확히 지켜서 답하세요. 각 항목은 2~4문장으로 씁니다.
+
+[총평] 두 사람의 전반적인 궁합과 인연의 깊이
+[오행관계] 두 사주의 오행 구성이 어떻게 조화/충돌하는지
+[천간지지] 주요 천간합·지지합·충의 의미
+[연애] 연애 관계에서의 특징과 흐름
+[결혼] 결혼·장기 동반자 관계에서의 조화 여부
+[조언] 두 사람에게 전하는 현실적인 조언
+[점수] 궁합 점수 (0~100점 숫자만)`;
+
+  const userMsg = `첫 번째 사람: ${A.name} (${A.gender === 'male' ? '남성' : '여성'}, ${A.y}년 ${A.m}월 ${A.d}일생${A.hasShijin ? ` ${A.h}시` : ''})
+사주: ${sajuText(A)}
+
+두 번째 사람: ${B.name} (${B.gender === 'male' ? '남성' : '여성'}, ${B.y}년 ${B.m}월 ${B.d}일생${B.hasShijin ? ` ${B.h}시` : ''})
+사주: ${sajuText(B)}
+
+위 두 사람의 궁합을 명리학적으로 분석해주세요.`;
+
+  try {
+    const raw = await callGemini(sys, userMsg, 900);
+
+    function extract(tag) {
+      const m = raw.match(new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`));
+      return m ? m[1].trim() : '';
+    }
+
+    const 총평 = extract('총평');
+    const 오행관계 = extract('오행관계');
+    const 천간지지 = extract('천간지지');
+    const 연애 = extract('연애');
+    const 결혼 = extract('결혼');
+    const 조언 = extract('조언');
+    const scoreRaw = extract('점수');
+    const score = parseInt(scoreRaw) || 0;
+
+    const scoreColor = score >= 75 ? 'var(--gold)' : score >= 50 ? 'var(--blue)' : '#E87070';
+    const scoreLabel = score >= 80 ? '천생연분' : score >= 65 ? '좋은 인연' : score >= 50 ? '보통 인연' : '도전적 인연';
+
+    function section(title, content, accent) {
+      if (!content) return '';
+      return `<div style="margin-bottom:16px;">
+        <div style="font-size:11px;letter-spacing:0.12em;color:${accent};margin-bottom:6px;">${title}</div>
+        <div style="font-size:14px;line-height:1.9;color:var(--text-2);">${content}</div>
+      </div>`;
+    }
+
+    aiContent.innerHTML = `
+      <!-- 점수 -->
+      <div style="text-align:center;padding:20px 0 24px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:20px;">
+        <div style="font-size:48px;font-weight:700;color:${scoreColor};font-family:'Cinzel Decorative',serif;line-height:1;">${score}</div>
+        <div style="font-size:11px;color:var(--text-3);letter-spacing:0.15em;margin-top:4px;">/ 100점</div>
+        <div style="font-size:15px;color:${scoreColor};margin-top:8px;letter-spacing:0.08em;">${scoreLabel}</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:4px;">${A.name} ✦ ${B.name}</div>
+      </div>
+      ${section('✦ 총평', 총평, 'var(--gold)')}
+      ${section('✦ 오행 관계', 오행관계, 'var(--text)')}
+      ${section('✦ 천간·지지 합충', 천간지지, 'var(--text)')}
+      ${section('✦ 연애', 연애, 'var(--blue)')}
+      ${section('✦ 결혼·동반자', 결혼, 'var(--blue)')}
+      ${section('✦ 조언', 조언, 'var(--gold)')}`;
+
+    btn.textContent = '✦ AI 분석 완료';
+  } catch (e) {
+    aiContent.innerHTML = `<div style="color:#E87070;font-size:14px;">분석 오류: ${e.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = '✦ AI 궁합 심층 분석';
+  }
+}
+
+// =============================================
 async function callGemini(sys,userMsg,maxTok=1200){
   const res=await fetch('/api/gemini',
     {method:'POST',headers:{'Content-Type':'application/json'},
