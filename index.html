@@ -1911,6 +1911,7 @@ const 일주해석DB = {
   '갑오': '뜨거운 여름 대지에 선 나무입니다. 열정적이고 표현력이 강합니다. 하고자 하는 것에 불꽃처럼 달려들지만, 과열되면 빠르게 지치는 패턴이 있습니다. 주목받는 것을 좋아하고 사교성이 뛰어납니다. 에너지 관리가 성공의 핵심입니다.',
   '갑신': '가을 쇠 기운 위에 선 나무입니다. 날카로운 도전을 이겨내는 힘이 있습니다. 외부의 압박이 강할수록 오히려 단단해지는 유형입니다. 승부욕이 강하고 한 번 목표를 정하면 포기하지 않습니다. 지나친 완고함이 인간관계에서 손해를 볼 수 있습니다.',
   '갑술': '가을 건조한 땅 위의 나무입니다. 재물 창출 능력이 있고 현실 감각이 좋습니다. 그러나 내면 깊숙이 고독감이 있을 수 있습니다. 인정받고 싶은 마음이 강하지만 스스로 표현하는 것을 어려워합니다. 가까운 사람에게 마음을 여는 연습이 필요합니다.',
+  '을축': '겨울 차가운 땅 위에 뿌리내린 풀입니다. 혹독한 환경에서도 꿋꿋이 살아남는 강인한 생명력이 있습니다. 겉으로는 유순하고 조용하지만 내면에 단단한 의지를 품고 있습니다. 인내심이 강하고 꾸준함으로 신뢰를 쌓습니다. 급하게 서두르지 않아도 결국 자신의 자리를 만들어내는 힘이 있습니다.',
   '을묘': '봄에 피어나는 작은 꽃과 풀입니다. 두 개의 나무 기운이 겹쳐 감성이 풍부하고 친화력이 넘칩니다. 적응력이 뛰어나고 어떤 환경에서도 자기 자리를 만들어냅니다. 다만 너무 유연하게 맞춰가다 자신을 잃어버리는 경우가 있습니다. 나는 어떤 사람인가를 자주 돌아보세요.',
   '을사': '여름 불꽃 위에 앉은 작은 풀입니다. 겉으로는 부드럽지만 내면에 강인한 생명력이 있습니다. 예상치 못한 상황에서도 살아남는 놀라운 회복력이 있습니다. 이 사주를 가진 사람들은 위기를 겪을수록 더 강해지는 경우가 많습니다.',
   '을미': '여름 끝자락의 풀입니다. 재물과 관련된 기운이 있고 생활력이 강합니다. 감성적이면서도 현실적인 양면을 가지고 있습니다. 사람들에게 따뜻하고 포용적인 인상을 주며 중재자 역할을 잘 합니다.',
@@ -4798,13 +4799,20 @@ function mxCalcSaju(y,m,d,h){
                        정밀용신.기신&&duOhaeng===정밀용신.기신?'기신대운▲':'중간대운';
       return `사주: ${천간[yp.g]}${지지[yp.j]} ${천간[mp.g]}${지지[mp.j]} ${천간[dp.g]}${지지[dp.j]} ${천간[hp.g]}${지지[hp.j]} / ${격국정보.격} / ${신강정보.판정} / 용신:${정밀용신.용신} 기신:${정밀용신.기신} / 현재대운:${대운관계}\n일주기질: ${일주설명.slice(0,80)}`;
     }
-    const base=calcBaseTime(h,0,135);
+    // 시진 인덱스(0-11) → 실제 시각(hour) 변환
+    const SI_TO_HOUR=[23,1,3,5,7,9,11,13,15,17,19,21];
+    const actualHour=SI_TO_HOUR[h]??12;
     const yg=((y-4)%10+10)%10, yz=((y-4)%12+12)%12;
-    const days=Math.floor((new Date(y,m-1,d)-new Date(1900,0,31))/86400000);
+    // Date.UTC 사용으로 타임존 무관 일수 계산 (버그4 수정)
+    const days=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(1900,0,31))/86400000);
     const dg=((days%10)+10)%10, dz=((days%12)+12)%12;
+    // 월주 계산 추가 (버그2 수정)
+    const mp_=getMP(y,m,d,yg);
+    // 시주 계산 추가 (버그2 수정)
+    const hp_=getHP(dg,actualHour);
     const ilju = 천간[dg]+지지[dz];
     const 일주설명 = (일주해석DB[ilju]||'').slice(0,80);
-    return `년주 ${천간[yg]}${지지[yz]} 일주 ${ilju} / 일간오행: ${천간오행[dg]}\n일주기질: ${일주설명}`;
+    return `사주: ${천간[yg]}${지지[yz]} ${천간[mp_.g]}${지지[mp_.j]} ${천간[dg]}${지지[dz]} ${천간[hp_.g]}${지지[hp_.j]} / 일간오행: ${천간오행[dg]}\n일주기질: ${일주설명}`;
   }catch(e){return y+'년 '+m+'월 '+d+'일 '+h+'시 사주';}
 }
 
@@ -4972,11 +4980,14 @@ function mxCalcZiweiSimple(y, m, d) {
 
 function mxGetAllData(y, m, d, si, isFemale) {
   const name = document.getElementById('mx-name')?.value?.trim() || '';
+  // 시진 인덱스(0-11) → 실제 시각(hour) 변환 (버그3 수정)
+  const SI_TO_HOUR=[23,1,3,5,7,9,11,13,15,17,19,21];
+  const actualHour=SI_TO_HOUR[si]??12;
   const map = {};
   // 선택된 술법만 계산
   if(mxSelected.includes('saju'))   map['사주']        = mxCalcSaju(y, m, d, si);
-  if(mxSelected.includes('astro'))  map['서양점성술']  = mxCalcAstro(y, m, d, si);
-  if(mxSelected.includes('vedic'))  map['베딕점성술']  = mxCalcVedic(y, m, d, si);
+  if(mxSelected.includes('astro'))  map['서양점성술']  = mxCalcAstro(y, m, d, actualHour);
+  if(mxSelected.includes('vedic'))  map['베딕점성술']  = mxCalcVedic(y, m, d, actualHour);
   if(mxSelected.includes('ziwei'))  map['자미두수']    = mxCalcZiweiSimple(y, m, d);
   if(mxSelected.includes('qimen'))  map['기문둔갑']    = mxCalcQimen(y, m, d);
   if(mxSelected.includes('danjusa'))map['당사주']      = mxCalcDanjusaSimple(y, m, d);
