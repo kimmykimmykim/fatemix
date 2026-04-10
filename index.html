@@ -5728,16 +5728,15 @@ async function generateBujeok(btn) {
 }
 
 function makeBujeokSVG(params) {
-  // ── 전통 한국 부적 스타일 ──────────────────────────────────────────
-  // 한지(黃紙) 배경 + 경면주사(硃砂) 잉크 고정
-  const W = 280, H = 462;
+  // ── 전통 한국 부적 스타일 (개선판) ──────────────────────────────
+  const W = 280, H = 480;
   const { purpose='수호', mainHanja='守護平安', subHanja='吉祥' } = params;
   const uid = 'bj' + Math.random().toString(36).slice(2, 6);
 
-  const INK  = '#6C0909';   // 경면주사 진한 벽돌색
-  const INK2 = '#8B1010';   // 조금 밝은 주사색 (보조)
-  const BG1  = '#EDD060';   // 한지 밝은면
-  const BG2  = '#C2A028';   // 한지 어두운면
+  const INK  = '#6C0909';
+  const INK2 = '#8B1010';
+  const BG1  = '#EDD060';
+  const BG2  = '#C2A028';
 
   // ── 팔괘 데이터 [위선, 중선, 아래선] true=양(실선), false=음(끊김) ──
   const BAGUA = [
@@ -5751,91 +5750,119 @@ function makeBujeokSVG(params) {
     [false,false,false],  // ☷ 곤(坤)
   ];
   const BGNAME = ['건','태','리','진','손','감','간','곤'];
-  // 목적별 강조 팔괘 (감=재물, 손=사랑, 건=건강, 진=수호, 태=성공)
   const TRI_HI = {'재물운':5,'사랑운':4,'건강운':0,'수호':3,'성공운':1};
   const hi = TRI_HI[purpose] ?? 0;
 
-  // ── Helper: 팔괘 한 개 그리기 ───────────────────────────────────
+  // ── Helper: 팔괘 — 양효(긴실선) / 음효(두토막) 정교하게 ─────────
   function drawTri(cx, topY, lines, isHi) {
-    const lw=14, gap=5, sp=7, sw=isHi?3.4:1.8;
+    const lw=22, gap=7, sp=10;
+    const sw = isHi ? 4.2 : 2.4;
+    const col = isHi ? INK : INK2;
     let s = '';
+    // 강조 괘: 배경 하이라이트
+    if (isHi) {
+      s += `<rect x="${cx-lw/2-4}" y="${topY-6}" width="${lw+8}" height="${sp*2+14}" fill="${INK}" opacity="0.12" rx="2"/>`;
+    }
     for (let i=0; i<3; i++) {
       const ly = topY + i*sp;
       if (lines[i]) {
-        s += `<line x1="${cx-lw/2}" y1="${ly}" x2="${cx+lw/2}" y2="${ly}" stroke="${isHi?INK:INK2}" stroke-width="${sw}" stroke-linecap="round"/>`;
+        // 양효: 꽉 찬 실선 (stroke-linecap="butt" 로 끝이 각짐)
+        s += `<line x1="${cx-lw/2}" y1="${ly}" x2="${cx+lw/2}" y2="${ly}" stroke="${col}" stroke-width="${sw}" stroke-linecap="butt"/>`;
       } else {
-        s += `<line x1="${cx-lw/2}" y1="${ly}" x2="${cx-gap/2}" y2="${ly}" stroke="${isHi?INK:INK2}" stroke-width="${sw}" stroke-linecap="round"/>`;
-        s += `<line x1="${cx+gap/2}" y1="${ly}" x2="${cx+lw/2}" y2="${ly}" stroke="${isHi?INK:INK2}" stroke-width="${sw}" stroke-linecap="round"/>`;
+        // 음효: 명확한 두 토막 (gap=7px 빈틈)
+        s += `<line x1="${cx-lw/2}" y1="${ly}" x2="${cx-gap/2}" y2="${ly}" stroke="${col}" stroke-width="${sw}" stroke-linecap="butt"/>`;
+        s += `<line x1="${cx+gap/2}" y1="${ly}" x2="${cx+lw/2}" y2="${ly}" stroke="${col}" stroke-width="${sw}" stroke-linecap="butt"/>`;
       }
     }
-    // 강조된 괘 이름 표시
-    if (isHi) s += `<text x="${cx}" y="${topY+24}" text-anchor="middle" font-size="8.5" fill="${INK}" font-family="serif" font-weight="700">${BGNAME[hi]}</text>`;
+    if (isHi) {
+      s += `<text x="${cx}" y="${topY+sp*2+12}" text-anchor="middle" font-size="9" fill="${INK}" font-family="serif" font-weight="900">${BGNAME[hi]}</text>`;
+    }
     return s;
   }
 
-  // ── Helper: 뇌문(雷文) 구분선 — 두 가로줄 + 세로 격자 ──────────
+  // ── Helper: 뇌문(雷文) — 이중 수평 막대 + 세로 격자 ────────────
   function raeun(x1, y, x2) {
-    const h=11, uw=14, n=Math.floor((x2-x1)/uw);
+    const h=13, uw=13, n=Math.floor((x2-x1)/uw);
     const ox = x1 + ((x2-x1)-n*uw)/2;
     let d = `M ${x1} ${y} L ${x2} ${y} M ${x1} ${y+h} L ${x2} ${y+h}`;
     for (let i=0; i<=n; i++) { const x=ox+i*uw; d+=` M ${x} ${y} L ${x} ${y+h}`; }
-    return `<path d="${d}" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="square"/>`;
+    return `<path d="${d}" stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="square"/>`;
   }
 
-  // ── Helper: 천부인(天符印) 원형 만다라 ──────────────────────────
+  // ── Helper: 천부인(天符印) — 정교한 만다라 ───────────────────────
   function seal(cx, cy, r) {
     let s = '';
-    // 3중 원
-    s += `<circle cx="${cx}" cy="${cy}" r="${r}"          fill="none" stroke="${INK}" stroke-width="3.2"/>`;
-    s += `<circle cx="${cx}" cy="${cy}" r="${+(r*.72).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="1.8"/>`;
-    s += `<circle cx="${cx}" cy="${cy}" r="${+(r*.42).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="1.2"/>`;
-    // 8방위 바퀴살 (굵은 4방 + 가는 4사선)
-    for (let i=0; i<8; i++) {
-      const a = i*Math.PI/4;
-      const r1=r*.44, r2=r*.99;
+    // 4중 원 (굵기 차별화)
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}"                   fill="none" stroke="${INK}" stroke-width="3.8"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${+(r*.78).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="2.0"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${+(r*.55).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="1.4"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${+(r*.30).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="1.0"/>`;
+    // 16방위 바퀴살 (4 정방위 굵음 / 4 사선 보통 / 8 세부 가는선)
+    for (let i=0; i<16; i++) {
+      const a = i * Math.PI / 8;
+      const isCard = i % 4 === 0;   // 4 정방위: 굵음
+      const isMid  = i % 2 === 0;   // 8 주방위: 보통
+      const r1 = isMid ? r*0.31 : r*0.57;   // 세부살은 중간 원에서 시작
+      const r2 = r * 0.98;
+      const sw = isCard ? 2.8 : (isMid ? 1.5 : 0.8);
       const x1=+(cx+Math.cos(a)*r1).toFixed(2), y1=+(cy+Math.sin(a)*r1).toFixed(2);
       const x2=+(cx+Math.cos(a)*r2).toFixed(2), y2=+(cy+Math.sin(a)*r2).toFixed(2);
-      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${INK}" stroke-width="${i%2===0?2.6:1.2}"/>`;
+      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${INK}" stroke-width="${sw}"/>`;
     }
-    // 4방위 마름모 장식 (바퀴살 끝)
-    [0, Math.PI/2, Math.PI, Math.PI*1.5].forEach(a => {
-      const dc=r+8, ds=5.5;
+    // 8방위 마름모 장식 (정방위=크게, 사선=작게)
+    for (let i=0; i<8; i++) {
+      const a = i * Math.PI / 4;
+      const dc = r + 8, ds = i%2===0 ? 5.5 : 3.5;
       const dx=+(cx+Math.cos(a)*dc).toFixed(1), dy=+(cy+Math.sin(a)*dc).toFixed(1);
       s += `<polygon points="${dx},${dy-ds} ${dx+ds},${dy} ${dx},${dy+ds} ${dx-ds},${dy}" fill="${INK}"/>`;
-    });
-    // 중심
-    s += `<circle cx="${cx}" cy="${cy}" r="7" fill="${INK}"/>`;
-    s += `<circle cx="${cx}" cy="${cy}" r="2.8" fill="${BG1}"/>`;
+    }
+    // 중간 원 위 8개 소점 (바퀴살 사이 장식)
+    for (let i=0; i<8; i++) {
+      const a = i*Math.PI/4 + Math.PI/8;
+      const rc = r*0.655;
+      const dx=+(cx+Math.cos(a)*rc).toFixed(1), dy=+(cy+Math.sin(a)*rc).toFixed(1);
+      s += `<circle cx="${dx}" cy="${dy}" r="2.2" fill="${INK}"/>`;
+    }
+    // 안쪽 원 내부: 8각 방사선
+    for (let i=0; i<8; i++) {
+      const a = i*Math.PI/4;
+      const ri = r*0.27;
+      const xi=+(cx+Math.cos(a)*ri).toFixed(2), yi=+(cy+Math.sin(a)*ri).toFixed(2);
+      s += `<line x1="${cx}" y1="${cy}" x2="${xi}" y2="${yi}" stroke="${INK}" stroke-width="1.0" opacity="0.65"/>`;
+    }
+    // 중심점 3중 (원 → 한지색 → 소점)
+    s += `<circle cx="${cx}" cy="${cy}" r="8.5" fill="${INK}"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="4.0" fill="${BG1}"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="1.5" fill="${INK}"/>`;
     return s;
   }
 
-  // ── Helper: 붓글씨 느낌 한자 (획 두텁게) ────────────────────────
+  // ── Helper: 붓글씨 한자 (획 두텁게) ─────────────────────────────
   const FF = `font-family="'Noto Serif KR','Noto Serif SC',serif" font-weight="900"`;
   function brushChar(x, y, ch, fs) {
-    // 바깥쪽 획 stroke → 안쪽 fill 순서로 겹쳐서 붓 두께감 연출
     return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs}" `
-      + `fill="none" stroke="${INK}" stroke-width="${+(fs*.07).toFixed(1)}" stroke-linejoin="round" ${FF}>${ch}</text>`
+      + `fill="none" stroke="${INK}" stroke-width="${+(fs*.075).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" ${FF}>${ch}</text>`
       + `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs}" fill="${INK}" ${FF}>${ch}</text>`;
   }
 
-  // ── 주 한자 배치 ───────────────────────────────────────────────
+  // ── 주 한자 배치 (더 크게, 임팩트 있게) ─────────────────────────
   const chars = [...mainHanja].slice(0, 4);
   const cn = chars.length;
   let charSVG = '';
   if (cn <= 2) {
-    const fs=88, sp=82;
-    chars.forEach((ch,i) => charSVG += brushChar(W/2+(i-(cn-1)/2)*sp, 316, ch, fs));
+    const fs=112, sp=88;
+    chars.forEach((ch,i) => charSVG += brushChar(W/2+(i-(cn-1)/2)*sp, 336, ch, fs));
   } else if (cn === 4) {
-    const fs=58, dx=76, dy=63;
-    chars.forEach((ch,i) => charSVG += brushChar(W/2+((i%2)-0.5)*dx, 278+Math.floor(i/2)*dy, ch, fs));
+    const fs=76, dx=76, dy=68;
+    chars.forEach((ch,i) => charSVG += brushChar(W/2+((i%2)-0.5)*dx, 285+Math.floor(i/2)*dy, ch, fs));
   } else {
-    const fs=72, sp=67;
-    chars.forEach((ch,i) => charSVG += brushChar(W/2+(i-(cn-1)/2)*sp, 312, ch, fs));
+    const fs=90, sp=72;
+    chars.forEach((ch,i) => charSVG += brushChar(W/2+(i-(cn-1)/2)*sp, 332, ch, fs));
   }
 
   // ── 부 한자 ─────────────────────────────────────────────────────
   const subSVG = [...subHanja].slice(0, 2).map((ch,i) =>
-    `<text x="${W/2+(i-0.5)*42}" y="390" text-anchor="middle" font-size="31" fill="${INK}" `
+    `<text x="${W/2+(i-0.5)*44}" y="398" text-anchor="middle" font-size="33" fill="${INK}" `
     + `font-family="'Noto Serif KR',serif" font-weight="800">${ch}</text>`
   ).join('');
 
@@ -5843,12 +5870,12 @@ function makeBujeokSVG(params) {
   const triStep = (W-32)/8;
   const triSVG = BAGUA.map((l,i) => drawTri(16+i*triStep+triStep/2, 162, l, i===hi)).join('');
 
-  // ── 코너 ㄱ자 장식 ───────────────────────────────────────────────
-  const CL = 18;
-  const cornSVG = [[5,5,1,1],[W-5,5,-1,1],[5,H-5,1,-1],[W-5,H-5,-1,-1]].map(
+  // ── 코너 ㄱ자 장식 (더 굵고 길게) ──────────────────────────────
+  const CL = 24;
+  const cornSVG = [[6,6,1,1],[W-6,6,-1,1],[6,H-6,1,-1],[W-6,H-6,-1,-1]].map(
     ([sx,sy,ddx,ddy]) =>
-      `<line x1="${sx}" y1="${sy}" x2="${sx+ddx*CL}" y2="${sy}" stroke="${INK}" stroke-width="4.5"/>`
-    + `<line x1="${sx}" y1="${sy}" x2="${sx}" y2="${sy+ddy*CL}" stroke="${INK}" stroke-width="4.5"/>`
+      `<line x1="${sx}" y1="${sy}" x2="${sx+ddx*CL}" y2="${sy}" stroke="${INK}" stroke-width="6"/>`
+    + `<line x1="${sx}" y1="${sy}" x2="${sx}" y2="${sy+ddy*CL}" stroke="${INK}" stroke-width="6"/>`
   ).join('');
 
   // ── SVG 조립 ────────────────────────────────────────────────────
@@ -5869,43 +5896,44 @@ function makeBujeokSVG(params) {
 <rect width="${W}" height="${H}" fill="url(#${uid}bg)"/>
 <rect width="${W}" height="${H}" fill="${BG1}" opacity="0.18" filter="url(#${uid}tx)"/>
 
-<!-- 이중 테두리 -->
-<rect x="5"  y="5"  width="${W-10}"  height="${H-10}"  fill="none" stroke="${INK}" stroke-width="3.8"/>
-<rect x="10" y="10" width="${W-20}"  height="${H-20}"  fill="none" stroke="${INK}" stroke-width="1"/>
+<!-- 삼중 테두리: 바깥 두꺼운선 + 중간선 + 안쪽 가는선 -->
+<rect x="4"  y="4"  width="${W-8}"  height="${H-8}"  fill="none" stroke="${INK}" stroke-width="7"/>
+<rect x="13" y="13" width="${W-26}" height="${H-26}" fill="none" stroke="${INK}" stroke-width="1.6"/>
+<rect x="17" y="17" width="${W-34}" height="${H-34}" fill="none" stroke="${INK}" stroke-width="0.8" opacity="0.6"/>
 
 <!-- 코너 ㄱ자 -->
 ${cornSVG}
 
-<!-- 천부인(天符印) 원형 문양 -->
-${seal(W/2, 82, 44)}
+<!-- 천부인(天符印) — 4중원 + 16방위살 + 8마름모 + 소점 -->
+${seal(W/2, 80, 52)}
 
 <!-- 뇌문(雷文) 1 -->
-${raeun(14, 142, W-14)}
+${raeun(16, 143, W-16)}
 
-<!-- 팔괘(八卦) — SVG 직접 드로잉 -->
+<!-- 팔괘(八卦) — 정교한 양효(실선)/음효(두토막) -->
 ${triSVG}
 
 <!-- 뇌문(雷文) 2 -->
-${raeun(14, 202, W-14)}
+${raeun(16, 206, W-16)}
 
-<!-- 주 한자 (크게, 붓글씨 느낌) -->
+<!-- 주 한자 (크게, 붓글씨) -->
 ${charSVG}
 
-<!-- 구분선 -->
-<line x1="18" y1="362" x2="${W-18}" y2="362" stroke="${INK}" stroke-width="2.8"/>
-<line x1="18" y1="366" x2="${W-18}" y2="366" stroke="${INK}" stroke-width="0.9" opacity="0.65"/>
+<!-- 이중 구분선 -->
+<line x1="18" y1="370" x2="${W-18}" y2="370" stroke="${INK}" stroke-width="3.2"/>
+<line x1="18" y1="375" x2="${W-18}" y2="375" stroke="${INK}" stroke-width="1.0" opacity="0.6"/>
 
 <!-- 부 한자 -->
 ${subSVG}
 
 <!-- 낙관(落款) 인장 -->
-<rect x="${W/2-42}" y="404" width="84" height="50" fill="${INK}" opacity="0.07"/>
-<rect x="${W/2-42}" y="404" width="84" height="50" fill="none" stroke="${INK}" stroke-width="2.8"/>
-<rect x="${W/2-33}" y="412" width="66" height="34" fill="none" stroke="${INK}" stroke-width="0.9"/>
-<text x="${W/2}" y="435" text-anchor="middle" font-size="14" fill="${INK}" letter-spacing="3.5" font-family="'Noto Serif KR',serif" font-weight="800">萬事如意</text>
+<rect x="${W/2-44}" y="412" width="88" height="52" fill="${INK}" opacity="0.08"/>
+<rect x="${W/2-44}" y="412" width="88" height="52" fill="none" stroke="${INK}" stroke-width="3.2"/>
+<rect x="${W/2-36}" y="420" width="72" height="36" fill="none" stroke="${INK}" stroke-width="1.0"/>
+<text x="${W/2}" y="445" text-anchor="middle" font-size="15" fill="${INK}" letter-spacing="3.5" font-family="'Noto Serif KR',serif" font-weight="800">萬事如意</text>
 
 <!-- 목적 소자 -->
-<text x="${W-14}" y="${H-8}" text-anchor="end" font-size="8" fill="${INK}" opacity="0.48" font-family="serif">${purpose}</text>
+<text x="${W-15}" y="${H-9}" text-anchor="end" font-size="8.5" fill="${INK}" opacity="0.5" font-family="serif">${purpose}</text>
 </svg>`;
 }
 
