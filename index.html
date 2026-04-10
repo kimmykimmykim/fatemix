@@ -1137,6 +1137,22 @@ body::before{
       <div class="result-text" id="mixt-action" style="font-size:14px;line-height:2.3;"></div>
     </div>
   </div>
+
+  <!-- 부적 섹션 -->
+  <div id="mx-bujeok-section" style="display:none;margin-top:8px;">
+    <div class="card" style="border-color:rgba(180,20,30,0.45);background:linear-gradient(135deg,rgba(160,10,20,0.1) 0%,rgba(160,10,20,0.02) 100%);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:22px;">🔮</span>
+        <div>
+          <div style="font-size:11px;color:#E05060;letter-spacing:0.14em;margin-bottom:2px;">나만의 부적</div>
+          <div style="font-size:12px;color:var(--text-3);">운세 결과를 바탕으로 당신만을 위한 부적을 생성합니다</div>
+        </div>
+      </div>
+      <button class="ghost-btn" id="mx-bujeok-btn" onclick="generateBujeok(this)"
+        style="width:100%;border-color:rgba(180,20,30,0.5);color:#E05060;">✦ 나만의 부적 생성하기</button>
+      <div id="mx-bujeok-display" style="display:none;margin-top:18px;"></div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -5441,6 +5457,7 @@ async function runMixAiAnalysis(){
   const btn=document.getElementById('mix-btn');
   btn.disabled=true; btn.textContent='운명을 읽는 중...';
   document.getElementById('mix-result-card').style.display='none';
+  document.getElementById('mx-bujeok-section').style.display='none';
 
   const dataMap=mxGetAllData(y,m,d,mxShijinIdx,mxGenderVal==='female');
   const question=document.getElementById('mix-question').value||mixTopicVal+' 운세를 봐주세요.';
@@ -5655,12 +5672,195 @@ async function runMixAiAnalysis(){
     }
 
     document.getElementById('mix-result-card').style.display='block';
+    const _bjSec=document.getElementById('mx-bujeok-section');
+    if(_bjSec){ _bjSec.style.display='block'; document.getElementById('mx-bujeok-display').style.display='none'; const _bjBtn=document.getElementById('mx-bujeok-btn'); _bjBtn.disabled=false; _bjBtn.textContent='✦ 나만의 부적 생성하기'; }
     window.scrollTo({top:document.getElementById('mix-result-card').offsetTop-20,behavior:'smooth'});
   }catch(e){alert('오류: '+e.message);}
   btn.disabled=false; btn.textContent='✦ 운명의 교차점 읽기';
 }
-// 
-// 
+
+// =============================================
+// === 부적 생성 ===
+// =============================================
+let _mxBujeokSvg = null;
+
+async function generateBujeok(btn) {
+  const fullText = (
+    (document.getElementById('mixt-summary')?.textContent || '') + ' ' +
+    (document.getElementById('mixt-action')?.textContent  || '')
+  ).replace(/\s+/g,' ').trim().slice(0, 600);
+
+  btn.disabled = true;
+  btn.textContent = '✦ 부적을 그리는 중 ···';
+  const display = document.getElementById('mx-bujeok-display');
+  display.style.display = 'block';
+  display.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--text-3);font-size:14px;">✦ 운세의 기운을 부적에 담는 중 ···</div>`;
+
+  const sys = `당신은 한국 전통 부적 전문가입니다. 운세 내용을 분석하여 아래 JSON만 반환하세요. 설명 없이 JSON만.
+{"purpose":"재물운/사랑운/건강운/수호/성공운 중 택1","mainHanja":"부적 중앙 한자 2~4글자(예:守護平安)","subHanja":"하단 보조 한자 정확히 2글자(예:吉祥)","colorTheme":"홍/청/황/백/흑 중 택1","blessing":"부적 축원 15자 이내 한국어"}`;
+
+  let params = { purpose:'수호', mainHanja:'守護平安', subHanja:'吉祥', colorTheme:'홍', blessing:'평안과 행운이 가득하기를' };
+  try {
+    const raw = await callGemini(sys, `운세 내용:\n${fullText}`, 180);
+    const m = raw.match(/\{[\s\S]*?\}/);
+    if (m) {
+      const parsed = JSON.parse(m[0]);
+      Object.assign(params, parsed);
+    }
+  } catch(e) { /* defaults */ }
+
+  // Guard: subHanja must be at most 2 chars
+  if (!params.subHanja || params.subHanja.length < 1) params.subHanja = '吉祥';
+  if ([...params.subHanja].length > 3) params.subHanja = [...params.subHanja].slice(0,2).join('');
+  if (!params.mainHanja || params.mainHanja.length < 1) params.mainHanja = '守護平安';
+
+  const svgStr = makeBujeokSVG(params);
+  _mxBujeokSvg = svgStr;
+
+  display.innerHTML = `
+    <div style="text-align:center;margin-bottom:6px;">${svgStr}</div>
+    <div style="text-align:center;font-size:12px;color:var(--text-3);margin:8px 0 14px;letter-spacing:0.06em;">${params.blessing}</div>
+    <button class="ghost-btn" onclick="downloadBujeok()" style="width:100%;border-color:rgba(180,20,30,0.4);color:#E05060;">⬇ 부적 저장하기 (SVG)</button>`;
+
+  btn.textContent = '✦ 부적 다시 생성하기';
+  btn.disabled = false;
+}
+
+function makeBujeokSVG(params) {
+  const W = 280, H = 400;
+  const { purpose='수호', mainHanja='守護平安', subHanja='吉祥', colorTheme='홍' } = params;
+
+  // 오방색 — 홍/청/황/백/흑
+  const S = {
+    '홍': {bg:'#9C0F17', bg2:'#6A080E', accent:'#FFD070', ink:'#0A0000', brd:'#FFB030'},
+    '청': {bg:'#0C2348', bg2:'#071525', accent:'#C9A84C', ink:'#D8ECF8', brd:'#C9A84C'},
+    '황': {bg:'#9E7008', bg2:'#6A4B04', accent:'#C81A1A', ink:'#180A00', brd:'#C81A1A'},
+    '백': {bg:'#EDE6DC', bg2:'#D4C8B8', accent:'#8B0000', ink:'#180800', brd:'#8B0000'},
+    '흑': {bg:'#0E0E0E', bg2:'#040404', accent:'#C9A84C', ink:'#E8D4A0', brd:'#C9A84C'},
+  };
+  const c = S[colorTheme] || S['홍'];
+  const uid = 'bj' + Math.random().toString(36).slice(2, 7);
+
+  // Purpose → trigram
+  const triMap = {'재물운':'☵','사랑운':'☱','건강운':'☰','수호':'☳','성공운':'☴'};
+  const tri = triMap[purpose] || '☰';
+
+  // Thunder/zigzag separator
+  function thunder(x1, y, x2, segs=14, amp=4) {
+    const seg=(x2-x1)/segs; let d=`M ${x1} ${y}`;
+    for(let i=0;i<segs;i++){const mx=x1+seg*(i+0.5),my=y+(i%2===0?-amp:amp);d+=` L ${mx} ${my} L ${x1+seg*(i+1)} ${y}`;}
+    return `<path d="${d}" stroke="${c.accent}" stroke-width="1.2" fill="none" opacity="0.82"/>`;
+  }
+
+  // Corner cross ornament
+  function cross(x, y, r=8) {
+    return `<line x1="${x-r}" y1="${y}" x2="${x+r}" y2="${y}" stroke="${c.accent}" stroke-width="1.5"/>`+
+      `<line x1="${x}" y1="${y-r}" x2="${x}" y2="${y+r}" stroke="${c.accent}" stroke-width="1.5"/>`+
+      `<circle cx="${x}" cy="${y}" r="${r*0.32}" fill="${c.accent}"/>`;
+  }
+
+  // Side vertical dot strip
+  function vdots(x, y1, y2, n=11) {
+    const step=(y2-y1)/n; let out='';
+    for(let i=0;i<=n;i++) out+=`<circle cx="${x}" cy="${y1+step*i}" r="${i%2===0?2:1.2}" fill="${c.accent}" opacity="${i%2===0?0.68:0.32}"/>`;
+    return out;
+  }
+
+  // Pre-compute parts
+  const corners = cross(5,5)+cross(W-5,5)+cross(5,H-5)+cross(W-5,H-5);
+  const dots    = vdots(21,40,H-40)+vdots(W-21,40,H-40);
+  const tThu    = thunder(28,42,W-28,14,4);
+  const mThu    = thunder(24,140,W-24,16,4);
+  const bThu    = thunder(24,278,W-24,16,4);
+
+  const triRow = ['☰','☱','☲','☳','☴','☵','☶','☷'].map((t,i) => {
+    const x = W/2 - 84 + i*24;
+    return `<text x="${x}" y="130" text-anchor="middle" font-size="${t===tri?15:10}" fill="${c.accent}" opacity="${t===tri?1:0.38}">${t}</text>`;
+  }).join('');
+
+  // Main 한자 layout
+  const chars = [...mainHanja].slice(0,4);
+  const cn = chars.length;
+  let charSVG = '';
+  const FF = `font-family="'Noto Serif KR','Noto Serif SC',serif" font-weight="900"`;
+
+  if (cn <= 2) {
+    const fs=84, sp=76;
+    chars.forEach((ch,i) => {
+      const x = W/2+(i-(cn-1)/2)*sp;
+      charSVG += `<text x="${x}" y="237" text-anchor="middle" font-size="${fs}" fill="none" stroke="${c.accent}" stroke-width="0.5" opacity="0.28" ${FF}>${ch}</text>`;
+      charSVG += `<text x="${x}" y="237" text-anchor="middle" font-size="${fs}" fill="${c.ink}" ${FF}>${ch}</text>`;
+    });
+  } else if (cn === 4) {
+    const fs=64, dx=60, dy=64;
+    chars.forEach((ch,i) => {
+      const x=W/2+((i%2)-0.5)*dx, y=202+Math.floor(i/2)*dy;
+      charSVG += `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs}" fill="none" stroke="${c.accent}" stroke-width="0.5" opacity="0.28" ${FF}>${ch}</text>`;
+      charSVG += `<text x="${x}" y="${y}" text-anchor="middle" font-size="${fs}" fill="${c.ink}" ${FF}>${ch}</text>`;
+    });
+  } else {
+    const fs=72, sp=66;
+    chars.forEach((ch,i) => {
+      const x=W/2+(i-(cn-1)/2)*sp;
+      charSVG += `<text x="${x}" y="240" text-anchor="middle" font-size="${fs}" fill="none" stroke="${c.accent}" stroke-width="0.5" opacity="0.28" ${FF}>${ch}</text>`;
+      charSVG += `<text x="${x}" y="240" text-anchor="middle" font-size="${fs}" fill="${c.ink}" ${FF}>${ch}</text>`;
+    });
+  }
+
+  // Sub 한자 (2 chars)
+  const subSVG = [...subHanja].slice(0,2).map((ch,i) => {
+    const x=W/2+(i-0.5)*38;
+    return `<text x="${x}" y="331" text-anchor="middle" font-size="30" fill="${c.accent}" font-family="'Noto Serif KR',serif" font-weight="700">${ch}</text>`;
+  }).join('');
+
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="pbg${uid}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="${c.bg}"/><stop offset="100%" stop-color="${c.bg2}"/>
+  </linearGradient>
+  <radialGradient id="pgl${uid}" cx="50%" cy="48%" r="52%">
+    <stop offset="0%" stop-color="${c.accent}" stop-opacity="0.13"/>
+    <stop offset="100%" stop-color="${c.accent}" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="${W}" height="${H}" fill="url(#pbg${uid})" rx="3"/>
+<ellipse cx="${W/2}" cy="${H*0.47}" rx="115" ry="165" fill="url(#pgl${uid})"/>
+<rect x="5" y="5" width="${W-10}" height="${H-10}" fill="none" stroke="${c.brd}" stroke-width="2.5" rx="2"/>
+<rect x="11" y="11" width="${W-22}" height="${H-22}" fill="none" stroke="${c.brd}" stroke-width="0.7" rx="1" opacity="0.58"/>
+${corners}${dots}
+<text x="${W/2}" y="33" text-anchor="middle" font-size="9.5" fill="${c.accent}" font-family="serif" letter-spacing="7" opacity="0.88">天 符 印</text>
+${tThu}
+<circle cx="${W/2}" cy="80" r="28" fill="none" stroke="${c.accent}" stroke-width="1.5" opacity="0.78"/>
+<circle cx="${W/2}" cy="80" r="22" fill="none" stroke="${c.accent}" stroke-width="0.5" opacity="0.42"/>
+<text x="${W/2}" y="93" text-anchor="middle" font-size="29" fill="${c.accent}">${tri}</text>
+${triRow}
+${mThu}
+${charSVG}
+${bThu}
+${subSVG}
+<line x1="${W/2-42}" y1="346" x2="${W/2+42}" y2="346" stroke="${c.accent}" stroke-width="0.7" opacity="0.48"/>
+<text x="${W/2}" y="369" text-anchor="middle" font-size="9.5" fill="${c.accent}" letter-spacing="2.5" opacity="0.75" font-family="serif">✦ 萬事如意 ✦</text>
+<line x1="${W/2-42}" y1="374" x2="${W/2+42}" y2="374" stroke="${c.accent}" stroke-width="0.7" opacity="0.48"/>
+<text x="${W-16}" y="${H-9}" text-anchor="end" font-size="8.5" fill="${c.accent}" opacity="0.42">${purpose}</text>
+</svg>`;
+}
+
+function downloadBujeok() {
+  const svgEl = document.querySelector('#mx-bujeok-display svg');
+  if (!svgEl) return;
+  const serializer = new XMLSerializer();
+  let svgStr = serializer.serializeToString(svgEl);
+  if (!svgStr.startsWith('<?xml')) svgStr = '<?xml version="1.0" encoding="UTF-8"?>' + svgStr;
+  const blob = new Blob([svgStr], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `fatemix_부적_${Date.now()}.svg`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+//
+//
 let drTopicVal='전체';
 function drTopic(btn,t){
   drTopicVal=t;
