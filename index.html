@@ -352,6 +352,69 @@ body::before{
   to   { opacity:1; transform:translateY(0); }
 }
 
+/* 오늘의 운세 배너 */
+@keyframes oraclePulse {
+  0%,100%{ box-shadow:0 0 0 0 rgba(201,168,76,0); }
+  50%    { box-shadow:0 0 18px 2px rgba(201,168,76,0.14); }
+}
+@keyframes oracleFadeIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes oracleShimmer {
+  0%   { background-position:-200% center; }
+  100% { background-position:200% center; }
+}
+.today-oracle{
+  margin:0 20px 20px;max-width:680px;margin-left:auto;margin-right:auto;
+  background:linear-gradient(135deg,#12122A 0%,#0E0E1C 55%,#161024 100%);
+  border:1px solid rgba(201,168,76,0.42);border-radius:20px;
+  padding:20px;position:relative;overflow:hidden;
+  animation:oracleFadeIn 0.6s ease-out,oraclePulse 4s ease-in-out 1s infinite;
+}
+.today-oracle::before{
+  content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(ellipse at 85% 10%,rgba(140,80,200,0.06) 0%,transparent 55%),
+             radial-gradient(ellipse at 10% 90%,rgba(201,168,76,0.07) 0%,transparent 50%);
+}
+.oracle-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.oracle-date{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold);font-weight:400;line-height:1.4;}
+.oracle-label{font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:0.22em;font-family:'Cinzel Decorative',serif;margin-bottom:3px;}
+.oracle-iljin-name{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);line-height:1;}
+.oracle-iljin-sub{font-size:12px;color:var(--text-2);margin-top:4px;}
+.oracle-body{display:flex;gap:16px;align-items:flex-start;}
+.oracle-card-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.oracle-card-sub{font-size:10px;color:var(--text-3);letter-spacing:0.06em;text-align:center;line-height:1.4;}
+.oracle-right{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;}
+.oracle-card-title{font-size:14px;font-weight:600;color:var(--gold-light);}
+.oracle-card-key{font-size:12px;color:var(--text-3);line-height:1.5;margin-top:2px;}
+.oracle-fortune-box{
+  font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);
+  line-height:1.9;padding:11px 14px;
+  background:rgba(201,168,76,0.05);
+  border-radius:10px;border-left:2px solid rgba(201,168,76,0.5);
+}
+.oracle-fortune-loading{
+  font-size:13px;color:var(--text-3);
+  background:linear-gradient(90deg,var(--text-3) 25%,var(--text-2) 50%,var(--text-3) 75%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:oracleShimmer 1.8s linear infinite;
+}
+.oracle-refresh{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;color:var(--text-3);background:none;border:none;
+  cursor:pointer;padding:0;font-family:inherit;transition:color 0.2s;
+  align-self:flex-end;
+}
+.oracle-refresh:hover{color:var(--gold);}
+.luck-gil{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(201,168,76,0.1);border:0.5px solid rgba(201,168,76,0.35);color:var(--gold);}
+.luck-mid{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(112,168,232,0.08);border:0.5px solid rgba(112,168,232,0.3);color:var(--blue);}
+.luck-pil{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:var(--text-3);}
+
 </style>
 </head>
 <body>
@@ -460,6 +523,49 @@ body::before{
   <div class="home-header">
     <div class="home-logo">Fate<em>Mix</em></div>
     <div class="home-tagline">운명의 교차점에서 답을 찾다</div>
+  </div>
+
+  <!-- 오늘의 운세 -->
+  <div class="today-oracle" id="today-oracle-section">
+    <!-- 배경 장식 -->
+    <div style="position:absolute;top:-24px;right:-16px;font-size:110px;opacity:0.04;pointer-events:none;line-height:1;">☽</div>
+    <div style="position:absolute;bottom:-18px;left:4px;font-size:80px;opacity:0.03;pointer-events:none;line-height:1;">✦</div>
+
+    <!-- 헤더: 날짜 + 일진 -->
+    <div class="oracle-header">
+      <div>
+        <div class="oracle-label">TODAY'S ORACLE</div>
+        <div class="oracle-date" id="tf-date-display"></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="oracle-label" style="text-align:right;">오늘의 일진</div>
+        <div class="oracle-iljin-name" id="tf-iljin-name"></div>
+        <div class="oracle-iljin-sub" id="tf-iljin-sub"></div>
+      </div>
+    </div>
+
+    <!-- 본문: 카드 + 텍스트 -->
+    <div class="oracle-body">
+      <!-- 타로 카드 -->
+      <div class="oracle-card-wrap">
+        <div id="tf-card-svg"></div>
+        <div class="oracle-card-sub" id="tf-card-dir"></div>
+      </div>
+
+      <!-- 카드 정보 + AI 운세 -->
+      <div class="oracle-right">
+        <div>
+          <div class="oracle-card-title" id="tf-card-name"></div>
+          <div class="oracle-card-key" id="tf-card-key"></div>
+        </div>
+        <div class="oracle-fortune-box" id="tf-fortune-box">
+          <span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>
+        </div>
+        <button class="oracle-refresh" id="tf-refresh-btn" onclick="refreshTodayFortune()">
+          ↻ 운세 다시 보기
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 철학 문구 -->
@@ -9305,6 +9411,90 @@ async function analyzeRune(){
   btn.disabled=false; btn.textContent='✦ AI 룬 심층 해석';
 }
 
+// ============================================================
+// 오늘의 운세
+// ============================================================
+const JI_LUCK_CLASS = ['luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid'];
+const JI_LUCK_LABEL = ['吉','平','中吉','吉','平','中吉','吉','平','中吉','吉','平','中吉'];
+const JI_DESC = ['지혜·안정','인내·충실','진취·시작','유연·성장','변화·도전','열정·집중','활력·명예','온화·완성','결단·예리','수확·정밀','수호·마무리','깊은 내면'];
+
+function initTodayFortune() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  // 날짜 표시
+  const DOW = ['일','월','화','수','목','금','토'];
+  document.getElementById('tf-date-display').textContent =
+    `${y}년 ${m}월 ${d}일 (${DOW[now.getDay()]}요일)`;
+
+  // 일진 계산
+  const dp = getDP(y, m, d);
+  const iljinName = 천간[dp.g] + 지지[dp.j] + '일';
+  const luckCls  = JI_LUCK_CLASS[dp.j];
+  const luckLbl  = JI_LUCK_LABEL[dp.j];
+  const iljinOh  = 천간오행[dp.g];
+  document.getElementById('tf-iljin-name').textContent = iljinName;
+  document.getElementById('tf-iljin-sub').innerHTML =
+    `<span class="${luckCls}">${luckLbl}</span> <span style="color:var(--text-3);font-size:11px;">${JI_DESC[dp.j]}</span>`;
+
+  // 오늘의 타로 카드 (날짜 시드 — 항상 동일)
+  const cards = allCards();
+  const seed  = y * 10000 + m * 100 + d;
+  const card  = {...cards[seed % cards.length], isRev: (seed % 11 === 0)};
+
+  document.getElementById('tf-card-svg').innerHTML  = makeCardSVG(card, 78, 128);
+  document.getElementById('tf-card-name').textContent = card.name;
+  document.getElementById('tf-card-key').textContent  = card.isRev ? card.rev : card.key;
+  document.getElementById('tf-card-dir').innerHTML =
+    `<span style="color:${card.isRev?'#E87070':'var(--text-3)'};">${card.isRev?'▽ 역방향':'△ 정방향'}</span>`;
+
+  // AI 한줄 운세 (localStorage 캐시)
+  const cacheKey = `today_fortune_${dateKey}`;
+  const cached   = localStorage.getItem(cacheKey);
+  if (cached) {
+    showTodayFortune(cached);
+  } else {
+    loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey);
+  }
+}
+
+async function loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey) {
+  document.getElementById('tf-fortune-box').innerHTML =
+    `<span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>`;
+  document.getElementById('tf-refresh-btn').disabled = true;
+  try {
+    const sys = '당신은 동양 명리학과 타로를 아우르는 신비로운 점술사입니다. 짧고 시적인 한국어 문장으로 답합니다.';
+    const msg = `오늘은 ${y}년 ${m}월 ${d}일, 일진은 ${iljinName}(${iljinOh}의 기운), 오늘의 타로 카드는 "${card.name}"(${card.isRev?card.rev:card.key})입니다. 오늘의 운세를 한 문장(25자 이내)으로 써주세요. 따옴표 없이, 시적이고 희망적으로.`;
+    const raw  = await callGemini(sys, msg, 150);
+    const text = raw.trim().replace(/^["「『]|["」』]$/g, '');
+    localStorage.setItem(cacheKey, text);
+    showTodayFortune(text);
+  } catch(e) {
+    document.getElementById('tf-fortune-box').innerHTML =
+      `<span style="color:var(--text-3);font-size:13px;">운세를 불러올 수 없습니다</span>`;
+  }
+  document.getElementById('tf-refresh-btn').disabled = false;
+}
+
+function showTodayFortune(text) {
+  document.getElementById('tf-fortune-box').innerHTML =
+    `<span style="opacity:0.55;font-size:13px;margin-right:4px;">"</span>${text}<span style="opacity:0.55;font-size:13px;margin-left:4px;">"</span>`;
+}
+
+function refreshTodayFortune() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  localStorage.removeItem(`today_fortune_${dateKey}`);
+  const dp   = getDP(y, m, d);
+  const seed = y * 10000 + m * 100 + d;
+  const card = {...allCards()[seed % allCards().length], isRev: (seed % 11 === 0)};
+  loadTodayFortune(y, m, d,
+    천간[dp.g]+지지[dp.j]+'일', 천간오행[dp.g], card,
+    `today_fortune_${dateKey}`);
+}
+
 async function callGemini(sys,userMsg,maxTok=1200){
   const res=await fetch('/api/gemini',
     {method:'POST',headers:{'Content-Type':'application/json'},
@@ -9313,6 +9503,9 @@ async function callGemini(sys,userMsg,maxTok=1200){
   if(d.text) return d.text;
   throw new Error(d.error||'Gemini 오류');
 }
+
+// 오늘의 운세 초기화 (페이지 로드시)
+document.addEventListener('DOMContentLoaded', () => { initTodayFortune(); });
 </script>
 </body>
 </html>
