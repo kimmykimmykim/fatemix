@@ -634,11 +634,6 @@ body::before{
         <div class="menu-name">점성술</div>
         <div class="menu-desc" style="font-size:11px;">태어난 순간 행성들의 위치로 성격·재능·인연의 패턴을 읽는 서양 점성술</div>
       </div>
-      <div class="menu-item" onclick="go('gunghap')" style="padding:14px 10px;">
-        <div class="menu-icon">💞</div>
-        <div class="menu-name">궁합</div>
-        <div class="menu-desc" style="font-size:11px;">두 사주의 오행 충·합·극 관계로 인연의 깊이와 함께하는 삶의 흐름을 읽음</div>
-      </div>
     </div>
   </div>
 
@@ -1279,6 +1274,7 @@ const MIX_CATS = [
   {id:'rune',    name:'룬',           icon:'ᚱ'},
   {id:'egypt',   name:'이집트점성술', icon:'𓂀'},
   {id:'seong',   name:'성명학',       icon:'文'},
+  {id:'gunghap', name:'궁합',         icon:'💞'},
 ];
 
 function mxSetMax(n, el){
@@ -1301,18 +1297,19 @@ function renderMxCats(){
   const normalSelected=mxSelected.filter(id=>id!=='tarot'&&id!=='rune');
   let html='';
   MIX_CATS.forEach(cat=>{
+    const isGunghap=cat.id==='gunghap';
     const sel=mxSelected.includes(cat.id);
     // 타로/룬은 MX_MAX 제한 없이 항상 선택 가능
     const isTarotRune=cat.id==='tarot'||cat.id==='rune';
-    const disabled=!isTarotRune&&!sel&&normalSelected.length>=MX_MAX;
+    const disabled=!isGunghap&&!isTarotRune&&!sel&&normalSelected.length>=MX_MAX;
     html+=`<div onclick="${disabled?'':'mxToggleCat(\''+cat.id+'\')'}"
       style="display:flex;align-items:center;gap:10px;padding:10px 12px;
       background:var(--dark3);border-radius:8px;cursor:${disabled?'not-allowed':'pointer'};
-      border:0.5px solid ${sel?'rgba(201,168,76,0.7)':'var(--border)'};
+      border:0.5px solid ${isGunghap?'rgba(232,112,112,0.45)':sel?'rgba(201,168,76,0.7)':'var(--border)'};
       opacity:${disabled?'0.4':'1'};transition:all 0.2s;">
-      <div style="font-size:16px;color:${sel?'var(--gold)':'var(--text-3)'};">${cat.icon}</div>
-      <div style="font-size:13px;color:${sel?'var(--gold)':'var(--text)'};">${cat.name}</div>
-      ${sel?'<div style="margin-left:auto;color:var(--gold);font-size:12px;">✓</div>':''}
+      <div style="font-size:16px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text-3)'};">${cat.icon}</div>
+      <div style="font-size:13px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text)'};">${cat.name}</div>
+      ${isGunghap?'<div style="margin-left:auto;color:#E87070;font-size:10px;letter-spacing:0.05em;">→</div>':sel?'<div style="margin-left:auto;color:var(--gold);font-size:12px;">✓</div>':''}
     </div>`;
   });
   grid.innerHTML=html;
@@ -1348,6 +1345,7 @@ function renderMxCats(){
 }
 
 function mxToggleCat(id){
+  if(id==='gunghap'){ go('gunghap'); return; }
   if(mxSelected.includes(id)){
     mxSelected=mxSelected.filter(s=>s!==id);
   } else {
