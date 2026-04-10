@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FateMix</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --gold: #C9A84C;
@@ -14,9 +14,9 @@
   --dark2: #14142A;
   --dark3: #1C1C32;
   --dark4: #242440;
-  --text: #F0EDE6;
-  --text-2: #C4BFB5;
-  --text-3: #8A847C;
+  --text: #F4F1EC;
+  --text-2: #D2CEC8;
+  --text-3: #ADA7A0;
   --border: rgba(201,168,76,0.22);
   --border-2: rgba(201,168,76,0.1);
   --red: #E87070;
@@ -24,7 +24,7 @@
   --blue: #70A8E8;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--dark);color:var(--text);font-family:'Noto Serif KR',serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--dark);color:var(--text);font-family:'Gowun Dodum','Noto Serif KR',sans-serif;min-height:100vh;overflow-x:hidden;}
 
 /* 배경 별빛 */
 body::before{
@@ -44,7 +44,7 @@ body::before{
   display:inline-flex;align-items:center;gap:8px;
   color:var(--text-2);font-size:15px;letter-spacing:0.08em;
   background:none;border:none;cursor:pointer;padding:20px 0 0;
-  font-family:'Noto Serif KR',serif;transition:color 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;transition:color 0.2s;
 }
 .back-btn:hover{color:var(--gold);}
 .page-title{
@@ -52,13 +52,13 @@ body::before{
   font-size:34px;font-weight:300;color:var(--gold);
   letter-spacing:0.08em;margin:20px 0 6px;
 }
-.page-subtitle{font-size:14px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
+.page-subtitle{font-size:15px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
 .card{background:var(--dark2);border:0.5px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
-.label{font-size:13px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;}
+.label{font-size:14px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
 .input{
   width:100%;background:#1E1E2E;border:0.5px solid rgba(201,168,76,0.3);
   border-radius:10px;padding:13px 16px;color:#EDE9DF;font-size:16px;
-  font-family:'Noto Serif KR',serif;outline:none;transition:border-color 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;outline:none;transition:border-color 0.2s;
 }
 .input:focus{border-color:var(--gold);background:#252535;}
 .input::placeholder{color:#6A6580;}
@@ -66,7 +66,7 @@ body::before{
 .primary-btn{
   width:100%;padding:17px;background:linear-gradient(135deg,#C9A84C 0%,#9A7830 100%);
   border:none;border-radius:10px;color:#080810;font-size:16px;font-weight:600;
-  font-family:'Noto Serif KR',serif;cursor:pointer;letter-spacing:0.1em;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;letter-spacing:0.05em;
   transition:opacity 0.2s;margin-top:4px;
 }
 .primary-btn:hover{opacity:0.88;}
@@ -74,8 +74,8 @@ body::before{
 .ghost-btn{
   width:100%;padding:14px;background:transparent;
   border:0.5px solid var(--border);border-radius:10px;color:var(--text-2);
-  font-size:15px;font-family:'Noto Serif KR',serif;cursor:pointer;
-  letter-spacing:0.06em;transition:all 0.2s;margin-top:8px;
+  font-size:15px;font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;
+  letter-spacing:0.04em;transition:all 0.2s;margin-top:8px;
 }
 .ghost-btn:hover{border-color:var(--gold);color:var(--gold);}
 .divider{height:0.5px;background:var(--border-2);margin:20px 0;}
@@ -84,14 +84,14 @@ body::before{
   color:var(--gold);border:0.5px solid var(--gold);
   padding:4px 12px;border-radius:12px;text-transform:uppercase;margin-bottom:12px;
 }
-.result-text{font-size:16px;line-height:2.3;color:var(--text);white-space:pre-wrap;word-break:keep-all;}
+.result-text{font-size:17px;line-height:2.4;color:var(--text);white-space:pre-wrap;word-break:keep-all;}
 
 /* 탭 선택 */
 .toggle-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .toggle-btn{
   padding:9px 18px;border-radius:20px;border:0.5px solid rgba(201,168,76,0.25);
-  background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:14px;
-  font-family:'Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
+  background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:15px;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
 }
 .toggle-btn.active,.toggle-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -100,7 +100,7 @@ body::before{
 .gender-btn{
   flex:1;padding:12px;border-radius:8px;border:0.5px solid var(--border);
   background:transparent;color:var(--text-2);font-size:15px;
-  font-family:'Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
 }
 .gender-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -352,6 +352,69 @@ body::before{
   to   { opacity:1; transform:translateY(0); }
 }
 
+/* 오늘의 운세 배너 */
+@keyframes oraclePulse {
+  0%,100%{ box-shadow:0 0 0 0 rgba(201,168,76,0); }
+  50%    { box-shadow:0 0 18px 2px rgba(201,168,76,0.14); }
+}
+@keyframes oracleFadeIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes oracleShimmer {
+  0%   { background-position:-200% center; }
+  100% { background-position:200% center; }
+}
+.today-oracle{
+  margin:0 20px 20px;max-width:680px;margin-left:auto;margin-right:auto;
+  background:linear-gradient(135deg,#12122A 0%,#0E0E1C 55%,#161024 100%);
+  border:1px solid rgba(201,168,76,0.42);border-radius:20px;
+  padding:20px;position:relative;overflow:hidden;
+  animation:oracleFadeIn 0.6s ease-out,oraclePulse 4s ease-in-out 1s infinite;
+}
+.today-oracle::before{
+  content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  background:radial-gradient(ellipse at 85% 10%,rgba(140,80,200,0.06) 0%,transparent 55%),
+             radial-gradient(ellipse at 10% 90%,rgba(201,168,76,0.07) 0%,transparent 50%);
+}
+.oracle-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.oracle-date{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold);font-weight:400;line-height:1.4;}
+.oracle-label{font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:0.22em;font-family:'Cinzel Decorative',serif;margin-bottom:3px;}
+.oracle-iljin-name{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);line-height:1;}
+.oracle-iljin-sub{font-size:12px;color:var(--text-2);margin-top:4px;}
+.oracle-body{display:flex;gap:16px;align-items:flex-start;}
+.oracle-card-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.oracle-card-sub{font-size:10px;color:var(--text-3);letter-spacing:0.06em;text-align:center;line-height:1.4;}
+.oracle-right{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;}
+.oracle-card-title{font-size:14px;font-weight:600;color:var(--gold-light);}
+.oracle-card-key{font-size:12px;color:var(--text-3);line-height:1.5;margin-top:2px;}
+.oracle-fortune-box{
+  font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);
+  line-height:1.9;padding:11px 14px;
+  background:rgba(201,168,76,0.05);
+  border-radius:10px;border-left:2px solid rgba(201,168,76,0.5);
+}
+.oracle-fortune-loading{
+  font-size:13px;color:var(--text-3);
+  background:linear-gradient(90deg,var(--text-3) 25%,var(--text-2) 50%,var(--text-3) 75%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:oracleShimmer 1.8s linear infinite;
+}
+.oracle-refresh{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;color:var(--text-3);background:none;border:none;
+  cursor:pointer;padding:0;font-family:inherit;transition:color 0.2s;
+  align-self:flex-end;
+}
+.oracle-refresh:hover{color:var(--gold);}
+.luck-gil{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(201,168,76,0.1);border:0.5px solid rgba(201,168,76,0.35);color:var(--gold);}
+.luck-mid{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(112,168,232,0.08);border:0.5px solid rgba(112,168,232,0.3);color:var(--blue);}
+.luck-pil{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+  background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:var(--text-3);}
+
 </style>
 </head>
 <body>
@@ -460,6 +523,49 @@ body::before{
   <div class="home-header">
     <div class="home-logo">Fate<em>Mix</em></div>
     <div class="home-tagline">운명의 교차점에서 답을 찾다</div>
+  </div>
+
+  <!-- 오늘의 운세 -->
+  <div class="today-oracle" id="today-oracle-section">
+    <!-- 배경 장식 -->
+    <div style="position:absolute;top:-24px;right:-16px;font-size:110px;opacity:0.04;pointer-events:none;line-height:1;">☽</div>
+    <div style="position:absolute;bottom:-18px;left:4px;font-size:80px;opacity:0.03;pointer-events:none;line-height:1;">✦</div>
+
+    <!-- 헤더: 날짜 + 일진 -->
+    <div class="oracle-header">
+      <div>
+        <div class="oracle-label">TODAY'S ORACLE</div>
+        <div class="oracle-date" id="tf-date-display"></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="oracle-label" style="text-align:right;">오늘의 일진</div>
+        <div class="oracle-iljin-name" id="tf-iljin-name"></div>
+        <div class="oracle-iljin-sub" id="tf-iljin-sub"></div>
+      </div>
+    </div>
+
+    <!-- 본문: 카드 + 텍스트 -->
+    <div class="oracle-body">
+      <!-- 타로 카드 -->
+      <div class="oracle-card-wrap">
+        <div id="tf-card-svg"></div>
+        <div class="oracle-card-sub" id="tf-card-dir"></div>
+      </div>
+
+      <!-- 카드 정보 + AI 운세 -->
+      <div class="oracle-right">
+        <div>
+          <div class="oracle-card-title" id="tf-card-name"></div>
+          <div class="oracle-card-key" id="tf-card-key"></div>
+        </div>
+        <div class="oracle-fortune-box" id="tf-fortune-box">
+          <span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>
+        </div>
+        <button class="oracle-refresh" id="tf-refresh-btn" onclick="refreshTodayFortune()">
+          ↻ 운세 다시 보기
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 철학 문구 -->
@@ -641,34 +747,73 @@ body::before{
 
       <!-- 시진 선택 -->
       <div id="sj-shijin-picker">
-        <select class="input" id="sj-shijin-select" onchange="sjShijinSelect(this.value)">
-          <option value="23">자시 (子時) 23:00~01:00</option>
-          <option value="1">축시 (丑時) 01:00~03:00</option>
-          <option value="3">인시 (寅時) 03:00~05:00</option>
-          <option value="5">묘시 (卯時) 05:00~07:00</option>
-          <option value="7">진시 (辰時) 07:00~09:00</option>
-          <option value="9">사시 (巳時) 09:00~11:00</option>
-          <option value="11">오시 (午時) 11:00~13:00</option>
-          <option value="13">미시 (未時) 13:00~15:00</option>
-          <option value="15">신시 (申時) 15:00~17:00</option>
-          <option value="17">유시 (酉時) 17:00~19:00</option>
-          <option value="19">술시 (戌時) 19:00~21:00</option>
-          <option value="21">해시 (亥時) 21:00~23:00</option>
-        </select>
+        <div id="sj-shijin-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+          <button class="toggle-btn sj-shi-btn active" onclick="sjSelectShijin(23,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">자시</span>
+            <span style="font-size:11px;color:var(--text-3);">23~01시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(1,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">축시</span>
+            <span style="font-size:11px;color:var(--text-3);">01~03시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(3,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">인시</span>
+            <span style="font-size:11px;color:var(--text-3);">03~05시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(5,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">묘시</span>
+            <span style="font-size:11px;color:var(--text-3);">05~07시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(7,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">진시</span>
+            <span style="font-size:11px;color:var(--text-3);">07~09시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(9,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">사시</span>
+            <span style="font-size:11px;color:var(--text-3);">09~11시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(11,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">오시</span>
+            <span style="font-size:11px;color:var(--text-3);">11~13시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(13,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">미시</span>
+            <span style="font-size:11px;color:var(--text-3);">13~15시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(15,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">신시</span>
+            <span style="font-size:11px;color:var(--text-3);">15~17시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(17,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">유시</span>
+            <span style="font-size:11px;color:var(--text-3);">17~19시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(19,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">술시</span>
+            <span style="font-size:11px;color:var(--text-3);">19~21시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(21,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">해시</span>
+            <span style="font-size:11px;color:var(--text-3);">21~23시</span>
+          </button>
+        </div>
       </div>
 
       <!-- 직접 입력 -->
       <div id="sj-direct-picker" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
           <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">시</div>
-            <input class="input" type="number" id="sj-hour" value="" min="0" max="23" placeholder="0~23">
+            <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">시 (0~23)</div>
+            <input class="input" type="number" id="sj-hour" value="" min="0" max="23" placeholder="예) 14" oninput="sjUpdateShijin()">
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">분</div>
-            <input class="input" type="number" id="sj-min" value="" min="0" max="59" placeholder="0~59">
+            <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">분 (0~59)</div>
+            <input class="input" type="number" id="sj-min" value="" min="0" max="59" placeholder="예) 30">
           </div>
         </div>
+        <div id="sj-shijin-display" style="display:none;font-size:14px;padding:11px 16px;
+          background:var(--dark3);border-radius:10px;border:0.5px solid var(--border);
+          line-height:1.8;"></div>
       </div>
     </div>
 
@@ -2027,6 +2172,28 @@ function sjTimeMode(val, btn){
 
 function sjShijinSelect(val){
   sjShijinHour = +val;
+}
+
+function sjSelectShijin(hourVal, btn){
+  sjShijinHour = hourVal;
+  document.querySelectorAll('#sj-shijin-grid .sj-shi-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function sjUpdateShijin(){
+  const hv = document.getElementById('sj-hour').value;
+  const el = document.getElementById('sj-shijin-display');
+  if(hv===''||hv===null){el.style.display='none';return;}
+  const h = ((+hv%24)+24)%24;
+  const names = ['자시','축시','인시','묘시','진시','사시','오시','미시','신시','유시','술시','해시'];
+  const hanjas = ['子時','丑時','寅時','卯時','辰時','巳時','午時','未時','申時','酉時','戌時','亥時'];
+  const ranges = ['23~01시','01~03시','03~05시','05~07시','07~09시','09~11시','11~13시','13~15시','15~17시','17~19시','19~21시','21~23시'];
+  let ji;
+  if(h>=23||h<1) ji=0; else if(h<3) ji=1; else if(h<5) ji=2; else if(h<7) ji=3;
+  else if(h<9) ji=4; else if(h<11) ji=5; else if(h<13) ji=6; else if(h<15) ji=7;
+  else if(h<17) ji=8; else if(h<19) ji=9; else if(h<21) ji=10; else ji=11;
+  el.style.display='block';
+  el.innerHTML = `<span style="color:var(--text-2)">${h}시 →</span> <strong style="color:var(--gold);font-size:16px;">${names[ji]}</strong> <span style="color:var(--text-3);font-size:12px;">${hanjas[ji]}</span> <span style="color:var(--text-3);font-size:12px;">(${ranges[ji]})</span>`;
 }
 
 function sjGender(g,btn){
@@ -9244,6 +9411,90 @@ async function analyzeRune(){
   btn.disabled=false; btn.textContent='✦ AI 룬 심층 해석';
 }
 
+// ============================================================
+// 오늘의 운세
+// ============================================================
+const JI_LUCK_CLASS = ['luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','luck-mid'];
+const JI_LUCK_LABEL = ['吉','平','中吉','吉','平','中吉','吉','平','中吉','吉','平','中吉'];
+const JI_DESC = ['지혜·안정','인내·충실','진취·시작','유연·성장','변화·도전','열정·집중','활력·명예','온화·완성','결단·예리','수확·정밀','수호·마무리','깊은 내면'];
+
+function initTodayFortune() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  // 날짜 표시
+  const DOW = ['일','월','화','수','목','금','토'];
+  document.getElementById('tf-date-display').textContent =
+    `${y}년 ${m}월 ${d}일 (${DOW[now.getDay()]}요일)`;
+
+  // 일진 계산
+  const dp = getDP(y, m, d);
+  const iljinName = 천간[dp.g] + 지지[dp.j] + '일';
+  const luckCls  = JI_LUCK_CLASS[dp.j];
+  const luckLbl  = JI_LUCK_LABEL[dp.j];
+  const iljinOh  = 천간오행[dp.g];
+  document.getElementById('tf-iljin-name').textContent = iljinName;
+  document.getElementById('tf-iljin-sub').innerHTML =
+    `<span class="${luckCls}">${luckLbl}</span> <span style="color:var(--text-3);font-size:11px;">${JI_DESC[dp.j]}</span>`;
+
+  // 오늘의 타로 카드 (날짜 시드 — 항상 동일)
+  const cards = allCards();
+  const seed  = y * 10000 + m * 100 + d;
+  const card  = {...cards[seed % cards.length], isRev: (seed % 11 === 0)};
+
+  document.getElementById('tf-card-svg').innerHTML  = makeCardSVG(card, 78, 128);
+  document.getElementById('tf-card-name').textContent = card.name;
+  document.getElementById('tf-card-key').textContent  = card.isRev ? card.rev : card.key;
+  document.getElementById('tf-card-dir').innerHTML =
+    `<span style="color:${card.isRev?'#E87070':'var(--text-3)'};">${card.isRev?'▽ 역방향':'△ 정방향'}</span>`;
+
+  // AI 한줄 운세 (localStorage 캐시)
+  const cacheKey = `today_fortune_${dateKey}`;
+  const cached   = localStorage.getItem(cacheKey);
+  if (cached) {
+    showTodayFortune(cached);
+  } else {
+    loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey);
+  }
+}
+
+async function loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey) {
+  document.getElementById('tf-fortune-box').innerHTML =
+    `<span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>`;
+  document.getElementById('tf-refresh-btn').disabled = true;
+  try {
+    const sys = '당신은 동양 명리학과 타로를 아우르는 신비로운 점술사입니다. 짧고 시적인 한국어 문장으로 답합니다.';
+    const msg = `오늘은 ${y}년 ${m}월 ${d}일, 일진은 ${iljinName}(${iljinOh}의 기운), 오늘의 타로 카드는 "${card.name}"(${card.isRev?card.rev:card.key})입니다. 오늘의 운세를 한 문장(25자 이내)으로 써주세요. 따옴표 없이, 시적이고 희망적으로.`;
+    const raw  = await callGemini(sys, msg, 150);
+    const text = raw.trim().replace(/^["「『]|["」』]$/g, '');
+    localStorage.setItem(cacheKey, text);
+    showTodayFortune(text);
+  } catch(e) {
+    document.getElementById('tf-fortune-box').innerHTML =
+      `<span style="color:var(--text-3);font-size:13px;">운세를 불러올 수 없습니다</span>`;
+  }
+  document.getElementById('tf-refresh-btn').disabled = false;
+}
+
+function showTodayFortune(text) {
+  document.getElementById('tf-fortune-box').innerHTML =
+    `<span style="opacity:0.55;font-size:13px;margin-right:4px;">"</span>${text}<span style="opacity:0.55;font-size:13px;margin-left:4px;">"</span>`;
+}
+
+function refreshTodayFortune() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  localStorage.removeItem(`today_fortune_${dateKey}`);
+  const dp   = getDP(y, m, d);
+  const seed = y * 10000 + m * 100 + d;
+  const card = {...allCards()[seed % allCards().length], isRev: (seed % 11 === 0)};
+  loadTodayFortune(y, m, d,
+    천간[dp.g]+지지[dp.j]+'일', 천간오행[dp.g], card,
+    `today_fortune_${dateKey}`);
+}
+
 async function callGemini(sys,userMsg,maxTok=1200){
   const res=await fetch('/api/gemini',
     {method:'POST',headers:{'Content-Type':'application/json'},
@@ -9252,6 +9503,9 @@ async function callGemini(sys,userMsg,maxTok=1200){
   if(d.text) return d.text;
   throw new Error(d.error||'Gemini 오류');
 }
+
+// 오늘의 운세 초기화 (페이지 로드시)
+document.addEventListener('DOMContentLoaded', () => { initTodayFortune(); });
 </script>
 </body>
 </html>
