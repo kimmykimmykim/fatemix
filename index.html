@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FateMix</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --gold: #C9A84C;
@@ -14,9 +14,9 @@
   --dark2: #14142A;
   --dark3: #1C1C32;
   --dark4: #242440;
-  --text: #F0EDE6;
-  --text-2: #C4BFB5;
-  --text-3: #8A847C;
+  --text: #F4F1EC;
+  --text-2: #D2CEC8;
+  --text-3: #ADA7A0;
   --border: rgba(201,168,76,0.22);
   --border-2: rgba(201,168,76,0.1);
   --red: #E87070;
@@ -24,7 +24,7 @@
   --blue: #70A8E8;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--dark);color:var(--text);font-family:'Noto Serif KR',serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--dark);color:var(--text);font-family:'Gowun Dodum','Noto Serif KR',sans-serif;min-height:100vh;overflow-x:hidden;}
 
 /* 배경 별빛 */
 body::before{
@@ -44,7 +44,7 @@ body::before{
   display:inline-flex;align-items:center;gap:8px;
   color:var(--text-2);font-size:15px;letter-spacing:0.08em;
   background:none;border:none;cursor:pointer;padding:20px 0 0;
-  font-family:'Noto Serif KR',serif;transition:color 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;transition:color 0.2s;
 }
 .back-btn:hover{color:var(--gold);}
 .page-title{
@@ -52,13 +52,13 @@ body::before{
   font-size:34px;font-weight:300;color:var(--gold);
   letter-spacing:0.08em;margin:20px 0 6px;
 }
-.page-subtitle{font-size:14px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
+.page-subtitle{font-size:15px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
 .card{background:var(--dark2);border:0.5px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
-.label{font-size:13px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;}
+.label{font-size:14px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
 .input{
   width:100%;background:#1E1E2E;border:0.5px solid rgba(201,168,76,0.3);
   border-radius:10px;padding:13px 16px;color:#EDE9DF;font-size:16px;
-  font-family:'Noto Serif KR',serif;outline:none;transition:border-color 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;outline:none;transition:border-color 0.2s;
 }
 .input:focus{border-color:var(--gold);background:#252535;}
 .input::placeholder{color:#6A6580;}
@@ -66,7 +66,7 @@ body::before{
 .primary-btn{
   width:100%;padding:17px;background:linear-gradient(135deg,#C9A84C 0%,#9A7830 100%);
   border:none;border-radius:10px;color:#080810;font-size:16px;font-weight:600;
-  font-family:'Noto Serif KR',serif;cursor:pointer;letter-spacing:0.1em;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;letter-spacing:0.05em;
   transition:opacity 0.2s;margin-top:4px;
 }
 .primary-btn:hover{opacity:0.88;}
@@ -74,8 +74,8 @@ body::before{
 .ghost-btn{
   width:100%;padding:14px;background:transparent;
   border:0.5px solid var(--border);border-radius:10px;color:var(--text-2);
-  font-size:15px;font-family:'Noto Serif KR',serif;cursor:pointer;
-  letter-spacing:0.06em;transition:all 0.2s;margin-top:8px;
+  font-size:15px;font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;
+  letter-spacing:0.04em;transition:all 0.2s;margin-top:8px;
 }
 .ghost-btn:hover{border-color:var(--gold);color:var(--gold);}
 .divider{height:0.5px;background:var(--border-2);margin:20px 0;}
@@ -84,14 +84,14 @@ body::before{
   color:var(--gold);border:0.5px solid var(--gold);
   padding:4px 12px;border-radius:12px;text-transform:uppercase;margin-bottom:12px;
 }
-.result-text{font-size:16px;line-height:2.3;color:var(--text);white-space:pre-wrap;word-break:keep-all;}
+.result-text{font-size:17px;line-height:2.4;color:var(--text);white-space:pre-wrap;word-break:keep-all;}
 
 /* 탭 선택 */
 .toggle-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .toggle-btn{
   padding:9px 18px;border-radius:20px;border:0.5px solid rgba(201,168,76,0.25);
-  background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:14px;
-  font-family:'Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
+  background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:15px;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
 }
 .toggle-btn.active,.toggle-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -100,7 +100,7 @@ body::before{
 .gender-btn{
   flex:1;padding:12px;border-radius:8px;border:0.5px solid var(--border);
   background:transparent;color:var(--text-2);font-size:15px;
-  font-family:'Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
 }
 .gender-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -641,34 +641,73 @@ body::before{
 
       <!-- 시진 선택 -->
       <div id="sj-shijin-picker">
-        <select class="input" id="sj-shijin-select" onchange="sjShijinSelect(this.value)">
-          <option value="23">자시 (子時) 23:00~01:00</option>
-          <option value="1">축시 (丑時) 01:00~03:00</option>
-          <option value="3">인시 (寅時) 03:00~05:00</option>
-          <option value="5">묘시 (卯時) 05:00~07:00</option>
-          <option value="7">진시 (辰時) 07:00~09:00</option>
-          <option value="9">사시 (巳時) 09:00~11:00</option>
-          <option value="11">오시 (午時) 11:00~13:00</option>
-          <option value="13">미시 (未時) 13:00~15:00</option>
-          <option value="15">신시 (申時) 15:00~17:00</option>
-          <option value="17">유시 (酉時) 17:00~19:00</option>
-          <option value="19">술시 (戌時) 19:00~21:00</option>
-          <option value="21">해시 (亥時) 21:00~23:00</option>
-        </select>
+        <div id="sj-shijin-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+          <button class="toggle-btn sj-shi-btn active" onclick="sjSelectShijin(23,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">자시</span>
+            <span style="font-size:11px;color:var(--text-3);">23~01시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(1,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">축시</span>
+            <span style="font-size:11px;color:var(--text-3);">01~03시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(3,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">인시</span>
+            <span style="font-size:11px;color:var(--text-3);">03~05시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(5,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">묘시</span>
+            <span style="font-size:11px;color:var(--text-3);">05~07시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(7,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">진시</span>
+            <span style="font-size:11px;color:var(--text-3);">07~09시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(9,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">사시</span>
+            <span style="font-size:11px;color:var(--text-3);">09~11시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(11,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">오시</span>
+            <span style="font-size:11px;color:var(--text-3);">11~13시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(13,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">미시</span>
+            <span style="font-size:11px;color:var(--text-3);">13~15시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(15,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">신시</span>
+            <span style="font-size:11px;color:var(--text-3);">15~17시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(17,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">유시</span>
+            <span style="font-size:11px;color:var(--text-3);">17~19시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(19,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">술시</span>
+            <span style="font-size:11px;color:var(--text-3);">19~21시</span>
+          </button>
+          <button class="toggle-btn sj-shi-btn" onclick="sjSelectShijin(21,this)" style="padding:10px 4px;text-align:center;line-height:1.5;">
+            <span style="font-size:15px;font-weight:600;display:block;">해시</span>
+            <span style="font-size:11px;color:var(--text-3);">21~23시</span>
+          </button>
+        </div>
       </div>
 
       <!-- 직접 입력 -->
       <div id="sj-direct-picker" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
           <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">시</div>
-            <input class="input" type="number" id="sj-hour" value="" min="0" max="23" placeholder="0~23">
+            <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">시 (0~23)</div>
+            <input class="input" type="number" id="sj-hour" value="" min="0" max="23" placeholder="예) 14" oninput="sjUpdateShijin()">
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">분</div>
-            <input class="input" type="number" id="sj-min" value="" min="0" max="59" placeholder="0~59">
+            <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">분 (0~59)</div>
+            <input class="input" type="number" id="sj-min" value="" min="0" max="59" placeholder="예) 30">
           </div>
         </div>
+        <div id="sj-shijin-display" style="display:none;font-size:14px;padding:11px 16px;
+          background:var(--dark3);border-radius:10px;border:0.5px solid var(--border);
+          line-height:1.8;"></div>
       </div>
     </div>
 
@@ -2027,6 +2066,28 @@ function sjTimeMode(val, btn){
 
 function sjShijinSelect(val){
   sjShijinHour = +val;
+}
+
+function sjSelectShijin(hourVal, btn){
+  sjShijinHour = hourVal;
+  document.querySelectorAll('#sj-shijin-grid .sj-shi-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function sjUpdateShijin(){
+  const hv = document.getElementById('sj-hour').value;
+  const el = document.getElementById('sj-shijin-display');
+  if(hv===''||hv===null){el.style.display='none';return;}
+  const h = ((+hv%24)+24)%24;
+  const names = ['자시','축시','인시','묘시','진시','사시','오시','미시','신시','유시','술시','해시'];
+  const hanjas = ['子時','丑時','寅時','卯時','辰時','巳時','午時','未時','申時','酉時','戌時','亥時'];
+  const ranges = ['23~01시','01~03시','03~05시','05~07시','07~09시','09~11시','11~13시','13~15시','15~17시','17~19시','19~21시','21~23시'];
+  let ji;
+  if(h>=23||h<1) ji=0; else if(h<3) ji=1; else if(h<5) ji=2; else if(h<7) ji=3;
+  else if(h<9) ji=4; else if(h<11) ji=5; else if(h<13) ji=6; else if(h<15) ji=7;
+  else if(h<17) ji=8; else if(h<19) ji=9; else if(h<21) ji=10; else ji=11;
+  el.style.display='block';
+  el.innerHTML = `<span style="color:var(--text-2)">${h}시 →</span> <strong style="color:var(--gold);font-size:16px;">${names[ji]}</strong> <span style="color:var(--text-3);font-size:12px;">${hanjas[ji]}</span> <span style="color:var(--text-3);font-size:12px;">(${ranges[ji]})</span>`;
 }
 
 function sjGender(g,btn){
