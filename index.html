@@ -558,11 +558,9 @@ body::before{
           <div class="oracle-card-title" id="tf-card-name"></div>
           <div class="oracle-card-key" id="tf-card-key"></div>
         </div>
-        <div class="oracle-fortune-box" id="tf-fortune-box">
-          <span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>
-        </div>
+        <div class="oracle-fortune-box" id="tf-fortune-box"></div>
         <button class="oracle-refresh" id="tf-refresh-btn" onclick="refreshTodayFortune()">
-          ↻ 운세 다시 보기
+          ↻ 다른 문구 보기
         </button>
       </div>
     </div>
@@ -9731,10 +9729,114 @@ const JI_LUCK_CLASS = ['luck-gil','luck-pil','luck-mid','luck-gil','luck-pil','l
 const JI_LUCK_LABEL = ['吉','平','中吉','吉','平','中吉','吉','平','中吉','吉','平','中吉'];
 const JI_DESC = ['지혜·안정','인내·충실','진취·시작','유연·성장','변화·도전','열정·집중','활력·명예','온화·완성','결단·예리','수확·정밀','수호·마무리','깊은 내면'];
 
+// ─── 오늘의 운세 텍스트 DB (일진 길흉 × 천간오행) ─────────────────
+// 각 4가지 문구 — 날짜 시드 + refresh 횟수로 순환
+const DAILY_MSG_DB = {
+  '吉': {
+    '목': [
+      '새싹이 하늘을 향합니다. 용기 있게 나아갈 때입니다.',
+      '성장의 기운이 넘칩니다. 뿌린 씨앗이 빛을 향해 움직입니다.',
+      '나무가 곧게 자라듯, 오늘의 기운이 당신을 이끕니다.',
+      '봄비 같은 행운이 조용히 내립니다. 받아들이세요.',
+    ],
+    '화': [
+      '불꽃처럼 빛나는 하루. 열정이 결실로 이어집니다.',
+      '밝은 화기가 막힌 것을 엽니다. 적극적으로 표현하세요.',
+      '태양이 가장 높이 뜨는 시간. 당신도 그렇게 빛납니다.',
+      '뜨거운 열기가 행운을 가져옵니다. 망설임을 버리세요.',
+    ],
+    '토': [
+      '대지처럼 든든한 기운이 감쌉니다. 믿음직한 하루입니다.',
+      '토기(土氣)가 안정을 선물합니다. 중심을 잡으세요.',
+      '뿌리 깊은 나무처럼, 오늘은 탄탄한 기반이 됩니다.',
+      '흙의 포근함이 오늘을 감쌉니다. 평화로운 하루입니다.',
+    ],
+    '금': [
+      '결단의 시간입니다. 날카로운 직관을 믿으세요.',
+      '가을 서리처럼 맑은 기운. 중요한 결정에 좋은 날입니다.',
+      '쇠처럼 단단한 의지가 빛나는 날. 포기하지 마세요.',
+      '정밀함이 빛을 발합니다. 섬세하게 접근하면 됩니다.',
+    ],
+    '수': [
+      '물처럼 유연하게, 오늘은 흐름에 몸을 맡기세요.',
+      '깊은 지혜가 떠오릅니다. 직관이 답을 알고 있습니다.',
+      '잔잔한 물 위에 달이 비칩니다. 고요하고 풍요로운 날.',
+      '북방의 수기(水氣)가 지혜와 행운을 가져옵니다.',
+    ],
+  },
+  '中吉': {
+    '목': [
+      '씨앗이 막 싹트려 합니다. 조금 더 인내해 보세요.',
+      '초록빛 가능성이 보입니다. 꾸준함이 열쇠입니다.',
+      '가지를 뻗을 준비가 됐습니다. 한 걸음 내딛어 보세요.',
+      '성장 중인 나무처럼, 지금은 버팀의 시간입니다.',
+    ],
+    '화': [
+      '불씨가 살아 있습니다. 작은 노력이 큰 불꽃이 됩니다.',
+      '열정은 있으나 서두르지 마세요. 때를 기다리는 지혜.',
+      '빛이 구름 뒤에 있습니다. 조금만 더 기다려 보세요.',
+      '방향을 잡으면 앞길이 밝아집니다.',
+    ],
+    '토': [
+      '안정적인 하루입니다. 예상 밖의 일도 무사히 넘깁니다.',
+      '흙의 기운이 균형을 지킵니다. 무리하지 않는 것이 지혜.',
+      '중간을 잘 지키면 무사합니다. 극단을 피하세요.',
+      '평탄한 길이 이어집니다. 조심하면 무탈한 하루입니다.',
+    ],
+    '금': [
+      '칼날을 가는 시간입니다. 지금의 준비가 나중을 빛냅니다.',
+      '결단보다 관찰이 먼저입니다. 조금 더 살펴보세요.',
+      '금기(金氣)가 단단함을 요청합니다. 흔들리지 마세요.',
+      '날카로움보다 유연함이 필요한 날. 부드러워지세요.',
+    ],
+    '수': [
+      '흐름을 파악하는 것이 먼저입니다. 서두르면 넘칩니다.',
+      '물은 낮은 곳으로 흐릅니다. 겸손함이 길을 만듭니다.',
+      '깊은 생각이 필요한 날. 혼자만의 시간을 가져보세요.',
+      '수기(水氣)가 조용히 흐릅니다. 행동으로 보여주세요.',
+    ],
+  },
+  '平': {
+    '목': [
+      '오늘은 쉬어가는 날. 억지로 나아가기보다 돌아보세요.',
+      '지금은 뿌리를 내릴 시간. 서두르지 마세요.',
+      '나무도 겨울엔 쉽니다. 평온함 속에서 힘을 비축하세요.',
+      '강요보다 기다림이 현명한 날입니다.',
+    ],
+    '화': [
+      '과한 열기를 식히는 날. 충동보다 냉정함이 필요합니다.',
+      '오늘은 분주함을 내려놓는 날. 잠시 숨을 고르세요.',
+      '화기가 복잡합니다. 감정을 잘 다스리세요.',
+      '불은 때론 꺼질 수 있습니다. 소중한 것을 지키세요.',
+    ],
+    '토': [
+      '흙이 묵묵합니다. 말보다 듣는 것이 좋겠습니다.',
+      '평범한 하루가 때로 가장 큰 선물입니다.',
+      '무리하지 말고 오늘의 고요함을 즐기세요.',
+      '안정 속에 머물면 됩니다. 변화를 추구하지 마세요.',
+    ],
+    '금': [
+      '칼이 너무 날카로우면 부러집니다. 유연함을 기억하세요.',
+      '과도한 결단은 피하세요. 오늘은 지켜보는 날입니다.',
+      '중요한 약속은 내일로 미루는 것이 좋겠습니다.',
+      '고집을 잠시 내려놓는 날. 다른 이의 말에 귀 기울여보세요.',
+    ],
+    '수': [
+      '물이 고여 있으면 썩습니다. 작은 움직임이라도 시작하세요.',
+      '걱정이 많은 날. 마음을 비우고 가벼워지세요.',
+      '수기가 복잡합니다. 오늘은 중요한 결정을 피하세요.',
+      '감추어진 것이 있습니다. 솔직함이 더 좋은 결과를 만듭니다.',
+    ],
+  },
+};
+
+let _tfVariant = 0;
+let _tfMsgState = null; // {luckLbl, oh, seed}
+
 function initTodayFortune() {
+  _tfVariant = 0;
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
-  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
   // 날짜 표시
   const DOW = ['일','월','화','수','목','금','토'];
@@ -9751,61 +9853,34 @@ function initTodayFortune() {
   document.getElementById('tf-iljin-sub').innerHTML =
     `<span class="${luckCls}">${luckLbl}</span> <span style="color:var(--text-3);font-size:11px;">${JI_DESC[dp.j]}</span>`;
 
-  // 오늘의 타로 카드 (날짜 시드 — 항상 동일)
+  // 오늘의 타로 카드 (날짜 시드 — 하루 동안 동일)
   const cards = allCards();
   const seed  = y * 10000 + m * 100 + d;
   const card  = {...cards[seed % cards.length], isRev: (seed % 11 === 0)};
-
   document.getElementById('tf-card-svg').innerHTML  = makeCardSVG(card, 78, 128);
   document.getElementById('tf-card-name').textContent = card.name;
   document.getElementById('tf-card-key').textContent  = card.isRev ? card.rev : card.key;
   document.getElementById('tf-card-dir').innerHTML =
     `<span style="color:${card.isRev?'#E87070':'var(--text-3)'};">${card.isRev?'▽ 역방향':'△ 정방향'}</span>`;
 
-  // AI 한줄 운세 (localStorage 캐시)
-  const cacheKey = `today_fortune_${dateKey}`;
-  const cached   = localStorage.getItem(cacheKey);
-  if (cached) {
-    showTodayFortune(cached);
-  } else {
-    loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey);
-  }
+  // 한줄 운세 — DB에서 즉시 뽑기 (API 호출 없음)
+  _tfMsgState = { luckLbl, oh: iljinOh, seed };
+  _showTodayMsg();
 }
 
-async function loadTodayFortune(y, m, d, iljinName, iljinOh, card, cacheKey) {
+function _showTodayMsg() {
+  if (!_tfMsgState) return;
+  const { luckLbl, oh, seed } = _tfMsgState;
+  const pool = (DAILY_MSG_DB[luckLbl] || DAILY_MSG_DB['平'])[oh]
+            || DAILY_MSG_DB['平']['토'];
+  const text = pool[(seed + _tfVariant * 7) % pool.length];
   document.getElementById('tf-fortune-box').innerHTML =
-    `<span class="oracle-fortune-loading">✦ 오늘의 운세를 읽는 중 ···</span>`;
-  document.getElementById('tf-refresh-btn').disabled = true;
-  try {
-    const sys = '당신은 동양 명리학과 타로를 아우르는 신비로운 점술사입니다. 짧고 시적인 한국어 문장으로 답합니다.';
-    const msg = `오늘은 ${y}년 ${m}월 ${d}일, 일진은 ${iljinName}(${iljinOh}의 기운), 오늘의 타로 카드는 "${card.name}"(${card.isRev?card.rev:card.key})입니다. 오늘의 운세를 한 문장(25자 이내)으로 써주세요. 따옴표 없이, 시적이고 희망적으로.`;
-    const raw  = await callGemini(sys, msg, 150);
-    const text = raw.trim().replace(/^["「『]|["」』]$/g, '');
-    localStorage.setItem(cacheKey, text);
-    showTodayFortune(text);
-  } catch(e) {
-    document.getElementById('tf-fortune-box').innerHTML =
-      `<span style="color:var(--text-3);font-size:13px;">운세를 불러올 수 없습니다</span>`;
-  }
-  document.getElementById('tf-refresh-btn').disabled = false;
-}
-
-function showTodayFortune(text) {
-  document.getElementById('tf-fortune-box').innerHTML =
-    `<span style="opacity:0.55;font-size:13px;margin-right:4px;">"</span>${text}<span style="opacity:0.55;font-size:13px;margin-left:4px;">"</span>`;
+    `<span style="opacity:0.5;font-size:13px;margin-right:4px;">"</span>${text}<span style="opacity:0.5;font-size:13px;margin-left:4px;">"</span>`;
 }
 
 function refreshTodayFortune() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
-  const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  localStorage.removeItem(`today_fortune_${dateKey}`);
-  const dp   = getDP(y, m, d);
-  const seed = y * 10000 + m * 100 + d;
-  const card = {...allCards()[seed % allCards().length], isRev: (seed % 11 === 0)};
-  loadTodayFortune(y, m, d,
-    천간[dp.g]+지지[dp.j]+'일', 천간오행[dp.g], card,
-    `today_fortune_${dateKey}`);
+  _tfVariant = (_tfVariant + 1) % 4;
+  _showTodayMsg();
 }
 
 // =============================================
