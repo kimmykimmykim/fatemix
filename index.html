@@ -567,38 +567,61 @@ body::before{
     <div style="position:absolute;top:-24px;right:-16px;font-size:110px;opacity:0.04;pointer-events:none;line-height:1;">☽</div>
     <div style="position:absolute;bottom:-18px;left:4px;font-size:80px;opacity:0.03;pointer-events:none;line-height:1;">✦</div>
 
-    <!-- 헤더: 날짜 + 일진 -->
-    <div class="oracle-header">
-      <div>
-        <div class="oracle-label">TODAY'S ORACLE</div>
-        <div class="oracle-date" id="tf-date-display"></div>
+    <!-- [A] 생년월일 있을 때: 개인화된 오늘의 카드 -->
+    <div id="tf-populated" style="display:none;">
+      <!-- 헤더: 날짜 + 일진 -->
+      <div class="oracle-header">
+        <div>
+          <div class="oracle-label">TODAY'S ORACLE</div>
+          <div class="oracle-date" id="tf-date-display"></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="oracle-label" style="text-align:right;">오늘의 일진</div>
+          <div class="oracle-iljin-name" id="tf-iljin-name"></div>
+          <div class="oracle-iljin-sub" id="tf-iljin-sub"></div>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <div class="oracle-label" style="text-align:right;">오늘의 일진</div>
-        <div class="oracle-iljin-name" id="tf-iljin-name"></div>
-        <div class="oracle-iljin-sub" id="tf-iljin-sub"></div>
+
+      <!-- 본문: 카드 + 텍스트 -->
+      <div class="oracle-body">
+        <!-- 타로 카드 -->
+        <div class="oracle-card-wrap">
+          <div id="tf-card-svg"></div>
+          <div class="oracle-card-sub" id="tf-card-dir"></div>
+        </div>
+
+        <!-- 카드 정보 + AI 운세 -->
+        <div class="oracle-right">
+          <div>
+            <div class="oracle-card-title" id="tf-card-name"></div>
+            <div class="oracle-card-key" id="tf-card-key"></div>
+          </div>
+          <div class="oracle-fortune-box" id="tf-fortune-box"></div>
+          <button class="oracle-refresh" id="tf-refresh-btn" onclick="refreshTodayFortune()">
+            ↻ 다른 문구 보기
+          </button>
+        </div>
       </div>
+
+      <!-- 근거 (어떤 로직으로 나왔는지) -->
+      <div id="tf-basis" style="margin-top:14px;padding:10px 14px 0;font-size:11px;color:var(--text-3);text-align:center;border-top:0.5px dashed rgba(201,168,76,0.22);letter-spacing:0.02em;line-height:1.65;"></div>
     </div>
 
-    <!-- 본문: 카드 + 텍스트 -->
-    <div class="oracle-body">
-      <!-- 타로 카드 -->
-      <div class="oracle-card-wrap">
-        <div id="tf-card-svg"></div>
-        <div class="oracle-card-sub" id="tf-card-dir"></div>
+    <!-- [B] 생년월일 없을 때: 입력 안내 + CTA -->
+    <div id="tf-empty" style="display:none;padding:30px 18px 22px;text-align:center;">
+      <div style="font-size:42px;opacity:0.32;margin-bottom:10px;line-height:1;">🗓️</div>
+      <div class="oracle-label" style="margin-bottom:10px;">TODAY'S ORACLE</div>
+      <div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:8px;">
+        오늘의 운세는 <b style="color:var(--gold);">생년월일 입력 후</b> 확인할 수 있어요
       </div>
-
-      <!-- 카드 정보 + AI 운세 -->
-      <div class="oracle-right">
-        <div>
-          <div class="oracle-card-title" id="tf-card-name"></div>
-          <div class="oracle-card-key" id="tf-card-key"></div>
-        </div>
-        <div class="oracle-fortune-box" id="tf-fortune-box"></div>
-        <button class="oracle-refresh" id="tf-refresh-btn" onclick="refreshTodayFortune()">
-          ↻ 다른 문구 보기
-        </button>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-bottom:18px;max-width:320px;margin-left:auto;margin-right:auto;">
+        생일 × 오늘 날짜의 <b style="color:var(--text-2);">수비학적 에너지</b>로 당신만의 개인화된 카드를 뽑아드립니다
       </div>
+      <button onclick="go('saju')" style="padding:11px 22px;font-size:13px;border-radius:24px;border:0.5px solid rgba(201,168,76,0.55);background:rgba(201,168,76,0.08);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;"
+        onmouseover="this.style.background='rgba(201,168,76,0.16)';this.style.borderColor='rgba(201,168,76,0.85)';"
+        onmouseout="this.style.background='rgba(201,168,76,0.08)';this.style.borderColor='rgba(201,168,76,0.55)';">
+        ✦ 생년월일 입력하기 →
+      </button>
     </div>
   </div>
 
@@ -10087,47 +10110,93 @@ let _tfVariant = 0;
 let _tfMsgState = null; // {luckLbl, oh, seed}
 
 function initTodayFortune() {
-  // 사주 입력 완료(저장) 전에는 숨김
   const sec = document.getElementById('today-oracle-section');
-  if (!sec) return;
-  const hasSaju = (typeof sjData !== 'undefined' && sjData) ||
-                  (typeof getSjList === 'function' && getSjList().length > 0);
-  if (!hasSaju) {
-    sec.style.display = 'none';
+  const populated = document.getElementById('tf-populated');
+  const empty = document.getElementById('tf-empty');
+  if (!sec || !populated || !empty) return;
+  // 섹션 자체는 항상 표시 (내부 분기로 populated/empty 선택)
+  sec.style.display = '';
+
+  // 생년월일 존재 여부 확인
+  const savedList = (typeof getSjList === 'function') ? getSjList() : [];
+  const hasLive = (typeof sjData !== 'undefined' && sjData);
+  if (!hasLive && !savedList.length) {
+    populated.style.display = 'none';
+    empty.style.display = '';
     return;
   }
-  sec.style.display = '';
+  populated.style.display = '';
+  empty.style.display = 'none';
+
+  // 현재 세션 사주 데이터 우선 → 저장된 목록의 첫 항목 fallback
+  const birth = hasLive
+    ? { y: sjData.y, m: sjData.m, d: sjData.d }
+    : { y: savedList[0].y, m: savedList[0].m, d: savedList[0].d };
 
   _tfVariant = 0;
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
+  const ty = now.getFullYear(), tm = now.getMonth() + 1, td = now.getDate();
+
+  // 수비학(Numerology) 계산 — 생명수·일수
+  const digitSum = n => String(Math.abs(n)).split('').reduce((a, c) => a + (+c || 0), 0);
+  const reduceSingle = n => { while (n > 9) n = digitSum(n); return n; };
+  const birthNum = reduceSingle(digitSum(birth.y) + digitSum(birth.m) + digitSum(birth.d)); // 생명수 1~9
+  const todayNum = reduceSingle(digitSum(ty) + digitSum(tm) + digitSum(td));                 // 우주일수 1~9
+  const personalDay = reduceSingle(birthNum + todayNum);                                      // 개인 일수 1~9
+
+  // 시드: 생일·오늘·개인일수 3축 결합
+  const seed = Math.abs(
+    (birth.y * 10000 + birth.m * 100 + birth.d) * 7 +
+    (ty * 10000 + tm * 100 + td) * 13 +
+    personalDay * 131
+  );
 
   // 날짜 표시
-  const DOW = ['일','월','화','수','목','금','토'];
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
   document.getElementById('tf-date-display').textContent =
-    `${y}년 ${m}월 ${d}일 (${DOW[now.getDay()]}요일)`;
+    `${ty}년 ${tm}월 ${td}일 (${DOW[now.getDay()]}요일)`;
 
   // 일진 계산
-  const dp = getDP(y, m, d);
+  const dp = getDP(ty, tm, td);
   const iljinName = 천간[dp.g] + 지지[dp.j] + '일';
-  const luckCls  = JI_LUCK_CLASS[dp.j];
-  const luckLbl  = JI_LUCK_LABEL[dp.j];
-  const iljinOh  = 천간오행[dp.g];
+  const luckCls = JI_LUCK_CLASS[dp.j];
+  const luckLbl = JI_LUCK_LABEL[dp.j];
+  const iljinOh = 천간오행[dp.g];
   document.getElementById('tf-iljin-name').textContent = iljinName;
   document.getElementById('tf-iljin-sub').innerHTML =
     `<span class="${luckCls}">${luckLbl}</span> <span style="color:var(--text-3);font-size:11px;">${JI_DESC[dp.j]}</span>`;
 
-  // 오늘의 타로 카드 (날짜 시드 — 하루 동안 동일)
+  // 오늘의 카드 (생년월일 × 오늘 × 개인일수 기반)
   const cards = allCards();
-  const seed  = y * 10000 + m * 100 + d;
-  const card  = {...cards[seed % cards.length], isRev: (seed % 11 === 0)};
-  document.getElementById('tf-card-svg').innerHTML  = makeCardSVG(card, 78, 128);
+  const card = { ...cards[seed % cards.length], isRev: (seed % 11 === 0) };
+  document.getElementById('tf-card-svg').innerHTML = makeCardSVG(card, 78, 128);
   document.getElementById('tf-card-name').textContent = card.name;
-  document.getElementById('tf-card-key').textContent  = card.isRev ? card.rev : card.key;
+  document.getElementById('tf-card-key').textContent = card.isRev ? card.rev : card.key;
   document.getElementById('tf-card-dir').innerHTML =
-    `<span style="color:${card.isRev?'#E87070':'var(--text-3)'};">${card.isRev?'▽ 역방향':'△ 정방향'}</span>`;
+    `<span style="color:${card.isRev ? '#E87070' : 'var(--text-3)'};">${card.isRev ? '▽ 역방향' : '△ 정방향'}</span>`;
 
-  // 한줄 운세 — DB에서 즉시 뽑기 (API 호출 없음)
+  // 근거 표시 — 어떤 로직으로 나왔는지
+  const PDAY_DESC = {
+    1: '시작·주도',
+    2: '협력·관계',
+    3: '표현·창의',
+    4: '기반·안정',
+    5: '변화·자유',
+    6: '책임·가족',
+    7: '성찰·영감',
+    8: '성취·물질',
+    9: '마무리·통찰',
+  };
+  const basisEl = document.getElementById('tf-basis');
+  if (basisEl) {
+    basisEl.innerHTML =
+      `생년월일 <b style="color:var(--text-2);">${birth.y}.${birth.m}.${birth.d}</b>` +
+      ` × 오늘 날짜의 <b style="color:var(--gold);">수비학적 에너지</b> 기반` +
+      ` · 개인 일수 <b style="color:var(--gold);">${personalDay}</b>` +
+      ` <span style="color:var(--text-3);">(${PDAY_DESC[personalDay] || '—'})</span>`;
+  }
+
+  // 한줄 운세 — DB에서 즉시 뽑기
   _tfMsgState = { luckLbl, oh: iljinOh, seed };
   _showTodayMsg();
 }
