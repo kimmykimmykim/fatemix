@@ -5417,6 +5417,7 @@ const MIX_RULEBASE = {
 
 // 타로 덱 렌더 — 카드 뒤집기
 let mxTarotSpread=1, mxDrawnTarot=null, mxDrawnRune=null, mxFlippedTarot=[];
+let tarotPickPool=null; // allCards() 78장을 셔플해 담는 풀 (렌더 시마다 새로 생성)
 
 function mxSetTarotSpread(n,btn){
   mxTarotSpread=n;
@@ -5426,30 +5427,52 @@ function mxSetTarotSpread(n,btn){
   renderTarotDeck();
 }
 
+// 78장 타로(메이저 22 + 마이너 56)를 allCards() 에서 가져와
+// 각 카드에 상징 이모지와 정/역방향을 부여한 뒤 Fisher-Yates 로 셔플
+function _mxBuildTarotPool(){
+  const MAJOR_SYMS=['🃏','🪄','🌙','👑','⚡','☩','💕','🏆','♾️','🕯️','☸️','⚖️','🔄','💀','🏺','😈','⚡','⭐','🌕','☀️','📯','🌍'];
+  const SUIT_SYMS={'완드':'🔥','컵':'💧','검':'🌬️','별':'🌿'};
+  const pool = allCards().map((c,i)=>{
+    const sym = c.type==='major'
+      ? (MAJOR_SYMS[i] || '🃏')
+      : (SUIT_SYMS[c.suit] || '🎴');
+    return { ...c, sym, isRev: Math.random() > 0.5 };
+  });
+  // Fisher-Yates shuffle
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool;
+}
+
 function renderTarotDeck(){
   const deck=document.getElementById('mx-tarot-deck');
   if(!deck) return;
   mxFlippedTarot=[];
   mxDrawnTarot=null;
   window._mxTarotCards={};
+  tarotPickPool = _mxBuildTarotPool(); // 78장 전체 새로 셔플
+  const TOTAL = tarotPickPool.length;  // = 78 (메이저 22 + 마이너 56)
   const count=mxTarotSpread||1;
-  const TOTAL_SHUFFLED=14; // 펼쳐 보일 카드 뒷면 수
+
   let html=`<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;text-align:center;line-height:1.6;">
-    아래 <b style="color:var(--gold);">${TOTAL_SHUFFLED}장 중 ${count}장</b>을 직접 뽑아주세요
+    아래 <b style="color:var(--gold);">${TOTAL}장</b> <span style="color:var(--text-3);font-size:10px;">(메이저 22 + 마이너 56)</span> 중 <b style="color:var(--gold);">${count}장</b>을 직접 뽑아주세요
     <span id="mx-tarot-pick-count" style="display:block;font-size:10px;color:var(--gold);margin-top:3px;">0 / ${count}</span>
   </div>
-  <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;padding:4px;">`;
-  for(let i=0;i<TOTAL_SHUFFLED;i++){
-    const rot=(i%2===0?-1:1)*(Math.random()*4+1);
+  <div style="display:flex;flex-wrap:wrap;gap:1px;justify-content:center;padding:6px 2px;">`;
+  for(let i=0;i<TOTAL;i++){
+    const rot=((i%3)-1)*(Math.random()*2.5+0.3);
     html+=`<div id="mx-tcard-${i}" onclick="mxFlipTarot(${i})"
-      style="width:42px;height:68px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
-      border:0.5px solid rgba(201,168,76,0.5);border-radius:6px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;font-size:18px;
-      color:rgba(201,168,76,0.6);
-      user-select:none;transform:rotate(${rot}deg);
-      transition:transform 0.25s ease,box-shadow 0.2s,border-color 0.2s;"
-      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg)';this.style.boxShadow='0 4px 12px rgba(201,168,76,0.3)';this.style.borderColor='rgba(201,168,76,0.9)';}"
-      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot}deg)';this.style.boxShadow='none';this.style.borderColor='rgba(201,168,76,0.5)';}"
+      style="width:22px;height:34px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
+      border:0.5px solid rgba(201,168,76,0.35);border-radius:3px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:9px;
+      color:rgba(201,168,76,0.4);
+      user-select:none;transform:rotate(${rot.toFixed(2)}deg);
+      transition:transform 0.18s ease,box-shadow 0.18s,border-color 0.18s,opacity 0.2s;
+      margin:-1px;"
+      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg) scale(1.3)';this.style.boxShadow='0 4px 12px rgba(201,168,76,0.45)';this.style.borderColor='rgba(201,168,76,0.95)';this.style.zIndex='10';}"
+      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot.toFixed(2)}deg)';this.style.boxShadow='none';this.style.borderColor='rgba(201,168,76,0.35)';this.style.zIndex='';}"
       title="클릭하여 카드 뽑기">✦</div>`;
   }
   html+='</div>';
@@ -5462,35 +5485,36 @@ function mxFlipTarot(idx){
   if(mxFlippedTarot.includes(idx)) return;
   const count=mxTarotSpread||1;
   if(mxFlippedTarot.length>=count) return; // 이미 최대 뽑음
-  const majors=['바보','마법사','여사제','여황제','황제','교황','연인','전차','힘','은둔자','운명의 수레바퀴','정의','매달린 사람','죽음','절제','악마','탑','별','달','태양','심판','세계'];
-  const majorSyms=['🃏','🪄','🌙','👑','⚡','☩','💕','🏆','♾️','🕯️','☸️','⚖️','🔄','💀','🏺','😈','⚡','⭐','🌕','☀️','📯','🌍'];
-  const suits=['완드','컵','소드','펜타클'];
-  const suitSyms=['🔥','💧','🌬️','🌿'];
-  const i2=Math.floor(Math.random()*78), rev=Math.random()>0.5;
-  const isMajor=i2<22;
-  const name=isMajor?majors[i2]:suits[Math.floor((i2-22)/14)]+' '+((i2-22)%14+1);
-  const sym=isMajor?majorSyms[i2]:suitSyms[Math.floor((i2-22)/14)];
-  const fullName=isMajor?'[메이저] '+name:'[마이너] '+suits[Math.floor((i2-22)/14)]+' '+((i2-22)%14+1);
-  const card={name:fullName,rev,dir:rev?'역방향':'정방향',sym};
-  mxFlippedTarot.push(idx);
-  if(!window._mxTarotCards) window._mxTarotCards={};
-  window._mxTarotCards[idx]=card;
+  if(!tarotPickPool || !tarotPickPool[idx]) return;
 
+  const src = tarotPickPool[idx];
+  const isMajor = src.type === 'major';
+  // 기존 UI/데이터 포맷 유지 (AI 프롬프트와 호환)
+  const card = {
+    name: (isMajor ? '[메이저] ' : '[마이너] ') + src.name,
+    rev: src.isRev,
+    dir: src.isRev ? '역방향' : '정방향',
+    sym: src.sym,
+    isMajor
+  };
+  mxFlippedTarot.push(idx);
+  window._mxTarotCards[idx] = card;
+
+  // 팬 속 작은 카드: 픽 표시 (크게 띄우고 심볼 확대)
   const el=document.getElementById('mx-tcard-'+idx);
   if(el){
     el.dataset.picked='1';
     el.style.background=card.rev
       ?'linear-gradient(160deg,#2a1010,#1a0808)'
       :'linear-gradient(160deg,#0f1a2a,#0a1020)';
-    el.style.borderColor=card.rev?'rgba(232,112,112,0.9)':'rgba(201,168,76,0.9)';
-    el.style.boxShadow=rev?'0 0 14px rgba(232,112,112,0.35)':'0 0 14px rgba(201,168,76,0.35)';
+    el.style.borderColor=card.rev?'rgba(232,112,112,0.95)':'rgba(201,168,76,0.95)';
+    el.style.boxShadow=card.rev?'0 0 12px rgba(232,112,112,0.55)':'0 0 12px rgba(201,168,76,0.55)';
     el.style.cursor='default';
-    el.style.transform=(card.rev?'rotate(180deg)':'translateY(-6px) rotate(0deg)');
-    el.innerHTML=`<div style="text-align:center;padding:3px 2px;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
-      <div style="font-size:7px;color:${card.rev?'#E87070':'rgba(201,168,76,0.6)'};letter-spacing:0.05em;">${isMajor?'MAJOR':'MINOR'}</div>
-      <div style="font-size:20px;line-height:1;">${sym}</div>
-      <div style="font-size:7px;color:${card.rev?'#E87070':'var(--gold)'};line-height:1.2;word-break:keep-all;">${name}</div>
-    </div>`;
+    el.style.zIndex='20';
+    el.style.transform=(card.rev
+      ? 'translateY(-10px) scale(1.4) rotate(180deg)'
+      : 'translateY(-10px) scale(1.4) rotate(0deg)');
+    el.innerHTML=`<div style="font-size:12px;line-height:1;">${card.sym}</div>`;
   }
   // 진행 표시 업데이트
   const pc=document.getElementById('mx-tarot-pick-count');
@@ -5500,11 +5524,11 @@ function mxFlipTarot(idx){
     // 뽑힌 카드를 클릭 순서대로 [과거, 현재, 미래] 등 라벨에 매핑
     mxDrawnTarot=mxFlippedTarot.map(i=>window._mxTarotCards[i]);
     const labels=count===1?['현재']:['과거','현재','미래'];
-    // 뽑히지 않은 카드 비활성화(흐리게)
-    for(let k=0;k<14;k++){
+    // 뽑히지 않은 78-count 장 비활성화(흐리게)
+    for(let k=0;k<tarotPickPool.length;k++){
       if(mxFlippedTarot.includes(k)) continue;
       const u=document.getElementById('mx-tcard-'+k);
-      if(u){ u.style.opacity='0.22'; u.style.cursor='default'; u.onclick=null; }
+      if(u){ u.style.opacity='0.15'; u.style.cursor='default'; u.onclick=null; }
     }
     const res=document.getElementById('mx-tarot-result');
     res.style.display='block';
@@ -5513,9 +5537,9 @@ function mxFlipTarot(idx){
         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
           background:var(--dark3);border:0.5px solid ${c.rev?'rgba(232,112,112,0.4)':'rgba(201,168,76,0.3)'};
           border-radius:8px;margin-bottom:6px;">
-          <div style="font-size:20px;">${c.sym}</div>
+          <div style="font-size:22px;">${c.sym}</div>
           <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">${labels[i]}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">${labels[i]} · ${c.isMajor?'메이저':'마이너'}</div>
             <div style="font-size:13px;color:${c.rev?'#E87070':'var(--gold)'};">${c.name.replace(/\[.+\] /,'')}</div>
             <div style="font-size:10px;color:var(--text-3);">${c.dir}</div>
           </div>
