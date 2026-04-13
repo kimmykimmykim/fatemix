@@ -47,10 +47,11 @@ body::before{
   font-family:'Gowun Dodum','Noto Serif KR',sans-serif;transition:color 0.2s;
 }
 .back-btn:hover{color:var(--gold);}
+/* 페이지 타이틀 — 오늘의 운세 본문과 동일 폰트 스택(Gowun Dodum) */
 .page-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:34px;font-weight:300;color:var(--gold);
-  letter-spacing:0.08em;margin:20px 0 6px;
+  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;
+  font-size:30px;font-weight:600;color:var(--gold);
+  letter-spacing:0.04em;margin:20px 0 6px;
 }
 .page-subtitle{font-size:15px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
 .card{background:var(--dark2);border:0.5px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
@@ -159,7 +160,7 @@ body::before{
 }
 .mix-banner:hover{background:var(--dark3);}
 .mix-banner-icon{font-size:32px;flex-shrink:0;}
-.mix-banner-text h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);font-weight:400;margin-bottom:4px;}
+.mix-banner-text h3{font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:20px;color:var(--gold);font-weight:600;margin-bottom:4px;}
 .mix-banner-text p{font-size:14px;color:var(--text-2);line-height:1.6;}
 
 /* 
@@ -225,7 +226,7 @@ body::before{
 
 /* 타임라인 */
 .tl-box{margin-top:14px;background:var(--dark2);border:0.5px solid var(--border);border-radius:12px;padding:20px;display:none;}
-.tl-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-weight:300;margin-bottom:14px;}
+.tl-title{font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:18px;color:var(--gold);font-weight:600;margin-bottom:14px;}
 .tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border-2);}
 .tl-row:last-child{border-bottom:none;}
 .tl-yr{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-light);min-width:52px;}
@@ -627,7 +628,7 @@ body::before{
 
       <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.2em;margin-bottom:10px;">FATEMIX · 통합 운명 분석</div>
 
-      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:8px;font-weight:400;">
+      <div style="font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:20px;color:var(--gold);margin-bottom:8px;font-weight:600;letter-spacing:0.02em;">
         ✦ 지금 당신의 운명 읽기
       </div>
 
@@ -1171,7 +1172,7 @@ body::before{
   <!-- 결과 -->
   <div id="mix-result-card" style="display:none;">
     <div class="card" style="background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(201,168,76,0.02) 100%);border-color:rgba(201,168,76,0.5);">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:16px;letter-spacing:0.06em;">✦ 운명의 교차점</div>
+      <div style="font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:18px;color:var(--gold);margin-bottom:16px;letter-spacing:0.02em;font-weight:600;">✦ 운명의 교차점</div>
       <div class="result-text" id="mixt-summary" style="font-size:15px;line-height:2.4;"></div>
     </div>
     <div class="card" style="background:rgba(201,168,76,0.04);border-color:rgba(201,168,76,0.3);">
@@ -3161,11 +3162,18 @@ function renderSajuRuleBase(){
   //   분야별·조후·용신·대운·세운·부족오행)은 믹스 5개/7개에서만 열림.
   const _sjRuleIsFree = (typeof MX_MAX !== 'undefined') && MX_MAX < 5;
   if (_sjRuleIsFree) {
-    html += `<div style="margin-top:4px;padding:14px 16px;background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px dashed rgba(201,168,76,0.5);border-radius:12px;text-align:center;">
+    html += `<div role="button" tabindex="0" onclick="go('mix')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('mix');}"
+      onmouseover="this.style.background='linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.08))';this.style.borderColor='rgba(201,168,76,0.9)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(201,168,76,0.18)';"
+      onmouseout="this.style.background='linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04))';this.style.borderColor='rgba(201,168,76,0.5)';this.style.transform='none';this.style.boxShadow='none';"
+      style="margin-top:4px;padding:14px 16px;background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px dashed rgba(201,168,76,0.5);border-radius:12px;text-align:center;cursor:pointer;transition:all 0.2s ease;user-select:none;">
       <div style="font-size:10px;color:var(--gold);letter-spacing:0.18em;margin-bottom:8px;">✦ MORE INSIGHTS</div>
       <div style="font-size:13px;color:var(--text);line-height:1.9;word-break:keep-all;">
         더 깊은 해석 — <b style="color:var(--gold);">일주(日柱)·분야별 해석·대운·세운·조후·용신</b>은<br>
         <b style="color:var(--gold);">믹스 5개/7개</b> 선택 시 열립니다
+      </div>
+      <div style="font-size:11px;color:var(--gold);margin-top:10px;letter-spacing:0.08em;font-weight:600;">
+        ✦ 믹스 화면으로 이동 →
       </div>
     </div>`;
     document.getElementById('sj-rule-content').innerHTML = html;
