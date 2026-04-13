@@ -5630,6 +5630,90 @@ function mxFlipRune(idx){
     <button class="ghost-btn" onclick="renderRuneDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
 }
 
+// ════════════════════════════════════════════════════
+// Mix AI 종합 일관성 검증기 (SYNTHESIS_RULE 효과 검증용)
+// ────────────────────────────────────────────────────
+// AI 응답 텍스트에서 동일 주제에 대한 상충 진술이 공존하는지
+// 감지해 콘솔·UI 에 경고를 띄운다. 프롬프트가 의도대로
+// "하나의 일관된 인물상"을 뽑아내고 있는지 자동 점검.
+// ════════════════════════════════════════════════════
+const _MIX_CONTRADICTION_PAIRS = [
+  {
+    topic: '미감·태도',
+    a: ['심미안', '미적 감각', '아름다움을 보는', '심미적', '미의식이 높'],
+    b: ['겉모습으로 평가', '겉모습만 보', '외모로 판단', '피상적으로 판단', '겉만 보고', '외모에 휘둘']
+  },
+  {
+    topic: '결단 스타일',
+    a: ['신중하고 계획적', '신중한 편', '계획적으로', '차분하게 결정', '돌다리도 두드'],
+    b: ['충동적이고', '즉흥적이고', '앞뒤 안 가리', '무모하게', '충동에 휘둘']
+  },
+  {
+    topic: '대인 태도',
+    a: ['정이 깊', '정이 많', '따뜻하고 다정', '다정다감', '정 많은'],
+    b: ['감정적으로 차갑', '정이 메말', '차갑고 거리감', '쌀쌀맞', '냉정하고 차가']
+  },
+  {
+    topic: '주도성',
+    a: ['강한 리더십', '주도적으로', '앞장서서 이끌', '이끄는 타입'],
+    b: ['끌려다닌', '수동적으로', '남에게 휘둘', '주변에 끌려', '남의 의견에 따라']
+  },
+  {
+    topic: '재물 흐름',
+    a: ['재물운이 좋', '재물복이 많', '돈이 잘 들어', '금전운이 강'],
+    b: ['재물이 흩어지', '돈이 새', '재물 손실', '재물이 쌓이지 않']
+  },
+  {
+    topic: '감정 안정성',
+    a: ['감정이 안정', '마음이 평온', '감정 기복이 적'],
+    b: ['감정 기복이 심', '감정이 롤러코스터', '감정 통제가 어려', '감정이 불안정']
+  },
+];
+
+function _mixDetectContradictions(text) {
+  if (!text) return [];
+  const found = [];
+  _MIX_CONTRADICTION_PAIRS.forEach(pair => {
+    const aHits = pair.a.filter(k => text.includes(k));
+    const bHits = pair.b.filter(k => text.includes(k));
+    if (aHits.length && bHits.length) {
+      found.push({ topic: pair.topic, aHits, bHits });
+    }
+  });
+  return found;
+}
+
+function _mixReportContradictions(contras, meta) {
+  const stamp = (meta && meta.tier) ? `[MIX AI · ${meta.tier}]` : '[MIX AI]';
+  if (!contras.length) {
+    console.info(`${stamp} ✅ 종합 일관성 검증 통과 — 모순 감지 0건`);
+    return;
+  }
+  console.warn(`${stamp} ⚠️ 모순 감지 ${contras.length}건:`);
+  contras.forEach(c => {
+    console.warn(`  • [${c.topic}] A: "${c.aHits.join('", "')}" ↔ B: "${c.bHits.join('", "')}"`);
+  });
+  // 결과 카드 상단에 경고 뱃지 삽입 (중복 방지)
+  const card = document.getElementById('mix-result-card');
+  if (!card || card.querySelector('.mix-contra-warning')) return;
+  const warn = document.createElement('div');
+  warn.className = 'mix-contra-warning';
+  warn.style.cssText = 'margin-bottom:12px;padding:11px 14px;font-size:12px;color:#E87070;background:rgba(232,112,112,0.08);border:0.5px solid rgba(232,112,112,0.35);border-radius:8px;line-height:1.65;';
+  warn.innerHTML = `<b>⚠️ 종합 일관성 경고</b> · ${contras.length}개 주제에서 상충 진술 감지<br>` +
+    contras.map(c => `<span style="color:var(--text-2);">• <b>${c.topic}</b>:</span> "${c.aHits[0]}" <span style="color:var(--text-3);">↔</span> "${c.bHits[0]}"`).join('<br>') +
+    `<div style="font-size:10.5px;color:var(--text-3);margin-top:7px;">※ 개발자 검증용 · SYNTHESIS_RULE 프롬프트가 의도대로 작동하는지 자동 점검. 재생성하면 사라질 수 있습니다.</div>`;
+  card.insertBefore(warn, card.firstChild);
+}
+
+// 개발자 콘솔 테스트 API — window._mixTestContradiction('...샘플 텍스트...') 로 수동 검증
+if (typeof window !== 'undefined') {
+  window._mixTestContradiction = function(sampleText) {
+    const c = _mixDetectContradictions(sampleText || '');
+    console.table(c.map(x => ({ topic: x.topic, a: x.aHits.join('|'), b: x.bHits.join('|') })));
+    return c;
+  };
+}
+
 // AI 믹스 분석 — 선택된 술법 + 타로/룬
 async function runMixAiAnalysis(){
   const sol=mxGetSolarDate();
@@ -5822,6 +5906,8 @@ async function runMixAiAnalysis(){
 
   try{
     const text=await callGemini(sys,user,8000);
+    // 🔍 SYNTHESIS_RULE 자동 검증 — 모순 감지 시 콘솔 경고 + 결과 카드 상단 배너
+    try { _mixReportContradictions(_mixDetectContradictions(text), { tier }); } catch(e) { console.warn('[MIX AI] validator error:', e); }
     const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
 
     const 본문 = tier==='free' ? get('본문','지침')
