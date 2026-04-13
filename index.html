@@ -317,6 +317,20 @@ body::before{
   75%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-8px); }
 }
+/* 로딩 — 심볼 트윙클 (각 심볼 반짝임) */
+@keyframes symbolTwinkle {
+  0%,100% { opacity: 0.35; text-shadow: 0 0 4px currentColor; }
+  50%     { opacity: 1;    text-shadow: 0 0 12px currentColor, 0 0 20px currentColor; }
+}
+/* 로딩 — 심볼 역회전 보정 (상속 회전 상쇄) */
+@keyframes symbolCounterRotateCW {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(-360deg); }
+}
+@keyframes symbolCounterRotateCCW {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(360deg); }
+}
 @keyframes starSpawn {
   0%   { opacity:0; transform:translate(0,0) scale(0.3); }
   20%  { opacity:1; }
@@ -425,30 +439,52 @@ body::before{
   background:rgba(10,10,20,0.97);
   flex-direction:column;align-items:center;justify-content:center;">
 
-  <!-- 중심 마법진 -->
-  <div style="position:relative;width:180px;height:180px;margin-bottom:36px;">
-    <!-- 외부 회전 링 -->
+  <!-- 중심 마법진 (3중 회전 링 + 별자리·룬·타로 심볼) -->
+  <div style="position:relative;width:240px;height:240px;margin-bottom:36px;">
+
+    <!-- 최외곽: 12 별자리 링 (시계방향, 20s) -->
     <div style="position:absolute;inset:0;border-radius:50%;
-      border:1px solid rgba(201,168,76,0.25);
-      animation:fortuneOrbit 5s linear infinite;">
-      <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
-        font-size:16px;color:rgba(201,168,76,0.9);">✦</span>
-      <span style="position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
-        font-size:16px;color:rgba(201,168,76,0.9);">✦</span>
-      <span style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);
-        font-size:13px;color:rgba(201,168,76,0.6);">◆</span>
-      <span style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);
-        font-size:13px;color:rgba(201,168,76,0.6);">◆</span>
+      border:1px solid rgba(201,168,76,0.12);
+      animation:fortuneOrbit 20s linear infinite;">
+      <!-- 12 zodiac signs at 30° intervals using transform rotation -->
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(0deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.3s ease-in-out infinite;">♈</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(30deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.5s ease-in-out 0.2s infinite;">♉</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(60deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.7s ease-in-out 0.4s infinite;">♊</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.9s ease-in-out 0.6s infinite;">♋</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(120deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.2s ease-in-out 0.8s infinite;">♌</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(150deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.4s ease-in-out 1.0s infinite;">♍</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(180deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.6s ease-in-out 1.2s infinite;">♎</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(210deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.8s ease-in-out 1.4s infinite;">♏</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(240deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.1s ease-in-out 1.6s infinite;">♐</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(270deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.3s ease-in-out 1.8s infinite;">♑</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(300deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.5s ease-in-out 2.0s infinite;">♒</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(330deg) translate(-50%,-50%) translateY(-120px);font-size:15px;color:rgba(232,201,122,0.85);animation:symbolTwinkle 2.7s ease-in-out 2.2s infinite;">♓</span>
     </div>
-    <!-- 중간 역방향 링 -->
-    <div style="position:absolute;inset:22px;border-radius:50%;
-      border:1px dashed rgba(160,100,220,0.3);
-      animation:fortuneOrbitReverse 3.5s linear infinite;">
-      <span style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);
-        font-size:10px;color:rgba(160,100,220,0.7);">☽</span>
-      <span style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
-        font-size:10px;color:rgba(160,100,220,0.7);">☾</span>
+
+    <!-- 중간 링: 8 룬 (반시계, 12s) -->
+    <div style="position:absolute;inset:40px;border-radius:50%;
+      border:1px dashed rgba(160,100,220,0.25);
+      animation:fortuneOrbitReverse 12s linear infinite;">
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(0deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.4s ease-in-out infinite;">ᚠ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(45deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.6s ease-in-out 0.3s infinite;">ᚢ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.8s ease-in-out 0.6s infinite;">ᚦ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(135deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.3s ease-in-out 0.9s infinite;">ᚨ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(180deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.5s ease-in-out 1.2s infinite;">ᚱ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(225deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.7s ease-in-out 1.5s infinite;">ᚲ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(270deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.4s ease-in-out 1.8s infinite;">ᚷ</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(315deg) translate(-50%,-50%) translateY(-80px);font-size:14px;color:rgba(200,150,240,0.85);animation:symbolTwinkle 2.6s ease-in-out 2.1s infinite;">ᚹ</span>
     </div>
+
+    <!-- 내곽 링: 타로 슈트 심볼 (시계, 6s) -->
+    <div style="position:absolute;inset:78px;border-radius:50%;
+      border:1px solid rgba(201,168,76,0.3);
+      animation:fortuneOrbit 6s linear infinite;">
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(0deg) translate(-50%,-50%) translateY(-42px);font-size:13px;color:rgba(201,168,76,0.95);">☉</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-50%) translateY(-42px);font-size:13px;color:rgba(201,168,76,0.95);">☽</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(180deg) translate(-50%,-50%) translateY(-42px);font-size:13px;color:rgba(201,168,76,0.95);">✦</span>
+      <span style="position:absolute;top:50%;left:50%;transform-origin:0 0;transform:rotate(270deg) translate(-50%,-50%) translateY(-42px);font-size:13px;color:rgba(201,168,76,0.95);">◆</span>
+    </div>
+
     <!-- 중심 카드 -->
     <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
       <div style="
@@ -525,8 +561,8 @@ body::before{
     <div class="home-tagline">운명의 교차점에서 답을 찾다</div>
   </div>
 
-  <!-- 오늘의 운세 -->
-  <div class="today-oracle" id="today-oracle-section">
+  <!-- 오늘의 운세 (사주 입력 완료 후에만 표시) -->
+  <div class="today-oracle" id="today-oracle-section" style="display:none;">
     <!-- 배경 장식 -->
     <div style="position:absolute;top:-24px;right:-16px;font-size:110px;opacity:0.04;pointer-events:none;line-height:1;">☽</div>
     <div style="position:absolute;bottom:-18px;left:4px;font-size:80px;opacity:0.03;pointer-events:none;line-height:1;">✦</div>
@@ -673,16 +709,16 @@ body::before{
           <div><span style="font-size:13px;color:var(--text);">이집트 점성술</span> <span style="font-size:10px;color:var(--text-3);">Egyptian</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">고대 이집트 신들의 에너지. 생일에 따라 호루스·이시스·오시리스 등 수호신이 배정되어 기질을 읽음</div></div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">✦</span>
-          <div><span style="font-size:13px;color:var(--text);">수기요</span> <span style="font-size:10px;color:var(--text-3);">宿曜</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">불교 천문학 기반. 달이 머무는 28개 별자리(수)로 타고난 기질과 인연의 법칙을 분석</div></div>
+          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">子</span>
+          <div><span style="font-size:13px;color:var(--text);">당사주</span> <span style="font-size:10px;color:var(--text-3);">唐四柱</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">당나라에서 정립된 한국 전통 명리. 십이신살·공망 체계로 인생의 굴곡과 타이밍의 결을 짚어냄</div></div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">🔢</span>
-          <div><span style="font-size:13px;color:var(--text);">수비학</span> <span style="font-size:10px;color:var(--text-3);">Numerology</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">피타고라스에서 시작된 숫자의 철학. 생년월일을 수비로 환원해 영혼의 목적과 성격 패턴을 분석</div></div>
+          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">≡</span>
+          <div><span style="font-size:13px;color:var(--text);">주역</span> <span style="font-size:10px;color:var(--text-3);">I Ching</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">3천년 역사의 동양 최고(最古) 경전. 64괘와 384효로 우주의 변화 원리와 현재 상황의 길흉을 읽음</div></div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">🌙</span>
-          <div><span style="font-size:13px;color:var(--text);">꿈 해몽</span> <span style="font-size:10px;color:var(--text-3);">Dream</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">동서양 몽서와 심리학적 상징 체계 기반. 꿈속 이미지가 무의식에서 보내는 메시지를 해독</div></div>
+          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">文</span>
+          <div><span style="font-size:13px;color:var(--text);">성명학</span> <span style="font-size:10px;color:var(--text-3);">Onomancy</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">이름의 한자·자형·음양오행·획수로 타고난 운명에 더해지는 평생의 기운과 대인 관계를 분석</div></div>
         </div>
       </div>
     </div>
@@ -1189,19 +1225,24 @@ body::before{
       <button class="gender-btn gg-a-gender-btn" onclick="ggSetAGender('female',this)">여성</button>
     </div>
     <div class="label">태어난 시간 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택 — 모르면 그냥 넘어가세요)</span></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(23,this)" style="padding:8px 2px;font-size:12px;">자시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(1,this)"  style="padding:8px 2px;font-size:12px;">축시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(3,this)"  style="padding:8px 2px;font-size:12px;">인시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(5,this)"  style="padding:8px 2px;font-size:12px;">묘시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(7,this)"  style="padding:8px 2px;font-size:12px;">진시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(9,this)"  style="padding:8px 2px;font-size:12px;">사시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(11,this)" style="padding:8px 2px;font-size:12px;">오시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(13,this)" style="padding:8px 2px;font-size:12px;">미시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(15,this)" style="padding:8px 2px;font-size:12px;">신시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(17,this)" style="padding:8px 2px;font-size:12px;">유시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(19,this)" style="padding:8px 2px;font-size:12px;">술시</button>
-      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(21,this)" style="padding:8px 2px;font-size:12px;">해시</button>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;">
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(23,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">자시<br><span style="font-size:9px;color:var(--text-3);">23-01</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(1,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">축시<br><span style="font-size:9px;color:var(--text-3);">01-03</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(3,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">인시<br><span style="font-size:9px;color:var(--text-3);">03-05</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(5,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">묘시<br><span style="font-size:9px;color:var(--text-3);">05-07</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(7,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">진시<br><span style="font-size:9px;color:var(--text-3);">07-09</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(9,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">사시<br><span style="font-size:9px;color:var(--text-3);">09-11</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(11,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">오시<br><span style="font-size:9px;color:var(--text-3);">11-13</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(13,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">미시<br><span style="font-size:9px;color:var(--text-3);">13-15</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(15,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">신시<br><span style="font-size:9px;color:var(--text-3);">15-17</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(17,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">유시<br><span style="font-size:9px;color:var(--text-3);">17-19</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(19,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">술시<br><span style="font-size:9px;color:var(--text-3);">19-21</span></button>
+      <button class="toggle-btn gg-a-shi-btn" onclick="ggSelectAShijin(21,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">해시<br><span style="font-size:9px;color:var(--text-3);">21-23</span></button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text-3);">
+      <span>또는 직접</span>
+      <input class="input" type="number" id="gg-a-hour-direct" min="0" max="23" placeholder="시" onchange="ggDirectShijin('a',this.value)" style="width:60px;padding:5px 8px;font-size:12px;">
+      <span>시</span>
     </div>
   </div>
 
@@ -1231,19 +1272,24 @@ body::before{
       <button class="gender-btn active gg-b-gender-btn" onclick="ggSetBGender('female',this)">여성</button>
     </div>
     <div class="label">태어난 시간 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(선택 — 모르면 그냥 넘어가세요)</span></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(23,this)" style="padding:8px 2px;font-size:12px;">자시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(1,this)"  style="padding:8px 2px;font-size:12px;">축시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(3,this)"  style="padding:8px 2px;font-size:12px;">인시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(5,this)"  style="padding:8px 2px;font-size:12px;">묘시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(7,this)"  style="padding:8px 2px;font-size:12px;">진시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(9,this)"  style="padding:8px 2px;font-size:12px;">사시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(11,this)" style="padding:8px 2px;font-size:12px;">오시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(13,this)" style="padding:8px 2px;font-size:12px;">미시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(15,this)" style="padding:8px 2px;font-size:12px;">신시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(17,this)" style="padding:8px 2px;font-size:12px;">유시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(19,this)" style="padding:8px 2px;font-size:12px;">술시</button>
-      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(21,this)" style="padding:8px 2px;font-size:12px;">해시</button>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;">
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(23,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">자시<br><span style="font-size:9px;color:var(--text-3);">23-01</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(1,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">축시<br><span style="font-size:9px;color:var(--text-3);">01-03</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(3,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">인시<br><span style="font-size:9px;color:var(--text-3);">03-05</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(5,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">묘시<br><span style="font-size:9px;color:var(--text-3);">05-07</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(7,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">진시<br><span style="font-size:9px;color:var(--text-3);">07-09</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(9,this)"  style="padding:6px 2px;font-size:11px;line-height:1.3;">사시<br><span style="font-size:9px;color:var(--text-3);">09-11</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(11,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">오시<br><span style="font-size:9px;color:var(--text-3);">11-13</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(13,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">미시<br><span style="font-size:9px;color:var(--text-3);">13-15</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(15,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">신시<br><span style="font-size:9px;color:var(--text-3);">15-17</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(17,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">유시<br><span style="font-size:9px;color:var(--text-3);">17-19</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(19,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">술시<br><span style="font-size:9px;color:var(--text-3);">19-21</span></button>
+      <button class="toggle-btn gg-b-shi-btn" onclick="ggSelectBShijin(21,this)" style="padding:6px 2px;font-size:11px;line-height:1.3;">해시<br><span style="font-size:9px;color:var(--text-3);">21-23</span></button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--text-3);">
+      <span>또는 직접</span>
+      <input class="input" type="number" id="gg-b-hour-direct" min="0" max="23" placeholder="시" onchange="ggDirectShijin('b',this.value)" style="width:60px;padding:5px 8px;font-size:12px;">
+      <span>시</span>
     </div>
   </div>
 
@@ -2413,6 +2459,8 @@ function calcSaju(){
   renderSajuRuleBase();
   document.getElementById('sj-result-card').style.display='block';
   document.getElementById('sj-rule-card').style.display='block';
+  // 사주 입력 완료 → 오늘의 운세 활성화
+  if (typeof initTodayFortune === 'function') initTodayFortune();
 }
 
 function renderSaju(){
@@ -5354,26 +5402,39 @@ function mxSetTarotSpread(n,btn){
 function renderTarotDeck(){
   const deck=document.getElementById('mx-tarot-deck');
   if(!deck) return;
-  const count=mxTarotSpread||1;
-  const labels=count===1?['현재']:['과거','현재','미래'];
-  let html='';
-  for(let i=0;i<count;i++){
-    html+=`<div style="text-align:center;">
-      <div style="font-size:9px;color:var(--text-3);margin-bottom:4px;">${labels[i]}</div>
-      <div id="mx-tcard-${i}" onclick="mxFlipTarot(${i})"
-        style="width:64px;height:104px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
-        border:0.5px solid rgba(201,168,76,0.5);border-radius:8px;cursor:pointer;
-        display:flex;align-items:center;justify-content:center;font-size:28px;
-        user-select:none;transition:transform 0.15s;" title="클릭하여 뽑기">🂠</div>
-    </div>`;
-  }
-  deck.innerHTML=html;
-  document.getElementById('mx-tarot-result').style.display='none';
+  mxFlippedTarot=[];
+  mxDrawnTarot=null;
   window._mxTarotCards={};
+  const count=mxTarotSpread||1;
+  const TOTAL_SHUFFLED=14; // 펼쳐 보일 카드 뒷면 수
+  let html=`<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;text-align:center;line-height:1.6;">
+    아래 <b style="color:var(--gold);">${TOTAL_SHUFFLED}장 중 ${count}장</b>을 직접 뽑아주세요
+    <span id="mx-tarot-pick-count" style="display:block;font-size:10px;color:var(--gold);margin-top:3px;">0 / ${count}</span>
+  </div>
+  <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;padding:4px;">`;
+  for(let i=0;i<TOTAL_SHUFFLED;i++){
+    const rot=(i%2===0?-1:1)*(Math.random()*4+1);
+    html+=`<div id="mx-tcard-${i}" onclick="mxFlipTarot(${i})"
+      style="width:42px;height:68px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
+      border:0.5px solid rgba(201,168,76,0.5);border-radius:6px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:18px;
+      color:rgba(201,168,76,0.6);
+      user-select:none;transform:rotate(${rot}deg);
+      transition:transform 0.25s ease,box-shadow 0.2s,border-color 0.2s;"
+      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg)';this.style.boxShadow='0 4px 12px rgba(201,168,76,0.3)';this.style.borderColor='rgba(201,168,76,0.9)';}"
+      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot}deg)';this.style.boxShadow='none';this.style.borderColor='rgba(201,168,76,0.5)';}"
+      title="클릭하여 카드 뽑기">✦</div>`;
+  }
+  html+='</div>';
+  deck.innerHTML=html;
+  const resEl=document.getElementById('mx-tarot-result');
+  if(resEl){ resEl.style.display='none'; resEl.innerHTML=''; }
 }
 
 function mxFlipTarot(idx){
   if(mxFlippedTarot.includes(idx)) return;
+  const count=mxTarotSpread||1;
+  if(mxFlippedTarot.length>=count) return; // 이미 최대 뽑음
   const majors=['바보','마법사','여사제','여황제','황제','교황','연인','전차','힘','은둔자','운명의 수레바퀴','정의','매달린 사람','죽음','절제','악마','탑','별','달','태양','심판','세계'];
   const majorSyms=['🃏','🪄','🌙','👑','⚡','☩','💕','🏆','♾️','🕯️','☸️','⚖️','🔄','💀','🏺','😈','⚡','⭐','🌕','☀️','📯','🌍'];
   const suits=['완드','컵','소드','펜타클'];
@@ -5390,26 +5451,37 @@ function mxFlipTarot(idx){
 
   const el=document.getElementById('mx-tcard-'+idx);
   if(el){
+    el.dataset.picked='1';
     el.style.background=card.rev
       ?'linear-gradient(160deg,#2a1010,#1a0808)'
       :'linear-gradient(160deg,#0f1a2a,#0a1020)';
-    el.style.borderColor=card.rev?'rgba(232,112,112,0.8)':'rgba(201,168,76,0.8)';
+    el.style.borderColor=card.rev?'rgba(232,112,112,0.9)':'rgba(201,168,76,0.9)';
+    el.style.boxShadow=rev?'0 0 14px rgba(232,112,112,0.35)':'0 0 14px rgba(201,168,76,0.35)';
     el.style.cursor='default';
-    el.style.transform=card.rev?'rotate(180deg)':'rotate(0deg)';
-    el.innerHTML=`<div style="text-align:center;padding:4px 3px;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
-      <div style="font-size:8px;color:${card.rev?'#E87070':'rgba(201,168,76,0.6)'};letter-spacing:0.05em;">${isMajor?'MAJOR':'MINOR'}</div>
-      <div style="font-size:26px;line-height:1;">${sym}</div>
-      <div style="font-size:8px;color:${card.rev?'#E87070':'var(--gold)'};line-height:1.3;word-break:keep-all;">${name}</div>
+    el.style.transform=(card.rev?'rotate(180deg)':'translateY(-6px) rotate(0deg)');
+    el.innerHTML=`<div style="text-align:center;padding:3px 2px;height:100%;display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="font-size:7px;color:${card.rev?'#E87070':'rgba(201,168,76,0.6)'};letter-spacing:0.05em;">${isMajor?'MAJOR':'MINOR'}</div>
+      <div style="font-size:20px;line-height:1;">${sym}</div>
+      <div style="font-size:7px;color:${card.rev?'#E87070':'var(--gold)'};line-height:1.2;word-break:keep-all;">${name}</div>
     </div>`;
   }
+  // 진행 표시 업데이트
+  const pc=document.getElementById('mx-tarot-pick-count');
+  if(pc) pc.textContent=`${mxFlippedTarot.length} / ${count}`;
 
-  const count=mxTarotSpread||1;
   if(mxFlippedTarot.length>=count){
-    mxDrawnTarot=Array.from({length:count},(_,i)=>window._mxTarotCards[i]);
+    // 뽑힌 카드를 클릭 순서대로 [과거, 현재, 미래] 등 라벨에 매핑
+    mxDrawnTarot=mxFlippedTarot.map(i=>window._mxTarotCards[i]);
     const labels=count===1?['현재']:['과거','현재','미래'];
+    // 뽑히지 않은 카드 비활성화(흐리게)
+    for(let k=0;k<14;k++){
+      if(mxFlippedTarot.includes(k)) continue;
+      const u=document.getElementById('mx-tcard-'+k);
+      if(u){ u.style.opacity='0.22'; u.style.cursor='default'; u.onclick=null; }
+    }
     const res=document.getElementById('mx-tarot-result');
     res.style.display='block';
-    res.innerHTML=`<div style="font-size:11px;color:var(--gold);margin:10px 0 8px;">✦ 뽑힌 카드</div>`+
+    res.innerHTML=`<div style="font-size:11px;color:var(--gold);margin:14px 0 8px;">✦ 뽑힌 카드</div>`+
       mxDrawnTarot.map((c,i)=>`
         <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
           background:var(--dark3);border:0.5px solid ${c.rev?'rgba(232,112,112,0.4)':'rgba(201,168,76,0.3)'};
@@ -5420,28 +5492,40 @@ function mxFlipTarot(idx){
             <div style="font-size:13px;color:${c.rev?'#E87070':'var(--gold)'};">${c.name.replace(/\[.+\] /,'')}</div>
             <div style="font-size:10px;color:var(--text-3);">${c.dir}</div>
           </div>
-        </div>`).join('');
-    window._mxTarotCards={}; mxFlippedTarot=[];
+        </div>`).join('')+
+      `<button class="ghost-btn" onclick="renderTarotDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
   }
 }
 
-// 룬 덱 렌더 — 돌 뒤집기
+// 룬 덱 렌더 — 여러 돌 중 직접 선택
 function renderRuneDeck(){
   const deck=document.getElementById('mx-rune-deck');
   if(!deck) return;
-  let html='';
-  for(let i=0;i<5;i++){
+  mxDrawnRune=null;
+  const TOTAL_STONES=12;
+  let html=`<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;text-align:center;line-height:1.6;">
+    아래 <b style="color:var(--gold);">${TOTAL_STONES}개의 돌</b> 중 하나를 직접 집어보세요
+  </div>
+  <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:4px;">`;
+  for(let i=0;i<TOTAL_STONES;i++){
     html+=`<div id="mx-rstone-${i}" onclick="mxFlipRune(${i})"
-      style="width:52px;height:52px;background:radial-gradient(circle,#2d2d3e,#1a1a28);
+      style="width:44px;height:44px;background:radial-gradient(circle,#2d2d3e,#1a1a28);
       border:0.5px solid rgba(201,168,76,0.4);border-radius:50%;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      font-size:22px;user-select:none;transition:transform 0.15s;" title="클릭하여 뽑기">🪨</div>`;
+      font-size:18px;color:rgba(201,168,76,0.45);user-select:none;
+      transition:all 0.25s ease;"
+      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-4px) scale(1.08)';this.style.boxShadow='0 4px 10px rgba(201,168,76,0.35)';this.style.borderColor='rgba(201,168,76,0.85)';}"
+      onmouseout="if(!this.dataset.picked){this.style.transform='none';this.style.boxShadow='none';this.style.borderColor='rgba(201,168,76,0.4)';}"
+      title="클릭하여 룬 뽑기">◉</div>`;
   }
+  html+='</div>';
   deck.innerHTML=html;
-  document.getElementById('mx-rune-result').style.display='none';
+  const resEl=document.getElementById('mx-rune-result');
+  if(resEl){ resEl.style.display='none'; resEl.innerHTML=''; }
 }
 
 function mxFlipRune(idx){
+  if(mxDrawnRune) return; // 이미 뽑은 상태면 재선택 불가
   const RUNES=[
     {n:'페후(ᚠ)',m:'재물·시작의 에너지'},
     {n:'우루즈(ᚢ)',m:'원시적 힘·돌파구'},
@@ -5472,24 +5556,27 @@ function mxFlipRune(idx){
   mxDrawnRune={...r,rev,dir:rev?'역방향':'정방향'};
   const letter=r.n.match(/\((.+)\)/)?.[1]||'ᚱ';
 
-  for(let i=0;i<5;i++){
+  // 12개 돌 전부 비활성화
+  const TOTAL_STONES=12;
+  for(let i=0;i<TOTAL_STONES;i++){
     const el=document.getElementById('mx-rstone-'+i);
-    if(el){el.style.cursor='default';el.onclick=null;el.style.opacity='0.35';}
+    if(el){el.style.cursor='default';el.onclick=null;el.style.opacity='0.22';el.dataset.picked='1';}
   }
   const chosen=document.getElementById('mx-rstone-'+idx);
   if(chosen){
     chosen.style.opacity='1';
-    chosen.style.width='72px';
-    chosen.style.height='72px';
+    chosen.style.width='64px';
+    chosen.style.height='64px';
     chosen.style.background=rev
       ?'radial-gradient(circle,#3e1a1a,#1a0808)'
       :'radial-gradient(circle,#1a2e2a,#0a1a18)';
     chosen.style.borderColor=rev?'rgba(232,112,112,0.9)':'rgba(201,168,76,0.9)';
     chosen.style.boxShadow=rev
-      ?'0 0 16px rgba(232,112,112,0.3)'
-      :'0 0 16px rgba(201,168,76,0.3)';
+      ?'0 0 16px rgba(232,112,112,0.4)'
+      :'0 0 16px rgba(201,168,76,0.4)';
+    chosen.style.transform='translateY(-6px) scale(1.05)';
     chosen.innerHTML=`<div style="text-align:center;">
-      <div style="font-size:28px;color:${rev?'#E87070':'var(--gold)'};">${letter}</div>
+      <div style="font-size:26px;color:${rev?'#E87070':'var(--gold)'};">${letter}</div>
     </div>`;
   }
 
@@ -5507,7 +5594,8 @@ function mxFlipRune(idx){
         <div style="font-size:12px;color:var(--text-2);margin-bottom:3px;">${r.m}</div>
         <div style="font-size:11px;color:var(--text-3);padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;display:inline-block;">${mxDrawnRune.dir}</div>
       </div>
-    </div>`;
+    </div>
+    <button class="ghost-btn" onclick="renderRuneDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
 }
 
 // AI 믹스 분석 — 선택된 술법 + 타로/룬
@@ -9999,6 +10087,17 @@ let _tfVariant = 0;
 let _tfMsgState = null; // {luckLbl, oh, seed}
 
 function initTodayFortune() {
+  // 사주 입력 완료(저장) 전에는 숨김
+  const sec = document.getElementById('today-oracle-section');
+  if (!sec) return;
+  const hasSaju = (typeof sjData !== 'undefined' && sjData) ||
+                  (typeof getSjList === 'function' && getSjList().length > 0);
+  if (!hasSaju) {
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = '';
+
   _tfVariant = 0;
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
@@ -10084,6 +10183,28 @@ function ggSelectBShijin(hourVal, btn) {
     document.querySelectorAll('.gg-b-shi-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
+}
+// 직접 시각(0~23) 입력 → 해당하는 시진(지지) 으로 매핑
+function ggDirectShijin(who, val) {
+  const h = parseInt(val, 10);
+  if (isNaN(h) || h < 0 || h > 23) return;
+  // 시진 시작 시각 배열 (자=23, 축=1, 인=3, ..., 해=21)
+  const SHI_START = [23, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21];
+  // 직전 시진을 찾음 — 23시는 자시로, 0시는 자시로, 1-2시는 축시…
+  let idx = 0;
+  for (let i = 0; i < 12; i++) {
+    const start = SHI_START[i];
+    const end = (start + 2) % 24;
+    if (start < end ? (h >= start && h < end) : (h >= start || h < end)) {
+      idx = i; break;
+    }
+  }
+  const hourVal = SHI_START[idx];
+  const selector = who === 'a' ? '.gg-a-shi-btn' : '.gg-b-shi-btn';
+  const btns = document.querySelectorAll(selector);
+  btns.forEach(b => b.classList.remove('active'));
+  if (btns[idx]) btns[idx].classList.add('active');
+  if (who === 'a') ggAShijinHour = hourVal; else ggBShijinHour = hourVal;
 }
 
 function calcGunghap() {
