@@ -2467,6 +2467,23 @@ function calcSaju(){
   renderSajuRuleBase();
   document.getElementById('sj-result-card').style.display='block';
   document.getElementById('sj-rule-card').style.display='block';
+
+  // ── 사주 자동 저장: 다음 앱 실행 시 자동 복원용 ──
+  //   사용자가 "저장" 버튼을 따로 누르지 않아도
+  //   계산 성공 시점에 마지막 사주를 별도 키 fm_saju_last 로 보존.
+  try {
+    localStorage.setItem('fm_saju_last', JSON.stringify({
+      y, m, d, h, min,
+      calType: (typeof sjCalType !== 'undefined') ? sjCalType : 'solar',
+      gender: sjGenderVal,
+      marital: sjMaritalVal,
+      topic: sjTopicVal,
+      timeMode: sjTimeModeVal,
+      shijinHour: sjShijinHour,
+      savedAt: Date.now()
+    }));
+  } catch(e) { /* storage 실패는 무해 */ }
+
   // 사주 입력 완료 → 오늘의 운세 활성화
   if (typeof initTodayFortune === 'function') initTodayFortune();
 }
@@ -3138,6 +3155,22 @@ function renderSajuRuleBase(){
     <div style="font-size:14px;color:var(--text-2);line-height:2.1;word-break:keep-all;margin-bottom:10px;">${manshin.B}</div>
     <div style="padding:12px 14px;background:rgba(201,168,76,0.08);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:13px;color:var(--gold);line-height:1.9;word-break:keep-all;">💫 ${manshin.C}</div>
   </div>`;
+
+  // ── free 티어 게이트 (믹스 3개 이하 선택 시 지침까지만 노출) ──
+  //   지침(💫) 박스까지 표시한 뒤 조기 return. 이후 섹션(핵심 서사·일주·
+  //   분야별·조후·용신·대운·세운·부족오행)은 믹스 5개/7개에서만 열림.
+  const _sjRuleIsFree = (typeof MX_MAX !== 'undefined') && MX_MAX < 5;
+  if (_sjRuleIsFree) {
+    html += `<div style="margin-top:4px;padding:14px 16px;background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px dashed rgba(201,168,76,0.5);border-radius:12px;text-align:center;">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:0.18em;margin-bottom:8px;">✦ MORE INSIGHTS</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.9;word-break:keep-all;">
+        더 깊은 해석 — <b style="color:var(--gold);">일주(日柱)·분야별 해석·대운·세운·조후·용신</b>은<br>
+        <b style="color:var(--gold);">믹스 5개/7개</b> 선택 시 열립니다
+      </div>
+    </div>`;
+    document.getElementById('sj-rule-content').innerHTML = html;
+    return;
+  }
 
   // ② 핵심 서사
   html += `<div style="padding:18px;background:rgba(201,168,76,0.05);border:0.5px solid rgba(201,168,76,0.25);border-radius:12px;margin-bottom:14px;">
@@ -10625,8 +10658,67 @@ async function callGemini(sys, userMsg, maxTok=1200) {
   }
 }
 
-// 오늘의 운세 초기화 (페이지 로드시)
-document.addEventListener('DOMContentLoaded', () => { initTodayFortune(); });
+// ══════════════════════════════════════════════════════════════
+// 사주 자동 복원 — 앱 실행 시 localStorage['fm_saju_last']로부터
+// 지난번 계산값을 폼에 채우고 calcSaju()를 백그라운드 실행.
+// 이 함수가 먼저 돌아야 initTodayFortune() 에서 sjData를 인식함.
+// ══════════════════════════════════════════════════════════════
+function _autoRestoreSaju() {
+  try {
+    const raw = localStorage.getItem('fm_saju_last');
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || !d.y || !d.m || !d.d) return false;
+
+    // ① 폼 값 채우기
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+    setVal('sj-year',  d.y);
+    setVal('sj-month', d.m);
+    setVal('sj-day',   d.d);
+    setVal('sj-hour',  d.h != null ? d.h : '');
+    setVal('sj-min',   d.min != null ? d.min : '');
+
+    // ② calType (양력/음력/윤달) 버튼 활성화
+    if (d.calType && typeof sjSetCal === 'function') {
+      const map = { solar: 'sj-cal-solar', lunar: 'sj-cal-lunar', leap: 'sj-cal-leap' };
+      const btn = document.getElementById(map[d.calType]);
+      if (btn) sjSetCal(d.calType, btn);
+    }
+
+    // ③ 성별 버튼 활성화 (사주 화면 내부 .gender-btn 만 대상)
+    if (d.gender) {
+      if (typeof sjGenderVal !== 'undefined') sjGenderVal = d.gender;
+      const genderBtns = document.querySelectorAll('#screen-saju .gender-btn');
+      // 마크업 순서: male 버튼 → female 버튼
+      genderBtns.forEach((b, i) => {
+        b.classList.toggle('active', (d.gender === 'male' && i === 0) || (d.gender === 'female' && i === 1));
+      });
+    }
+
+    // ④ 나머지 상태 복원 (관심주제·혼인상태·시진 모드/시각)
+    if (d.marital    && typeof sjMaritalVal   !== 'undefined') sjMaritalVal   = d.marital;
+    if (d.topic      && typeof sjTopicVal     !== 'undefined') sjTopicVal     = d.topic;
+    if (d.timeMode   && typeof sjTimeModeVal  !== 'undefined') sjTimeModeVal  = d.timeMode;
+    if (d.shijinHour != null && typeof sjShijinHour !== 'undefined') sjShijinHour = d.shijinHour;
+
+    // ⑤ 계산 실행 — sjData 설정 + 결과 카드 렌더 (사주 화면 숨겨져 있어도 무해)
+    if (typeof calcSaju === 'function') {
+      calcSaju();
+      return true;
+    }
+  } catch (e) {
+    console.warn('[autoRestoreSaju] 복원 실패:', e);
+  }
+  return false;
+}
+
+// 페이지 로드시 초기화
+//   순서 중요: 사주 자동 복원 → 오늘의 운세 초기화
+//   (복원된 sjData 가 있어야 오늘의 운세가 populated 상태로 표시됨)
+document.addEventListener('DOMContentLoaded', () => {
+  _autoRestoreSaju();
+  initTodayFortune();
+});
 </script>
 </body>
 </html>
