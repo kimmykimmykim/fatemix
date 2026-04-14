@@ -1409,7 +1409,7 @@ function renderMxCats(){
     if(rr){rr.style.display='none';rr.innerHTML='';}
     if(rd) rd.innerHTML='';
   } else if(!mxDrawnRune){
-    renderRuneDeck();
+    renderMxRuneDeck();
   }
 }
 
@@ -5571,7 +5571,7 @@ function mxFlipTarot(idx){
 }
 
 // 룬 덱 렌더 — 여러 돌 중 직접 선택
-function renderRuneDeck(){
+function renderMxRuneDeck(){
   const deck=document.getElementById('mx-rune-deck');
   if(!deck) return;
   mxDrawnRune=null;
@@ -5668,7 +5668,7 @@ function mxFlipRune(idx){
         <div style="font-size:11px;color:var(--text-3);padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;display:inline-block;">${mxDrawnRune.dir}</div>
       </div>
     </div>
-    <button class="ghost-btn" onclick="renderRuneDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
+    <button class="ghost-btn" onclick="renderMxRuneDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
 }
 
 // ════════════════════════════════════════════════════
