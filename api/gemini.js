@@ -23,7 +23,7 @@ export default async function handler(req, res) {
           'X-Title': 'Fatemix'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout:free',
+          model: 'meta-llama/llama-3.3-70b-instruct:free',
           messages: [
             { role: 'system', content: sys },
             { role: 'user', content: userMsg }
