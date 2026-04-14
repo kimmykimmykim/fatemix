@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     if (data.choices?.[0]?.message?.content) {
       return res.status(200).json({ text: data.choices[0].message.content });
     }
-    return res.status(500).json({ error: data.error?.message || 'OpenRouter 오류' });
+    return res.status(500).json({ error: data.error?.message || JSON.stringify(data) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
