@@ -7,31 +7,37 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const GEMINI_KEY = process.env.GEMINI_API_KEY;
-  if (!GEMINI_KEY) return res.status(500).json({ error: 'API key not configured' });
+  const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
+  if (!OPENROUTER_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_KEY}`,
+          'HTTP-Referer': 'https://fatemix.vercel.app',
+          'X-Title': 'Fatemix'
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: sys + '\n\n' + userMsg }] }],
-          generationConfig: { 
-            maxOutputTokens: maxTok, 
-            temperature: 0.8,
-            thinkingConfig: { thinkingBudget: 0 }
-          }
+          model: 'meta-llama/llama-4-scout:free',
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: userMsg }
+          ],
+          max_tokens: maxTok,
+          temperature: 0.8
         })
       }
     );
     const data = await response.json();
-    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
+    if (data.choices?.[0]?.message?.content) {
+      return res.status(200).json({ text: data.choices[0].message.content });
     }
-    return res.status(500).json({ error: data.error?.message || 'Gemini 오류' });
+    return res.status(500).json({ error: data.error?.message || 'OpenRouter 오류' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
