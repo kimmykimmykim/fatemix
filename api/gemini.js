@@ -7,24 +7,24 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
-  if (!OPENROUTER_KEY) return res.status(500).json({ error: 'API key not configured' });
+  const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
+  if (!NVIDIA_API_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
     const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
+      'https://integrate.api.nvidia.com/v1/chat/completions',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'HTTP-Referer': 'https://fatemix.vercel.app',
-          'X-Title': 'Fatemix'
+          'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.3-70b-instruct:free',
+          model: 'meta/llama-3.3-70b-instruct',
           messages: [
+            { role: 'system', content: '반드시 한국어로만 답변하세요. 모든 응답은 자연스러운 한국어로 작성합니다.' },
             { role: 'system', content: sys },
             { role: 'user', content: userMsg }
           ],
