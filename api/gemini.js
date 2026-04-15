@@ -86,6 +86,8 @@ export default async function handler(req, res) {
     if (text) {
       return res.status(200).json({ text });
     }
+    // 디버깅용: Gemini 응답에 텍스트가 없을 때 전체 응답 로깅
+    console.log('[Gemini API error response]', JSON.stringify(data, null, 2));
     return res.status(500).json({ error: data.error?.message || JSON.stringify(data) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
