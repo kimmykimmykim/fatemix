@@ -734,7 +734,7 @@ body::before{
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">ᚱ</span>
-          <div><span style="font-size:13px;color:var(--text);">룬</span> <span style="font-size:10px;color:var(--text-3);">Runes</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">12개 돌 중 직접 집은 엘더 푸타르크 룬 한 개의 상징과 정·역방향으로 지금 필요한 조언을 전함</div></div>
+          <div><span style="font-size:13px;color:var(--text);">룬</span> <span style="font-size:10px;color:var(--text-3);">Runes</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">24개 돌 중 직접 집은 엘더 푸타르크 룬 한 개의 상징과 정·역방향으로 지금 필요한 조언을 전함</div></div>
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;">
           <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">𓂀</span>
@@ -5377,6 +5377,7 @@ function mxCalcRune(y, m, d) {
     {n:'이사(ᛁ)',m:'정지·내면화·명확함'},
     {n:'예라(ᛃ)',m:'수확·순환·노력의 결실'},
     {n:'페오르(ᛇ)',m:'신비·죽음·변환'},
+    {n:'페르트(ᛈ)',m:'신비·운명·숨겨진 것'},
     {n:'알지즈(ᛉ)',m:'보호·수호·연결'},
     {n:'소윌로(ᛊ)',m:'태양·승리·생명력'},
     {n:'티와즈(ᛏ)',m:'정의·전사·희생'},
@@ -5388,7 +5389,7 @@ function mxCalcRune(y, m, d) {
     {n:'다가즈(ᛞ)',m:'새벽·돌파·전환점'},
     {n:'오딜라(ᛟ)',m:'조상·유산·뿌리와 귀환'},
   ];
-  const idx = (y + m * 3 + d * 7) % 23;
+  const idx = (y + m * 3 + d * 7) % 24;
   const r = RUNES[idx];
   return `뽑힌 룬: ${r.n} — ${r.m}`;
 }
@@ -5596,7 +5597,7 @@ function renderMxRuneDeck(){
   const deck=document.getElementById('mx-rune-deck');
   if(!deck) return;
   mxDrawnRune=null;
-  const TOTAL_STONES=12;
+  const TOTAL_STONES=24;
   let html=`<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;text-align:center;line-height:1.6;">
     아래 <b style="color:var(--gold);">${TOTAL_STONES}개의 돌</b> 중 하나를 직접 집어보세요
   </div>
@@ -5634,6 +5635,7 @@ function mxFlipRune(idx){
     {n:'이사(ᛁ)',m:'정지·내면화'},
     {n:'예라(ᛃ)',m:'수확·노력의 결실'},
     {n:'페오르(ᛇ)',m:'신비·변환'},
+    {n:'페르트(ᛈ)',m:'신비·운명·숨겨진 것'},
     {n:'알지즈(ᛉ)',m:'보호·수호'},
     {n:'소윌로(ᛊ)',m:'태양·승리'},
     {n:'티와즈(ᛏ)',m:'정의·희생'},
@@ -5646,12 +5648,12 @@ function mxFlipRune(idx){
     {n:'오딜라(ᛟ)',m:'뿌리·귀환'},
   ];
   const rev=Math.random()>0.5;
-  const r=RUNES[Math.floor(Math.random()*23)];
+  const r=RUNES[Math.floor(Math.random()*24)];
   mxDrawnRune={...r,rev,dir:rev?'역방향':'정방향'};
   const letter=r.n.match(/\((.+)\)/)?.[1]||'ᚱ';
 
-  // 12개 돌 전부 비활성화
-  const TOTAL_STONES=12;
+  // 24개 돌 전부 비활성화
+  const TOTAL_STONES=24;
   for(let i=0;i<TOTAL_STONES;i++){
     const el=document.getElementById('mx-rstone-'+i);
     if(el){el.style.cursor='default';el.onclick=null;el.style.opacity='0.22';el.dataset.picked='1';}
