@@ -1403,7 +1403,9 @@ function renderMxCats(){
   grid.innerHTML=html;
   const cnt=document.getElementById('mx-sel-count');
   const label=MX_MAX===3?'베타 무료':MX_MAX===5?'타임라인 포함':'심층 + 개운법';
-  if(cnt) cnt.textContent=`(${normalSelected.length}/${MX_MAX}개 선택 · ${label})`;
+  const tarotRuneCount = (mxSelected.includes('tarot')?1:0) + (mxSelected.includes('rune')?1:0);
+  const trTxt = tarotRuneCount > 0 ? ` + 타로/룬 ${tarotRuneCount}` : '';
+  if(cnt) cnt.textContent=`(${normalSelected.length}/${MX_MAX}개 선택${trTxt} · ${label})`;
 
   // 타로/룬 섹션 표시 제어
   const tarotSec=document.getElementById('mx-tarot-section');
@@ -5813,7 +5815,8 @@ async function runMixAiAnalysis(){
     +'\n\n[타로]\n'+tarotTxt
     +'\n\n[룬]\n'+runeTxt;
 
-  const selCount = mxSelected.length + (mxDrawnTarot?1:0) + (mxDrawnRune?1:0);
+  // mxSelected 에 'tarot'/'rune' 이 이미 포함되어 있으므로 따로 더하지 않음 (이중 카운트 방지)
+  const selCount = mxSelected.length;
   const tier = MX_MAX>=7?'premium':MX_MAX>=5?'paid':'free';
 
   // ── 모든 tier 공통: 여러 술법 데이터를 "한꺼번에" 종합해 하나의 일관된 인물상/운세를 도출하도록 강제 ──
