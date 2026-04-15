@@ -39,8 +39,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const GROQ_API_KEY = process.env.GROQ_API_KEY;
-  if (!GROQ_API_KEY) return res.status(500).json({ error: 'API key not configured' });
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  if (!GEMINI_API_KEY) return res.status(500).json({ error: 'API key not configured' });
 
   // ── Rate limit ──
   const ip = getClientIp(req);
@@ -60,29 +60,31 @@ export default async function handler(req, res) {
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
     const response = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY),
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: '반드시 한국어로만 답변하세요. 모든 응답은 자연스러운 한국어로 작성합니다.' },
-            { role: 'system', content: sys },
-            { role: 'user', content: userMsg }
+          systemInstruction: {
+            parts: [{ text: '반드시 한국어로만 답변하세요. 모든 응답은 자연스러운 한국어로 작성합니다.\n\n' + (sys || '') }]
+          },
+          contents: [
+            { role: 'user', parts: [{ text: userMsg || '' }] }
           ],
-          max_tokens: maxTok,
-          temperature: 0.8
+          generationConfig: {
+            maxOutputTokens: maxTok,
+            temperature: 0.8
+          }
         })
       }
     );
     const data = await response.json();
-    if (data.choices?.[0]?.message?.content) {
-      return res.status(200).json({ text: data.choices[0].message.content });
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+    if (text) {
+      return res.status(200).json({ text });
     }
     return res.status(500).json({ error: data.error?.message || JSON.stringify(data) });
   } catch (err) {
