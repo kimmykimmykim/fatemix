@@ -10731,9 +10731,24 @@ async function callGemini(sys, userMsg, maxTok=1200) {
 // ══════════════════════════════════════════════════════════════
 function _autoRestoreSaju() {
   try {
+    let d = null;
     const raw = localStorage.getItem('fm_saju_last');
-    if (!raw) return false;
-    const d = JSON.parse(raw);
+    if (raw) {
+      try { d = JSON.parse(raw); } catch(e) { d = null; }
+    }
+    // fallback: fm_saju_last 가 없거나 무효면, 오늘의 운세가 사용하는
+    // 저장 목록(fm_saju)의 첫 항목으로 폼을 채움
+    if ((!d || !d.y || !d.m || !d.d) && typeof getSjList === 'function') {
+      const list = getSjList();
+      if (list.length > 0) {
+        const it = list[0];
+        d = {
+          y: it.y, m: it.m, d: it.d,
+          h: it.h, min: it.min,
+          gender: it.gender === '여' ? 'female' : (it.gender === '남' ? 'male' : it.gender)
+        };
+      }
+    }
     if (!d || !d.y || !d.m || !d.d) return false;
 
     // ① 폼 값 채우기
