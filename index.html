@@ -5460,6 +5460,8 @@ const MIX_RULEBASE = {
 
 
 // 타로 덱 렌더 — 카드 뒤집기
+// 믹스 타로 카드 사이즈 (메인 타로 54×88의 약 0.6배 — 78장 wrap용)
+const MX_TAROT_W = 32, MX_TAROT_H = 50;
 let mxTarotSpread=1, mxDrawnTarot=null, mxDrawnRune=null, mxFlippedTarot=[];
 let tarotPickPool=null; // allCards() 78장을 셔플해 담는 풀 (렌더 시마다 새로 생성)
 
@@ -5508,16 +5510,13 @@ function renderTarotDeck(){
   for(let i=0;i<TOTAL;i++){
     const rot=((i%3)-1)*(Math.random()*2.5+0.3);
     html+=`<div id="mx-tcard-${i}" onclick="mxFlipTarot(${i})"
-      style="width:22px;height:34px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);
-      border:0.5px solid rgba(201,168,76,0.35);border-radius:3px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;font-size:9px;
-      color:rgba(201,168,76,0.4);
+      style="width:${MX_TAROT_W}px;height:${MX_TAROT_H}px;cursor:pointer;
       user-select:none;transform:rotate(${rot.toFixed(2)}deg);
-      transition:transform 0.18s ease,box-shadow 0.18s,border-color 0.18s,opacity 0.2s;
-      margin:-1px;"
-      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg) scale(1.3)';this.style.boxShadow='0 4px 12px rgba(201,168,76,0.45)';this.style.borderColor='rgba(201,168,76,0.95)';this.style.zIndex='10';}"
-      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot.toFixed(2)}deg)';this.style.boxShadow='none';this.style.borderColor='rgba(201,168,76,0.35)';this.style.zIndex='';}"
-      title="클릭하여 카드 뽑기">✦</div>`;
+      transition:transform 0.18s ease,filter 0.18s,opacity 0.2s;
+      display:inline-block;line-height:0;margin:1px;"
+      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg) scale(1.3)';this.style.filter='drop-shadow(0 4px 12px rgba(201,168,76,0.55))';this.style.zIndex='10';}"
+      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot.toFixed(2)}deg)';this.style.filter='none';this.style.zIndex='';}"
+      title="클릭하여 카드 뽑기">${makeCardBackSVG(MX_TAROT_W,MX_TAROT_H)}</div>`;
   }
   html+='</div>';
   deck.innerHTML=html;
@@ -5548,17 +5547,23 @@ function mxFlipTarot(idx){
   const el=document.getElementById('mx-tcard-'+idx);
   if(el){
     el.dataset.picked='1';
-    el.style.background=card.rev
-      ?'linear-gradient(160deg,#2a1010,#1a0808)'
-      :'linear-gradient(160deg,#0f1a2a,#0a1020)';
-    el.style.borderColor=card.rev?'rgba(232,112,112,0.95)':'rgba(201,168,76,0.95)';
-    el.style.boxShadow=card.rev?'0 0 12px rgba(232,112,112,0.55)':'0 0 12px rgba(201,168,76,0.55)';
     el.style.cursor='default';
     el.style.zIndex='20';
     el.style.transform=(card.rev
       ? 'translateY(-10px) scale(1.4) rotate(180deg)'
       : 'translateY(-10px) scale(1.4) rotate(0deg)');
-    el.innerHTML=`<div style="font-size:12px;line-height:1;">${card.sym}</div>`;
+    el.style.filter = card.rev
+      ? 'drop-shadow(0 0 12px rgba(232,112,112,0.55))'
+      : 'drop-shadow(0 0 12px rgba(201,168,76,0.55))';
+    // 메인 타로와 동일한 톤의 SVG 앞면(상징)으로 교체
+    const W=MX_TAROT_W, H=MX_TAROT_H;
+    const accent = card.rev ? '#E87070' : '#C9A84C';
+    el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${W}" height="${H}" rx="10" fill="#0F0F1A" stroke="${accent}" stroke-width="0.8"/>
+      <rect x="5" y="5" width="${W-10}" height="${H-10}" rx="7" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="0.4"/>
+      <text x="${W/2}" y="${H*0.5}" text-anchor="middle" dominant-baseline="central"
+        font-size="${W*0.45}" fill="${accent}" font-family="Cormorant Garamond,serif">${card.sym}</text>
+    </svg>`;
   }
   // 진행 표시 업데이트
   const pc=document.getElementById('mx-tarot-pick-count');
