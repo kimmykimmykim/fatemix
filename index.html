@@ -4242,20 +4242,20 @@ function renderPickDeck(){
 let _shuffling=false;
 function shuffleDeck(){
   if(_shuffling) return;
+  if(pickedCards.length>=spread) return; // 이미 다 뽑았으면 셔플 불필요
   _shuffling=true;
 
-  // Fisher-Yates 셔플
-  for(let i=deckPool.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
+  // 이미 뽑은 카드는 유지, 나머지 덱만 셔플
+  const alreadyPicked=pickedCards.length;
+  // alreadyPicked 이후 카드만 Fisher-Yates 셔플
+  for(let i=deckPool.length-1;i>alreadyPicked;i--){
+    const j=alreadyPicked+Math.floor(Math.random()*(i-alreadyPicked+1));
     [deckPool[i],deckPool[j]]=[deckPool[j],deckPool[i]];
   }
-  // 역방향 재배정 (25%)
-  deckPool.forEach(c=>{ c.isRev=Math.random()>0.75; });
-  // 뽑기 리셋 (언제든 재셔플 가능)
-  pickedCards=[];
-  pickCount=0;
-  drawnCards=[];
-  flippedCount=0;
+  // 아직 안 뽑은 카드만 역방향 재배정 (25%)
+  for(let i=alreadyPicked;i<deckPool.length;i++){
+    deckPool[i].isRev=Math.random()>0.75;
+  }
 
   const deckEl=document.getElementById('tarot-deck-cards');
   const topCard=document.getElementById('deck-top-card');
@@ -4264,20 +4264,9 @@ function shuffleDeck(){
   const guideEl=document.getElementById('tarot-deck-guide');
   if(guideEl) guideEl.textContent='✦ 셔플 중...';
 
-  // 슬롯 초기화
-  const posNames=spPos[spread];
-  posNames.forEach((_,i)=>{
-    const slot=document.getElementById(`tarot-slot-${i}`);
-    if(slot){
-      slot.style.border='1.5px dashed rgba(201,168,76,0.3)';
-      slot.style.background='rgba(201,168,76,0.04)';
-      slot.innerHTML='✦';
-    }
-  });
-
-  // 남은 카드 수 복원
+  // 남은 카드 수 업데이트
   const countEl=document.getElementById('deck-count');
-  if(countEl) countEl.textContent=`${deckPool.length}장`;
+  if(countEl) countEl.textContent=`${deckPool.length-alreadyPicked}장`;
 
   // ── 부채꼴 펼침 애니메이션 ──
   const rect=topCard.getBoundingClientRect();
@@ -4362,8 +4351,9 @@ function shuffleDeck(){
     topCard.style.pointerEvents='auto';
     if(shuffleBtn) shuffleBtn.style.pointerEvents='auto';
     if(guideEl){
-      guideEl.textContent='✦ 셔플 완료!';
-      setTimeout(()=>{ guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`; },1000);
+      const remaining=spread-pickedCards.length;
+      guideEl.textContent='✦ 나머지 덱 셔플 완료!';
+      setTimeout(()=>{ guideEl.textContent=remaining>0?`덱을 탭해서 카드를 ${remaining}장 더 뽑으세요`:`덱을 탭해서 카드를 ${spread}장 뽑으세요`; },1000);
     }
     _shuffling=false;
   },1650);
