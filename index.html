@@ -1236,10 +1236,8 @@ body::before{
     </div>
     <textarea class="input" id="mix-question" style="resize:vertical;min-height:60px;margin-bottom:14px;"
       placeholder="궁금한 것을 입력하세요. 예: 지금 이직해도 될까요?"></textarea>
-    <div style="display:flex;gap:8px;">
-      <button class="ghost-btn" onclick="mxGoStep(1)" style="flex:0 0 auto;padding:14px 20px;">← 이전</button>
-      <button class="primary-btn" id="mix-btn" onclick="runMixAiAnalysis()" style="flex:1;">✦ 운명의 교차점 읽기</button>
-    </div>
+    <button class="primary-btn" id="mix-btn" onclick="runMixAiAnalysis()" style="width:100%;margin-bottom:8px;">✦ 운명의 교차점 읽기</button>
+    <button class="ghost-btn" onclick="mxGoStep(1)" style="width:100%;padding:12px;">← 이전 단계로</button>
   </div>
 
   </div><!-- /mx-step-2 -->
