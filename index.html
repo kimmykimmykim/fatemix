@@ -1457,6 +1457,47 @@ function mxGoStep(n){
   if(ref) window.scrollTo({top:ref.offsetTop,behavior:'smooth'});
 }
 
+function _autoFillMixFromSaju(){
+  // sjData(현재 세션) → localStorage fm_saju_last → fm_saju 목록 순으로 시도
+  var d=null;
+  if(typeof sjData!=='undefined'&&sjData&&sjData.y){
+    d={y:sjData.y,m:sjData.m,d:sjData.d,h:sjData.h,gender:(typeof sjGenderVal!=='undefined')?sjGenderVal:'female'};
+  }
+  if(!d||!d.y){
+    try{var raw=localStorage.getItem('fm_saju_last');if(raw){d=JSON.parse(raw);}}catch(e){}
+  }
+  if(!d||!d.y){
+    try{var list=JSON.parse(localStorage.getItem('fm_saju')||'[]');if(list.length>0){var it=list[0];d={y:it.y,m:it.m,d:it.d,h:it.h,min:it.min,gender:it.gender==='여'?'female':it.gender==='남'?'male':it.gender};}}catch(e){}
+  }
+  if(!d||!d.y) return;
+
+  var yEl=document.getElementById('mx-year');
+  var mEl=document.getElementById('mx-month');
+  var dEl=document.getElementById('mx-day');
+  if(yEl&&!yEl.value) yEl.value=d.y;
+  if(mEl&&!mEl.value) mEl.value=d.m;
+  if(dEl&&!dEl.value) dEl.value=d.d;
+
+  // 시진
+  if(d.h!=null){
+    var h=typeof d.h==='number'?d.h:parseInt(d.h,10);
+    if(!isNaN(h)){
+      var siIdx=h>=23||h<1?0:Math.floor((h+1)/2);
+      mxShijinIdx=siIdx;
+      var grid=document.getElementById('mx-shijin-grid');
+      if(grid) grid.querySelectorAll('.toggle-btn').forEach(function(btn,i){btn.classList.toggle('active',i===siIdx);});
+    }
+  }
+  // 성별
+  var gender=d.gender;
+  if(gender){
+    mxGenderVal=gender;
+    document.querySelectorAll('#screen-mix .gender-btn').forEach(function(b,i){
+      b.classList.toggle('active',(gender==='male'&&i===0)||(gender==='female'&&i===1));
+    });
+  }
+}
+
 function renderMxCats(){
   const grid=document.getElementById('mx-cats-grid');
   if(!grid) return;
@@ -1578,6 +1619,8 @@ function go(screen) {
     // 이전 결과 숨기기
     var mrc=document.getElementById('mix-result-card'); if(mrc) mrc.style.display='none';
     var mbs=document.getElementById('mx-bujeok-section'); if(mbs) mbs.style.display='none';
+    // 사주 데이터 자동 채우기
+    _autoFillMixFromSaju();
   }
 }
 
