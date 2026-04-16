@@ -454,6 +454,24 @@ body::before{
 .luck-pil{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
   background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:var(--text-3);}
 
+/* ── 하단 탭 네비게이션 ── */
+#bottom-tab-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:6000;
+  display:flex;justify-content:space-around;align-items:center;
+  background:rgba(10,10,18,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:0.5px solid rgba(201,168,76,0.2);
+  padding:6px 0 env(safe-area-inset-bottom,8px);
+  height:56px;
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;padding:4px 0;transition:color 0.2s;color:var(--text-3);
+}
+.tab-item.active{color:var(--gold);}
+.tab-icon{font-size:20px;line-height:1;margin-bottom:2px;}
+.tab-label{font-size:9px;letter-spacing:0.04em;}
+body{padding-bottom:64px;}
+
 </style>
 </head>
 <body>
@@ -630,13 +648,13 @@ body::before{
 
       <!-- 믹스 분석 바로가기 -->
       <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
-        <button onclick="goMixFromFortune()" style="
+        <button onclick="goTab('quick')" style="
           padding:10px 20px;font-size:12px;border-radius:20px;cursor:pointer;
           border:1px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);
           color:var(--gold);font-family:inherit;letter-spacing:0.06em;
           transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;
         " onmouseover="this.style.background='rgba(201,168,76,0.18)'" onmouseout="this.style.background='rgba(201,168,76,0.08)'">
-          <span style="font-size:15px;">◇</span> 이 사주로 믹스 분석 →
+          <span style="font-size:15px;">◇</span> 내 운세 한눈에 보기 →
         </button>
       </div>
     </div>
@@ -792,8 +810,59 @@ body::before{
 
 </div>
 
+<!-- ═══════════════════════════════════════════
+     간단확인 화면
+═══════════════════════════════════════════ -->
+<div id="screen-quick" class="screen">
+<div class="container">
+  <div class="page-title">간단 확인</div>
+  <div class="page-subtitle" style="margin-bottom:20px;">AI 없이 · 룰베이스 즉시 결과</div>
+  <div id="quick-need-birth" style="display:none;text-align:center;padding:30px 20px;">
+    <div style="font-size:36px;opacity:0.3;margin-bottom:12px;">◇</div>
+    <div style="font-size:14px;color:var(--text-2);margin-bottom:16px;">생년월일을 입력하면 간단 운세를 바로 볼 수 있어요</div>
+    <button class="primary-btn" onclick="goTab('home')" style="max-width:240px;margin:0 auto;">홈에서 사주 입력하기</button>
+  </div>
+  <div id="quick-results" style="display:none;">
+    <div class="card" id="qk-saju" style="margin-bottom:12px;"></div>
+    <div class="card" id="qk-tarot" style="margin-bottom:12px;"></div>
+    <div class="card" id="qk-astro" style="margin-bottom:12px;"></div>
+    <div class="card" id="qk-numer" style="margin-bottom:12px;"></div>
+    <div style="text-align:center;padding:16px 0 8px;">
+      <button class="primary-btn" onclick="goTab('mix')" style="max-width:360px;margin:0 auto;">✦ 더 깊은 AI 믹스 분석 받기 →</button>
+    </div>
+  </div>
+</div>
+</div>
 
-<!-- 
+<!-- ═══════════════════════════════════════════
+     술법 목록 화면
+═══════════════════════════════════════════ -->
+<div id="screen-methods" class="screen">
+<div class="container">
+  <div class="page-title">개별 술법</div>
+  <div class="page-subtitle" style="margin-bottom:20px;">각 술법을 단독으로 깊게 보기</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div class="menu-item" onclick="go('saju')" style="padding:16px 12px;">
+      <div class="menu-icon">🧧</div><div class="menu-name">사주</div>
+      <div class="menu-desc" style="font-size:11px;">만세력 기반 사주 분석</div>
+    </div>
+    <div class="menu-item" onclick="go('tarot')" style="padding:16px 12px;">
+      <div class="menu-icon">🎴</div><div class="menu-name">타로</div>
+      <div class="menu-desc" style="font-size:11px;">라이더-웨이트 78장 덱</div>
+    </div>
+    <div class="menu-item" onclick="go('astro')" style="padding:16px 12px;">
+      <div class="menu-icon">⭐</div><div class="menu-name">서양 점성술</div>
+      <div class="menu-desc" style="font-size:11px;">행성 배치 · 별자리 분석</div>
+    </div>
+    <div class="menu-item" onclick="go('gunghap')" style="padding:16px 12px;">
+      <div class="menu-icon">💑</div><div class="menu-name">궁합</div>
+      <div class="menu-desc" style="font-size:11px;">두 사주의 조화</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!--
      사주 화면
  -->
 <div id="screen-saju" class="screen">
@@ -1614,12 +1683,113 @@ function go(screen) {
   if (screen === 'sukyao') syCalcAge();
   if (screen === 'mix') {
     renderMxCats(); mxGoStep(1);
-    // 이전 결과 숨기기
     var mrc=document.getElementById('mix-result-card'); if(mrc) mrc.style.display='none';
     var mbs=document.getElementById('mx-bujeok-section'); if(mbs) mbs.style.display='none';
-    // 사주 데이터 자동 채우기
     _autoFillMixFromSaju();
   }
+  if (screen === 'quick') renderQuickCheck();
+  // 탭바 active 동기화
+  _syncTabBar(screen);
+}
+
+// 탭 네비게이션
+const TAB_SCREENS={home:'home',quick:'quick',mix:'mix',methods:'methods'};
+function goTab(tab,btn){
+  go(tab);
+}
+function _syncTabBar(screen){
+  var tabMap={home:'tab-home',quick:'tab-quick',mix:'tab-mix',methods:'tab-methods',
+    saju:'tab-methods',tarot:'tab-methods',astro:'tab-methods',gunghap:'tab-methods'};
+  var activeTab=tabMap[screen]||'';
+  document.querySelectorAll('#bottom-tab-bar .tab-item').forEach(function(t){
+    t.classList.toggle('active',t.id===activeTab);
+  });
+}
+
+// 간단확인 렌더링
+function renderQuickCheck(){
+  var d=null;
+  if(typeof sjData!=='undefined'&&sjData&&sjData.y) d={y:sjData.y,m:sjData.m,d:sjData.d};
+  if(!d){try{var raw=localStorage.getItem('fm_saju_last');if(raw){d=JSON.parse(raw);}}catch(e){}}
+  if(!d){try{var list=JSON.parse(localStorage.getItem('fm_saju')||'[]');if(list.length)d=list[0];}catch(e){}}
+
+  var needEl=document.getElementById('quick-need-birth');
+  var resEl=document.getElementById('quick-results');
+  if(!d||!d.y){
+    if(needEl) needEl.style.display='block';
+    if(resEl) resEl.style.display='none';
+    return;
+  }
+  if(needEl) needEl.style.display='none';
+  if(resEl) resEl.style.display='block';
+
+  var y=d.y,m=d.m,dd=d.d;
+  var now=new Date();
+  var ty=now.getFullYear(),tm=now.getMonth()+1,td=now.getDate();
+
+  // ① 사주 일진
+  var dp=getDP(ty,tm,td);
+  var iljin=천간[dp.g]+지지[dp.j]+'일';
+  var oh=천간오행[dp.g];
+  var luckLbl=JI_LUCK_LABEL[dp.j];
+  var luckCls=JI_LUCK_CLASS[dp.j];
+  document.getElementById('qk-saju').innerHTML=`
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.12em;margin-bottom:10px;">오늘의 일진</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:28px;color:var(--gold);font-family:'Cinzel',serif;">${iljin}</div>
+      <div>
+        <div><span class="${luckCls}">${luckLbl}</span> <span style="font-size:11px;color:var(--text-3);">${JI_DESC[dp.j]}</span></div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:4px;">오행: ${oh} · ${천간[dp.g]}(${천간오행[dp.g]}) + ${지지[dp.j]}</div>
+      </div>
+    </div>`;
+
+  // ② 타로 1장
+  var seed=Math.abs((y*10000+m*100+dd)*7+(ty*10000+tm*100+td)*13);
+  var cards=allCards();
+  var card={...cards[seed%cards.length],isRev:(seed%11===0)};
+  card.reversed=card.isRev;
+  document.getElementById('qk-tarot').innerHTML=`
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.12em;margin-bottom:10px;">오늘의 카드</div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:60px;height:96px;flex-shrink:0;">${makeCardSVG(card,60,96)}</div>
+      <div>
+        <div style="font-size:15px;color:${card.isRev?'#E87070':'var(--gold)'};margin-bottom:4px;">${card.name}</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:2px;">${card.isRev?card.rev:card.key}</div>
+        <div style="font-size:10px;color:var(--text-3);">${card.isRev?'역방향':'정방향'}</div>
+      </div>
+    </div>`;
+
+  // ③ 별자리
+  var signs=['양자리','황소자리','쌍둥이자리','게자리','사자자리','처녀자리','천칭자리','전갈자리','사수자리','염소자리','물병자리','물고기자리'];
+  var signDates=[[3,21],[4,20],[5,21],[6,21],[7,23],[8,23],[9,23],[10,23],[11,22],[12,22],[1,20],[2,19]];
+  var signIdx=11;
+  for(var si=0;si<12;si++){
+    var nd=signDates[si],nx=signDates[(si+1)%12];
+    if(si<11){if(m===nd[0]&&dd>=nd[1]||m===nx[0]&&dd<nx[1]){signIdx=si;break;}}
+    else{if(m===12&&dd>=22||m===1&&dd<20){signIdx=11;break;} if(m===1&&dd>=20||m===2&&dd<19){signIdx=11;}}
+  }
+  var signName=signs[signIdx];
+  var signTraits=['리더십·도전','안정·감각','소통·호기심','감성·보호','자신감·창의','분석·완벽','균형·조화','직관·열정','자유·탐험','책임·인내','혁신·독립','상상·공감'];
+  document.getElementById('qk-astro').innerHTML=`
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.12em;margin-bottom:10px;">태양 별자리</div>
+    <div style="font-size:20px;color:var(--gold);margin-bottom:6px;">${signName}</div>
+    <div style="font-size:12px;color:var(--text-2);">${signTraits[signIdx]}</div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:4px;">${y}년 ${m}월 ${dd}일생</div>`;
+
+  // ④ 수비학
+  var digitSum=function(n){return String(Math.abs(n)).split('').reduce(function(a,c){return a+(+c||0);},0);};
+  var reduceSingle=function(n){while(n>9)n=digitSum(n);return n;};
+  var lifeNum=reduceSingle(digitSum(y)+digitSum(m)+digitSum(dd));
+  var dayNum=reduceSingle(digitSum(ty)+digitSum(tm)+digitSum(td));
+  var personalDay=reduceSingle(lifeNum+dayNum);
+  var PD_KW={1:'시작·주도',2:'협력·관계',3:'표현·창의',4:'기반·안정',5:'변화·자유',6:'책임·가족',7:'성찰·영감',8:'성취·물질',9:'마무리·통찰'};
+  document.getElementById('qk-numer').innerHTML=`
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.12em;margin-bottom:10px;">수비학</div>
+    <div style="display:flex;gap:16px;">
+      <div style="text-align:center;"><div style="font-size:24px;color:var(--gold);">${lifeNum}</div><div style="font-size:10px;color:var(--text-3);">생명수</div></div>
+      <div style="text-align:center;"><div style="font-size:24px;color:var(--gold);">${personalDay}</div><div style="font-size:10px;color:var(--text-3);">오늘의 개인일수</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-2);margin-top:8px;">${PD_KW[personalDay]||'흐름을 읽고 따르세요'}</div>`;
 }
 
 function showPaywall(feature) {
@@ -11426,5 +11596,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initTodayFortune();
 });
 </script>
+
+<!-- 하단 탭 네비게이션 -->
+<div id="bottom-tab-bar">
+  <div class="tab-item active" onclick="goTab('home',this)" id="tab-home">
+    <div class="tab-icon">⌂</div><div class="tab-label">홈</div>
+  </div>
+  <div class="tab-item" onclick="goTab('quick',this)" id="tab-quick">
+    <div class="tab-icon">◇</div><div class="tab-label">간단확인</div>
+  </div>
+  <div class="tab-item" onclick="goTab('mix',this)" id="tab-mix">
+    <div class="tab-icon">✦</div><div class="tab-label">믹스</div>
+  </div>
+  <div class="tab-item" onclick="goTab('methods',this)" id="tab-methods">
+    <div class="tab-icon">☰</div><div class="tab-label">술법</div>
+  </div>
+</div>
 </body>
 </html>
