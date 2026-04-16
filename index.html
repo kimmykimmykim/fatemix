@@ -1097,7 +1097,12 @@ body::before{
   <div class="page-title">믹스 분석</div>
   <div class="page-subtitle">동서양 11개 술법이 하나의 운명을 읽다</div>
 
-  <!-- STEP 1: 기본 정보 -->
+  <!-- 스텝 슬라이드 컨테이너 -->
+  <div id="mx-slide-container" style="overflow:hidden;position:relative;">
+    <div id="mx-slide-track" style="display:flex;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);">
+
+      <!-- ═══ STEP 1: 기본 정보 ═══ -->
+      <div id="mx-step-1" style="min-width:100%;flex-shrink:0;">
   <div class="card">
     <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 1 — 기본 정보</div>
     <div class="label">생년월일</div>
@@ -1152,8 +1157,11 @@ body::before{
     <div class="label">이름 <span style="color:var(--text-3);font-size:11px;">(성명학 분석용 · 선택)</span></div>
     <input class="input" type="text" id="mx-name" placeholder="이름을 입력하세요">
   </div>
+  <button class="primary-btn" onclick="mxGoStep(2)" style="margin-bottom:16px;">다음 →</button>
+      </div><!-- /mx-step-1 -->
 
-  <!-- STEP 2: 술법 선택 & 타로/룬 조건부 뽑기 -->
+      <!-- ═══ STEP 2: 술법 선택 + 분석 ═══ -->
+      <div id="mx-step-2" style="min-width:100%;flex-shrink:0;">
   <div class="card">
     <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 2 — 술법 선택</div>
 
@@ -1198,7 +1206,7 @@ body::before{
 
   <!-- STEP 3: 분석 주제 + 질문 -->
   <div class="card">
-    <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 3 — 분석 시작</div>
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">분석 주제 및 질문</div>
     <div class="label">분석 주제</div>
     <div class="toggle-group" id="mix-topic-group" style="margin-bottom:14px;">
       <button class="toggle-btn active" onclick="mixTopic(this,'연애/관계')">연애</button>
@@ -1208,8 +1216,15 @@ body::before{
     </div>
     <textarea class="input" id="mix-question" style="resize:vertical;min-height:60px;margin-bottom:14px;"
       placeholder="궁금한 것을 입력하세요. 예: 지금 이직해도 될까요?"></textarea>
-    <button class="primary-btn" id="mix-btn" onclick="runMixAiAnalysis()">✦ 운명의 교차점 읽기</button>
+    <div style="display:flex;gap:8px;">
+      <button class="ghost-btn" onclick="mxGoStep(1)" style="flex:0 0 auto;padding:14px 20px;">← 이전</button>
+      <button class="primary-btn" id="mix-btn" onclick="runMixAiAnalysis()" style="flex:1;">✦ 운명의 교차점 읽기</button>
+    </div>
   </div>
+
+      </div><!-- /mx-step-2 -->
+    </div><!-- /mx-slide-track -->
+  </div><!-- /mx-slide-container -->
 
   <!-- 결과 -->
   <div id="mix-result-card" style="display:none;">
@@ -1401,6 +1416,26 @@ function mxSetMax(n, el){
   renderMxCats();
 }
 
+let _mxStep=1;
+function mxGoStep(n){
+  // STEP 1 → 2 전환 시 입력값 검증
+  if(n===2){
+    const y=parseInt(document.getElementById('mx-year').value,10);
+    const m=parseInt(document.getElementById('mx-month').value,10);
+    const d=parseInt(document.getElementById('mx-day').value,10);
+    if(!y||y<1900||y>2100||!m||m<1||m>12||!d||d<1||d>31){
+      alert('생년월일을 정확히 입력해주세요.');
+      return;
+    }
+  }
+  _mxStep=n;
+  const track=document.getElementById('mx-slide-track');
+  if(track) track.style.transform=`translateX(-${(n-1)*100}%)`;
+  // 스크롤 상단으로
+  const container=document.getElementById('mx-slide-container');
+  if(container) window.scrollTo({top:container.offsetTop-60,behavior:'smooth'});
+}
+
 function renderMxCats(){
   const grid=document.getElementById('mx-cats-grid');
   if(!grid) return;
@@ -1517,7 +1552,7 @@ function go(screen) {
   if (screen === 'ziwei') { zwCalcAge(); }
   if (screen === 'danjusa') djCalcAge();
   if (screen === 'sukyao') syCalcAge();
-  if (screen === 'mix') { renderMxCats(); }
+  if (screen === 'mix') { renderMxCats(); mxGoStep(1); }
 }
 
 function showPaywall(feature) {
@@ -10794,6 +10829,8 @@ function goMixFromFortune() {
     }
   }
   go('mix');
+  // 데이터 이미 채워졌으므로 바로 STEP 2로
+  setTimeout(()=>mxGoStep(2),100);
 }
 
 // =============================================
