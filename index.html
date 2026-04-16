@@ -289,6 +289,10 @@ body::before{
   from { opacity:0; transform:translateY(20px) scale(0.9); }
   to   { opacity:1; transform:translateY(0) scale(1); }
 }
+@keyframes mxStepFadeIn {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
 .card-scene { animation: cardAppear 0.4s ease forwards; }
 
 /* ====== 타로 로딩 오버레이 ====== */
@@ -1097,12 +1101,8 @@ body::before{
   <div class="page-title">믹스 분석</div>
   <div class="page-subtitle">동서양 11개 술법이 하나의 운명을 읽다</div>
 
-  <!-- 스텝 슬라이드 컨테이너 -->
-  <div id="mx-slide-container" style="overflow:hidden;position:relative;">
-    <div id="mx-slide-track" style="display:flex;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);">
-
-      <!-- ═══ STEP 1: 기본 정보 ═══ -->
-      <div id="mx-step-1" style="min-width:100%;flex-shrink:0;">
+  <!-- ═══ STEP 1: 기본 정보 ═══ -->
+  <div id="mx-step-1" style="animation:mxStepFadeIn 0.35s ease;">
   <div class="card">
     <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 1 — 기본 정보</div>
     <div class="label">생년월일</div>
@@ -1158,10 +1158,10 @@ body::before{
     <input class="input" type="text" id="mx-name" placeholder="이름을 입력하세요">
   </div>
   <button class="primary-btn" onclick="mxGoStep(2)" style="margin-bottom:16px;">다음 →</button>
-      </div><!-- /mx-step-1 -->
+  </div><!-- /mx-step-1 -->
 
-      <!-- ═══ STEP 2: 술법 선택 + 분석 ═══ -->
-      <div id="mx-step-2" style="min-width:100%;flex-shrink:0;">
+  <!-- ═══ STEP 2: 술법 선택 + 분석 ═══ -->
+  <div id="mx-step-2" style="display:none;animation:mxStepFadeIn 0.35s ease;">
   <div class="card">
     <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 2 — 술법 선택</div>
 
@@ -1222,9 +1222,7 @@ body::before{
     </div>
   </div>
 
-      </div><!-- /mx-step-2 -->
-    </div><!-- /mx-slide-track -->
-  </div><!-- /mx-slide-container -->
+  </div><!-- /mx-step-2 -->
 
   <!-- 결과 -->
   <div id="mix-result-card" style="display:none;">
@@ -1418,7 +1416,6 @@ function mxSetMax(n, el){
 
 let _mxStep=1;
 function mxGoStep(n){
-  // STEP 1 → 2 전환 시 입력값 검증
   if(n===2){
     const y=parseInt(document.getElementById('mx-year').value,10);
     const m=parseInt(document.getElementById('mx-month').value,10);
@@ -1429,11 +1426,15 @@ function mxGoStep(n){
     }
   }
   _mxStep=n;
-  const track=document.getElementById('mx-slide-track');
-  if(track) track.style.transform=`translateX(-${(n-1)*100}%)`;
-  // 스크롤 상단으로
-  const container=document.getElementById('mx-slide-container');
-  if(container) window.scrollTo({top:container.offsetTop-60,behavior:'smooth'});
+  const s1=document.getElementById('mx-step-1');
+  const s2=document.getElementById('mx-step-2');
+  if(s1) s1.style.display=n===1?'block':'none';
+  if(s2) s2.style.display=n===2?'block':'none';
+  // 페이드 애니메이션 재트리거
+  const active=n===1?s1:s2;
+  if(active){active.style.animation='none';active.offsetHeight;active.style.animation='mxStepFadeIn 0.35s ease';}
+  const ref=document.getElementById('screen-mix');
+  if(ref) window.scrollTo({top:ref.offsetTop,behavior:'smooth'});
 }
 
 function renderMxCats(){
