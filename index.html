@@ -606,6 +606,18 @@ body::before{
 
       <!-- 근거 (어떤 로직으로 나왔는지) -->
       <div id="tf-basis" style="margin-top:14px;padding:10px 14px 0;font-size:11px;color:var(--text-3);text-align:center;border-top:0.5px dashed rgba(201,168,76,0.22);letter-spacing:0.02em;line-height:1.65;"></div>
+
+      <!-- 믹스 분석 바로가기 -->
+      <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
+        <button onclick="goMixFromFortune()" style="
+          padding:10px 20px;font-size:12px;border-radius:20px;cursor:pointer;
+          border:1px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);
+          color:var(--gold);font-family:inherit;letter-spacing:0.06em;
+          transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;
+        " onmouseover="this.style.background='rgba(201,168,76,0.18)'" onmouseout="this.style.background='rgba(201,168,76,0.08)'">
+          <span style="font-size:15px;">◇</span> 이 사주로 믹스 분석 →
+        </button>
+      </div>
     </div>
 
     <!-- [B] 생년월일 없을 때: 입력 안내 + CTA -->
@@ -1107,19 +1119,33 @@ body::before{
         <input class="input" type="number" id="mx-day" value="" min="1" max="31"></div>
     </div>
     <div class="label">생시</div>
-    <div id="mx-shijin-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;">
-      <button class="toggle-btn" onclick="mxSelectShijin(0,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">자시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(1,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">축시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(2,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">인시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(3,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">묘시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(4,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">진시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(5,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">사시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(6,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">오시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(7,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">미시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(8,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">신시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(9,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">유시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(10,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">술시</button>
-      <button class="toggle-btn" onclick="mxSelectShijin(11,this)" style="padding:6px 4px;font-size:11px;color:#C8C4BC;">해시</button>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="toggle-btn active" id="mx-time-mode-shijin" onclick="mxTimeMode('shijin',this)" style="flex:1;font-size:11px;">시진 선택</button>
+      <button class="toggle-btn" id="mx-time-mode-direct" onclick="mxTimeMode('direct',this)" style="flex:1;font-size:11px;">직접 입력</button>
+      <button class="toggle-btn" id="mx-time-mode-unknown" onclick="mxTimeMode('unknown',this)" style="flex:1;font-size:11px;">모름</button>
+    </div>
+    <div id="mx-shijin-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px;">
+      <button class="toggle-btn" onclick="mxSelectShijin(0,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">자시<br><span style="font-size:8px;opacity:0.6;">23~01시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(1,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">축시<br><span style="font-size:8px;opacity:0.6;">01~03시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(2,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">인시<br><span style="font-size:8px;opacity:0.6;">03~05시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(3,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">묘시<br><span style="font-size:8px;opacity:0.6;">05~07시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(4,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">진시<br><span style="font-size:8px;opacity:0.6;">07~09시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(5,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">사시<br><span style="font-size:8px;opacity:0.6;">09~11시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(6,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">오시<br><span style="font-size:8px;opacity:0.6;">11~13시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(7,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">미시<br><span style="font-size:8px;opacity:0.6;">13~15시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(8,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">신시<br><span style="font-size:8px;opacity:0.6;">15~17시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(9,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">유시<br><span style="font-size:8px;opacity:0.6;">17~19시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(10,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">술시<br><span style="font-size:8px;opacity:0.6;">19~21시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(11,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">해시<br><span style="font-size:8px;opacity:0.6;">21~23시</span></button>
+    </div>
+    <div id="mx-direct-picker" style="display:none;margin-bottom:6px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="input" type="number" id="mx-hour" min="0" max="23" placeholder="시(0~23)" style="width:80px;text-align:center;" oninput="mxUpdateShijin()">
+        <span style="color:var(--text-3);">시</span>
+        <input class="input" type="number" id="mx-min" min="0" max="59" placeholder="분" style="width:80px;text-align:center;">
+        <span style="color:var(--text-3);">분</span>
+      </div>
+      <div id="mx-shijin-display" style="font-size:11px;color:var(--gold);margin-top:4px;"></div>
     </div>
     <div class="label">성별</div>
     <div class="gender-row" style="margin-bottom:14px;">
@@ -5440,6 +5466,24 @@ function mxSelectShijin(idx,btn){
   mxShijinIdx=idx;
   document.querySelectorAll('#mx-shijin-grid .toggle-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+}
+function mxTimeMode(val,btn){
+  document.querySelectorAll('#mx-time-mode-shijin,#mx-time-mode-direct,#mx-time-mode-unknown').forEach(b=>{
+    var el=document.getElementById(b.id||''); if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+  document.getElementById('mx-shijin-grid').style.display = val==='shijin' ? 'grid' : 'none';
+  document.getElementById('mx-direct-picker').style.display = val==='direct' ? 'block' : 'none';
+  if(val==='unknown'){ mxShijinIdx=6; } // 모름 → 오시(정오) 기본
+}
+function mxUpdateShijin(){
+  var h=parseInt(document.getElementById('mx-hour').value,10);
+  if(isNaN(h)||h<0||h>23) return;
+  var SI=['자시 (子) 23:00~01:00','축시 (丑) 01:00~03:00','인시 (寅) 03:00~05:00','묘시 (卯) 05:00~07:00','진시 (辰) 07:00~09:00','사시 (巳) 09:00~11:00','오시 (午) 11:00~13:00','미시 (未) 13:00~15:00','신시 (申) 15:00~17:00','유시 (酉) 17:00~19:00','술시 (戌) 19:00~21:00','해시 (亥) 21:00~23:00'];
+  var idx = h>=23||h<1 ? 0 : Math.floor((h+1)/2);
+  mxShijinIdx=idx;
+  var disp=document.getElementById('mx-shijin-display');
+  if(disp) disp.textContent='→ '+SI[idx];
 }
 function mxGender(g,btn){
   mxGenderVal=g;
@@ -10642,7 +10686,7 @@ function initTodayFortune() {
   }
 
   // 한줄 운세 — DB에서 즉시 뽑기
-  _tfMsgState = { luckLbl, oh: iljinOh, seed };
+  _tfMsgState = { luckLbl, oh: iljinOh, seed, dp, personalDay, birth };
   _showTodayMsg();
 }
 
@@ -10655,17 +10699,99 @@ function _shortOracleMsg(raw) {
 
 function _showTodayMsg() {
   if (!_tfMsgState) return;
-  const { luckLbl, oh, seed } = _tfMsgState;
-  const pool = (DAILY_MSG_DB[luckLbl] || DAILY_MSG_DB['平'])[oh]
-            || DAILY_MSG_DB['平']['토'];
-  const text = pool[(seed + _tfVariant * 7) % pool.length];
+  const { luckLbl, oh, seed, dp, personalDay, birth } = _tfMsgState;
+
+  // ── 사주 기반 구체적 3줄 운세 생성 ──
+  const now = new Date();
+  const hour = now.getHours();
+  const dayGan = 천간[dp.g];
+  const dayJi = 지지[dp.j];
+  const dayOh = 천간오행[dp.g];
+
+  // 오행 상생/상극 관계
+  const SANG_SAENG = {'목':'화','화':'토','토':'금','금':'수','수':'목'};
+  const SANG_GEUK = {'목':'토','토':'수','수':'화','화':'금','금':'목'};
+  const isGeuk = SANG_GEUK[oh] === dayOh;
+  const isSaeng = SANG_SAENG[oh] === dayOh;
+
+  // 시간대 매핑
+  const SI_NAMES = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+  const curSi = SI_NAMES[Math.floor(((hour+1)%24)/2)];
+  const goodHours = isSaeng ? '오전' : '오후';
+  const cautionHours = isGeuk ? '저녁' : '점심';
+
+  // 방위
+  const DIR_MAP = {'목':'동쪽','화':'남쪽','토':'중앙','금':'서쪽','수':'북쪽'};
+  const goodDir = DIR_MAP[SANG_SAENG[oh]] || '동쪽';
+
+  // 구체적 행동
+  const ACTIONS_GOOD = {
+    '목':['새 프로젝트 시작','미뤄둔 연락 먼저 하기','식물 가꾸기나 산책'],
+    '화':['프레젠테이션이나 발표','SNS 게시물 올리기','운동이나 활발한 활동'],
+    '토':['계약서 검토나 서류 정리','집 안 정리정돈','저축이나 재테크 점검'],
+    '금':['중요한 결정이나 선택','불필요한 인간관계 정리','귀금속이나 고가 물건 구매'],
+    '수':['독서나 공부','조용한 카페에서 사색','건강검진이나 수면 관리']
+  };
+  const ACTIONS_CAUTION = {
+    '목':['과한 음주나 야식','무리한 운동','감정적인 대화'],
+    '화':['충동구매','격한 논쟁이나 다툼','뜨거운 음식에 의한 화상'],
+    '토':['부동산 계약','보증 서기','과식이나 소화불량'],
+    '금':['날카로운 도구 사용','수술이나 치과 방문','냉정한 말로 상처 주기'],
+    '수':['수영이나 물놀이','우울한 생각에 빠지기','과음']
+  };
+
+  const actionPool = ACTIONS_GOOD[oh] || ACTIONS_GOOD['토'];
+  const cautionPool = ACTIONS_CAUTION[isGeuk ? dayOh : oh] || ACTIONS_CAUTION['토'];
+  const action = actionPool[(seed + _tfVariant) % actionPool.length];
+  const caution = cautionPool[(seed + _tfVariant * 3) % cautionPool.length];
+
+  // 수비학 개인일수 기반 키워드
+  const PD_KEYWORD = {1:'주도적으로 움직이세요',2:'누군가와 함께하면 배가 됩니다',3:'말과 글로 표현하면 길이 열립니다',4:'기본에 충실하면 무난합니다',5:'예상치 못한 변화에 유연하게',6:'가족이나 가까운 사람에게 연락하세요',7:'혼자만의 시간이 답을 줍니다',8:'돈과 관련된 좋은 흐름이 있습니다',9:'오래 끌던 일을 마무리할 때입니다'};
+  const pdMsg = PD_KEYWORD[personalDay] || '흐름을 읽고 따르세요';
+
+  // 3줄 메시지 조합
+  const line1 = `${goodHours}에 "${action}" — ${luckLbl === '吉' ? '큰 성과가 기대됩니다' : luckLbl === '中吉' ? '좋은 결과가 따릅니다' : '무난하게 진행됩니다'}.`;
+  const line2 = `"${caution}" ${isGeuk ? '특히 주의' : '가급적 피하세요'}. ${pdMsg}.`;
+  const line3 = `길방위 ${goodDir}, ${curSi}시(${hour}시) 기준 ${isSaeng?'상생 기운이 강합니다':'평운 흐름입니다'}.`;
+
   document.getElementById('tf-fortune-box').innerHTML =
-    `<span style="opacity:0.5;font-size:13px;margin-right:4px;">"</span>${text}<span style="opacity:0.5;font-size:13px;margin-left:4px;">"</span>`;
+    `<div style="font-size:13px;color:var(--text);line-height:2.1;text-align:left;">
+      <div style="margin-bottom:4px;">▸ ${line1}</div>
+      <div style="margin-bottom:4px;">▸ ${line2}</div>
+      <div>▸ ${line3}</div>
+    </div>`;
 }
 
 function refreshTodayFortune() {
   _tfVariant = (_tfVariant + 1) % 4;
   _showTodayMsg();
+}
+
+function goMixFromFortune() {
+  // 사주 데이터를 믹스 입력 필드에 자동 채우기
+  const birth = _tfMsgState && _tfMsgState.birth;
+  if (birth) {
+    const yEl = document.getElementById('mx-year');
+    const mEl = document.getElementById('mx-month');
+    const dEl = document.getElementById('mx-day');
+    if (yEl) yEl.value = birth.y;
+    if (mEl) mEl.value = birth.m;
+    if (dEl) dEl.value = birth.d;
+  }
+  // sjData에서 시진 정보 가져오기
+  if (typeof sjData !== 'undefined' && sjData && sjData.h !== undefined) {
+    const h = sjData.h;
+    const siIdx = h >= 23 || h < 1 ? 0 : Math.floor((h + 1) / 2);
+    mxShijinIdx = siIdx;
+    // 시진 버튼 활성화
+    const grid = document.getElementById('mx-shijin-grid');
+    if (grid) {
+      grid.querySelectorAll('.toggle-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === siIdx);
+      });
+    }
+  }
+  go('mix');
 }
 
 // =============================================
