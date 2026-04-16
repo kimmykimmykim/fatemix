@@ -293,6 +293,26 @@ body::before{
   from { opacity:0; transform:translateY(12px); }
   to   { opacity:1; transform:translateY(0); }
 }
+@keyframes mxStarFadeIn { from{opacity:0} to{opacity:1} }
+@keyframes mxStarFadeOut { from{opacity:1} to{opacity:0} }
+@keyframes mxStarTwinkle {
+  0%,100%{opacity:0.2;transform:scale(0.8);}
+  50%{opacity:1;transform:scale(1.4);}
+}
+@keyframes mxShootingStar {
+  0%{top:-5%;opacity:1;}
+  70%{opacity:0.6;}
+  100%{top:105%;opacity:0;}
+}
+@keyframes mxStarPulse {
+  0%,100%{transform:scale(1);opacity:0.7;}
+  50%{transform:scale(1.15);opacity:1;}
+}
+@keyframes mxStarBar {
+  0%{width:10%;margin-left:0;}
+  50%{width:40%;margin-left:30%;}
+  100%{width:10%;margin-left:90%;}
+}
 .card-scene { animation: cardAppear 0.4s ease forwards; }
 
 /* ====== 타로 로딩 오버레이 ====== */
@@ -6151,6 +6171,61 @@ if (typeof window !== 'undefined') {
 }
 
 // AI 믹스 분석 — 선택된 술법 + 타로/룬
+// ── 믹스 분석 별 로딩 화면 ──
+function _showMixStarLoading(){
+  if(document.getElementById('mx-star-loading')) return;
+  const overlay=document.createElement('div');
+  overlay.id='mx-star-loading';
+  overlay.style.cssText='position:fixed;inset:0;z-index:8000;background:rgba(8,8,16,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:mxStarFadeIn 0.4s ease;';
+
+  // 별 파티클 컨테이너
+  let starsHTML='';
+  for(let i=0;i<40;i++){
+    const x=Math.random()*100;
+    const y=Math.random()*100;
+    const size=Math.random()*3+1;
+    const delay=Math.random()*3;
+    const dur=Math.random()*2+1.5;
+    starsHTML+=`<div style="position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;border-radius:50%;background:rgba(201,168,76,${Math.random()*0.5+0.3});animation:mxStarTwinkle ${dur}s ease-in-out ${delay}s infinite;"></div>`;
+  }
+  // 떨어지는 유성
+  for(let i=0;i<6;i++){
+    const x=Math.random()*80+10;
+    const delay=Math.random()*4+1;
+    const dur=Math.random()*1.5+0.8;
+    starsHTML+=`<div style="position:absolute;left:${x}%;top:-5%;width:2px;height:20px;background:linear-gradient(to bottom,rgba(201,168,76,0.8),transparent);border-radius:1px;animation:mxShootingStar ${dur}s ease-in ${delay}s infinite;transform:rotate(15deg);"></div>`;
+  }
+
+  overlay.innerHTML=`
+    <div style="position:absolute;inset:0;overflow:hidden;">${starsHTML}</div>
+    <div style="position:relative;z-index:1;text-align:center;">
+      <div style="font-size:36px;color:rgba(201,168,76,0.8);margin-bottom:16px;animation:mxStarPulse 2s ease-in-out infinite;">✦</div>
+      <div id="mx-star-msg" style="font-size:15px;color:rgba(201,168,76,0.9);font-family:'Cormorant Garamond',serif;letter-spacing:0.15em;margin-bottom:12px;">운명의 실타래를 풀고 있습니다</div>
+      <div style="font-size:11px;color:var(--text-3);letter-spacing:0.08em;">11개 술법이 하나의 답을 찾는 중</div>
+      <div style="margin-top:20px;width:120px;height:2px;background:rgba(201,168,76,0.15);border-radius:1px;overflow:hidden;margin-left:auto;margin-right:auto;">
+        <div style="width:30%;height:100%;background:rgba(201,168,76,0.7);border-radius:1px;animation:mxStarBar 2.5s ease-in-out infinite;"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // 메시지 순환
+  const msgs=['별자리가 정렬되고 있습니다','사주의 기둥이 세워지고 있습니다','타로가 속삭이고 있습니다','룬 문자가 빛나고 있습니다','동서양의 지혜가 교차합니다','운명의 교차점이 드러납니다'];
+  let mi=0;
+  overlay._msgTimer=setInterval(()=>{
+    mi=(mi+1)%msgs.length;
+    const el=document.getElementById('mx-star-msg');
+    if(el){el.style.opacity='0';setTimeout(()=>{el.textContent=msgs[mi];el.style.opacity='1';},300);}
+  },3000);
+}
+
+function _hideMixStarLoading(){
+  const overlay=document.getElementById('mx-star-loading');
+  if(!overlay) return;
+  if(overlay._msgTimer) clearInterval(overlay._msgTimer);
+  overlay.style.animation='mxStarFadeOut 0.5s ease forwards';
+  setTimeout(()=>{if(overlay.parentNode) overlay.remove();},500);
+}
+
 async function runMixAiAnalysis(){
   const sol=mxGetSolarDate();
   if(!sol){alert('생년월일을 입력해주세요.');return;}
@@ -6167,6 +6242,7 @@ async function runMixAiAnalysis(){
   btn.disabled=true; btn.textContent='운명을 읽는 중...';
   document.getElementById('mix-result-card').style.display='none';
   document.getElementById('mx-bujeok-section').style.display='none';
+  _showMixStarLoading();
 
   const dataMap=mxGetAllData(y,m,d,mxShijinIdx,mxGenderVal==='female');
   const question=document.getElementById('mix-question').value||mixTopicVal+' 운세를 봐주세요.';
@@ -6448,6 +6524,7 @@ async function runMixAiAnalysis(){
     document.getElementById('mixt-summary').innerHTML=`<div style="color:#E87070;font-size:14px;padding:8px 0;">⚠ ${e.message}</div>`;
     document.getElementById('mix-result-card').style.display='block';
   }
+  _hideMixStarLoading();
   btn.disabled=false; btn.textContent='✦ 운명의 교차점 읽기';
 }
 
