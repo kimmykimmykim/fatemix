@@ -4181,7 +4181,7 @@ function renderPickDeck(){
 
   // ── ② 중앙 덱 파일 (카드 뭉치) ────────────────────────
   const CONTAINER_W=Math.min(window.innerWidth-24,480);
-  const CONTAINER_H=160;
+  const CONTAINER_H=200;
   const deckX=(CONTAINER_W-w)/2;
   const deckY=(CONTAINER_H-h)/2;
 
@@ -4219,11 +4219,50 @@ function renderPickDeck(){
     width:${w}px;text-align:center;font-size:10px;color:var(--gold);opacity:0.7;
     z-index:${stackCount+2};">${deckPool.length}장</div>`;
 
+  // 셔플 버튼
+  stackHTML+=`<div id="deck-shuffle-btn" onclick="shuffleDeck()"
+    style="position:absolute;left:${deckX-28}px;top:${deckY+h+26}px;
+      width:${w+56}px;text-align:center;
+      padding:8px 0;border-radius:8px;cursor:pointer;
+      background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.35);
+      color:var(--gold);font-size:12px;letter-spacing:0.08em;
+      transition:background 0.2s,transform 0.15s;z-index:${stackCount+2};
+    "
+    onmouseenter="this.style.background='rgba(201,168,76,0.2)';this.style.transform='scale(1.03)';"
+    onmouseleave="this.style.background='rgba(201,168,76,0.1)';this.style.transform='none';"
+  >✦ 셔플</div>`;
+
   deckEl.innerHTML=stackHTML;
 
   if(guideEl) guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`;
   deckArea.style.display='block';
   window.scrollTo({top:deckArea.offsetTop-20,behavior:'smooth'});
+}
+
+function shuffleDeck(){
+  if(pickedCards.length>0) return; // 이미 뽑기 시작했으면 셔플 불가
+  // Fisher-Yates 셔플
+  for(let i=deckPool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [deckPool[i],deckPool[j]]=[deckPool[j],deckPool[i]];
+  }
+  // 역방향 재배정 (25%)
+  deckPool.forEach(c=>{ c.isRev=Math.random()>0.75; });
+  // 덱 흔들기 애니메이션
+  const topCard=document.getElementById('deck-top-card');
+  if(topCard){
+    topCard.style.transition='transform 0.08s ease';
+    topCard.style.transform='rotate(-6deg)';
+    setTimeout(()=>{ topCard.style.transform='rotate(5deg)'; },80);
+    setTimeout(()=>{ topCard.style.transform='rotate(-3deg)'; },160);
+    setTimeout(()=>{ topCard.style.transform='rotate(2deg)'; },240);
+    setTimeout(()=>{ topCard.style.transform='none'; },320);
+  }
+  const guideEl=document.getElementById('tarot-deck-guide');
+  if(guideEl){
+    guideEl.textContent='✦ 덱을 셔플했습니다';
+    setTimeout(()=>{ guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`; },1200);
+  }
 }
 
 let _deckDrawing=false;
@@ -4243,9 +4282,11 @@ function drawFromDeck(){
   const guideEl=document.getElementById('tarot-deck-guide');
   if(guideEl) guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요 (${pickedCards.length}/${spread})`;
 
-  // 남은 카드 수 업데이트
+  // 남은 카드 수 업데이트 + 셔플 버튼 숨기기
   const countEl=document.getElementById('deck-count');
   if(countEl) countEl.textContent=`${deckPool.length-pickedCards.length}장`;
+  const shuffleBtn=document.getElementById('deck-shuffle-btn');
+  if(shuffleBtn) shuffleBtn.style.display='none';
 
   const w=54, h=88;
   const cardRect=topCard.getBoundingClientRect();
@@ -4923,6 +4964,45 @@ function startReading(){
     : '✦ 마이너 아르카나 중심 — 일상과 실용적 영역에 집중할 시기입니다.';
 
   const hasRev=cards.some(c=>c.isRev);
+  const revCount=cards.filter(c=>c.isRev).length;
+
+  // ── 종합 메시지: 카드 조합 기반 동적 생성 ──
+  const synthParts=[];
+
+  // ① 역방향 분석 (비율 기반)
+  if(revCount===0) synthParts.push('모든 카드가 정방향입니다. 에너지가 자연스럽게 흐르고 있으며, 현재 방향이 올바름을 암시합니다.');
+  else if(revCount===cards.length) synthParts.push('모든 카드가 역방향입니다. 내면 깊은 곳에서 큰 전환이 일어나고 있습니다. 지금은 행동보다 성찰의 시기입니다.');
+  else if(revCount>cards.length/2) synthParts.push(`${cards.length}장 중 ${revCount}장이 역방향입니다. 내면의 저항이 강한 시기로, 외부 행동보다 내면 점검이 우선입니다.`);
+  else synthParts.push(`역방향 카드가 ${revCount}장 포함되어 있습니다. 부분적인 막힘이 있지만 전체 흐름은 순조롭습니다.`);
+
+  // ② 메이저 아르카나 특별 카드 언급
+  const specialMajors={0:'새로운 시작의 에너지(바보)',6:'중요한 선택의 기로(연인)',10:'운명의 전환점(운명의 수레바퀴)',13:'끝과 새로운 시작(죽음)',16:'급격한 변화(탑)',19:'밝은 성공(태양)',21:'완성과 성취(세계)'};
+  const foundSpecial=cards.filter(c=>c.type==='major'&&specialMajors[c.id]).map(c=>specialMajors[c.id]);
+  if(foundSpecial.length) synthParts.push(`핵심 카드: ${foundSpecial.join(', ')}의 기운이 이 리딩을 지배합니다.`);
+
+  // ③ 원소 조합 분석
+  const suitNames={'완드':'불(열정/행동)','컵':'물(감정/관계)','검':'바람(사고/갈등)','별':'땅(물질/현실)'};
+  const presentSuits=Object.keys(elemCount);
+  if(presentSuits.length>=3) synthParts.push(`${presentSuits.map(s=>suitNames[s]||s).join(', ')} 원소가 함께 작용하고 있어 다방면의 변화가 예상됩니다.`);
+  else if(presentSuits.length===1) synthParts.push(`${suitNames[presentSuits[0]]||presentSuits[0]} 원소에 에너지가 집중되어 있습니다. 해당 영역에 특히 주목하십시오.`);
+  else if(presentSuits.length===2) synthParts.push(`${presentSuits.map(s=>suitNames[s]||s).join('과 ')} 원소가 상호작용하고 있습니다.`);
+
+  // ④ 궁정카드 분석
+  if(courtTypes.length>1) synthParts.push(`궁정카드가 ${courtTypes.length}장 나왔습니다. 주변 인물들의 영향이 큰 시기입니다.`);
+  else if(courtTypes.length===1) synthParts.push(`${courtTypes[0].name}가 등장했습니다. ${courtTypes[0].info.energy||'주변 인물의 영향에 주목하십시오.'}`);
+
+  // ⑤ 메이저/마이너 비율
+  synthParts.push(ratioMsg);
+
+  // ⑥ 스프레드별 흐름 분석 (3장: 과거→현재→미래)
+  if(spread===3){
+    const pastRev=cards[0]?.isRev, futureRev=cards[2]?.isRev;
+    if(pastRev&&!futureRev) synthParts.push('과거의 막힘을 넘어 미래는 열려 있습니다. 앞으로 나아갈 때입니다.');
+    else if(!pastRev&&futureRev) synthParts.push('현재까지 순조로웠으나 앞으로 주의가 필요합니다. 준비를 철저히 하십시오.');
+    else if(pastRev&&futureRev) synthParts.push('과거와 미래 모두 시련을 암시합니다. 현재에 집중하며 내면의 힘을 기르십시오.');
+  }
+
+  const synthesisMsg=synthParts.join(' ');
 
   document.getElementById('tarot-reading-sections').innerHTML=`
     <div style="margin-bottom:16px;animation:resultReveal 0.6s ease 0.1s both;">
@@ -4934,8 +5014,7 @@ function startReading(){
     </div>
     <div style="padding:13px 14px;background:rgba(201,168,76,0.06);border:0.5px solid var(--gold);border-radius:10px;margin-bottom:12px;animation:resultReveal 0.6s ease 0.5s both;">
       <div style="font-size:9px;color:var(--gold);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:6px;">✦ 종합 메시지</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.9;margin-bottom:6px;">${hasRev?'역방향 카드가 포함되어 있습니다. 내면의 저항이나 에너지 흐름의 막힘을 나타냅니다. 외부 행동보다 내면 점검이 우선입니다.':'모든 카드가 정방향입니다. 에너지가 자연스럽게 흐르고 있습니다.'}</div>
-      <div style="font-size:11px;color:var(--text-2);">${ratioMsg}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.9;">${synthesisMsg}</div>
     </div>
     `;
 }
