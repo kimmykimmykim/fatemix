@@ -10,6 +10,10 @@
       "dest": "/splash.png"
     },
     {
+      "src": "/tarot/(.*)",
+      "dest": "/tarot/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
