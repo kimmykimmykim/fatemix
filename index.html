@@ -4179,138 +4179,173 @@ function renderPickDeck(){
       ">✦</div>
     </div>`).join('');
 
-  // ── ② 덱 카드 — 20장, 간격 넓게(최소 30px), 부채꼴 ────────────
-  const visible=Math.min(deckPool.length,20);
+  // ── ② 중앙 덱 파일 (카드 뭉치) ────────────────────────
   const CONTAINER_W=Math.min(window.innerWidth-24,480);
-  const CONTAINER_H=210;
-  const naturalStep=(CONTAINER_W-w-16)/(visible-1);
-  const step=Math.max(naturalStep,30);       // 최소 30px 간격
-  const totalW=Math.ceil(w+step*(visible-1)+16);
-  const maxRot=16;
+  const CONTAINER_H=160;
+  const deckX=(CONTAINER_W-w)/2;
+  const deckY=(CONTAINER_H-h)/2;
 
-  deckEl.style.cssText=`position:relative;width:${totalW}px;height:${CONTAINER_H}px;margin:0 auto;overflow:visible;`;
+  deckEl.style.cssText=`position:relative;width:${CONTAINER_W}px;height:${CONTAINER_H}px;margin:0 auto;overflow:visible;`;
 
-  deckEl.innerHTML=Array.from({length:visible},(_,i)=>{
-    const t=visible>1?i/(visible-1):0.5;
-    const x=8+step*i;
-    const rotDeg=(t-0.5)*maxRot*2;
-    const arcY=Math.pow(t-0.5,2)*45;
-    const y=(CONTAINER_H-h)/2+arcY-18;
-    return `<div id="deck-scene-${i}"
-      data-rot="${rotDeg.toFixed(2)}"
-      onclick="pickCard(${i})"
-      style="position:absolute;left:${x}px;top:${y}px;
-        width:${w}px;height:${h}px;
-        transform:rotate(${rotDeg}deg);transform-origin:center bottom;
-        cursor:pointer;
-        transition:transform 0.2s ease,box-shadow 0.2s ease;
-        z-index:${i+1};border-radius:6px;overflow:hidden;
-        border:1px solid rgba(201,168,76,0.5);
-        box-shadow:0 3px 10px rgba(0,0,0,0.75),0 0 0 0.5px rgba(201,168,76,0.2);"
-      onmouseenter="this.style.zIndex=${visible+10};this.style.transform='rotate(${rotDeg}deg) scale(1.12) translateY(-10px)';"
-      onmouseleave="this.style.zIndex=${i+1};this.style.transform='rotate(${rotDeg}deg)';"
-    >${makeCardBackSVG(w,h)}</div>`;
-  }).join('');
+  // 덱 뭉치: 겹친 카드 5장 + 맨 위 클릭 가능 카드
+  const stackCount=5;
+  let stackHTML='';
+  for(let s=0;s<stackCount;s++){
+    const ox=(stackCount-1-s)*1.2;
+    const oy=(stackCount-1-s)*1.2;
+    stackHTML+=`<div style="position:absolute;left:${deckX-ox}px;top:${deckY-oy}px;
+      width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;
+      border:1px solid rgba(201,168,76,${0.15+s*0.08});
+      box-shadow:0 2px 8px rgba(0,0,0,0.5);
+      z-index:${s};pointer-events:none;
+    ">${makeCardBackSVG(w,h)}</div>`;
+  }
+  // 맨 위 카드 (클릭 가능)
+  stackHTML+=`<div id="deck-top-card"
+    onclick="drawFromDeck()"
+    style="position:absolute;left:${deckX}px;top:${deckY}px;
+      width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;
+      border:1.5px solid rgba(201,168,76,0.7);
+      box-shadow:0 4px 16px rgba(0,0,0,0.8),0 0 12px rgba(201,168,76,0.25);
+      z-index:${stackCount+1};cursor:pointer;
+      transition:transform 0.15s ease;
+    "
+    onmouseenter="this.style.transform='scale(1.06) translateY(-4px)';"
+    onmouseleave="this.style.transform='none';"
+  >${makeCardBackSVG(w,h)}</div>`;
 
-  if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요`;
+  // 남은 카드 수 표시
+  stackHTML+=`<div id="deck-count" style="position:absolute;left:${deckX}px;top:${deckY+h+8}px;
+    width:${w}px;text-align:center;font-size:10px;color:var(--gold);opacity:0.7;
+    z-index:${stackCount+2};">${deckPool.length}장</div>`;
+
+  deckEl.innerHTML=stackHTML;
+
+  if(guideEl) guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`;
   deckArea.style.display='block';
   window.scrollTo({top:deckArea.offsetTop-20,behavior:'smooth'});
 }
 
-function pickCard(i){
-  if(pickedCards.includes(i)) return;
+let _deckDrawing=false;
+function drawFromDeck(){
+  if(_deckDrawing) return;
   if(pickedCards.length>=spread) return;
+  _deckDrawing=true;
 
-  const scene=document.getElementById(`deck-scene-${i}`);
-  if(!scene) return;
+  const cardIdx=pickedCards.length; // 0부터 순서대로
+  const slotIdx=cardIdx;
+  const card=deckPool[cardIdx];
+  pickedCards.push(cardIdx);
 
-  // 즉시 클릭 불가 (중복 방지)
-  scene.removeAttribute('onclick');
-  scene.removeAttribute('onmouseenter');
-  scene.removeAttribute('onmouseleave');
-  scene.style.pointerEvents='none';
-  scene.style.cursor='default';
-
-  const slotIdx=pickedCards.length;
-  pickedCards.push(i);
-  pickCount++;
+  const topCard=document.getElementById('deck-top-card');
+  if(!topCard){ _deckDrawing=false; return; }
 
   const guideEl=document.getElementById('tarot-deck-guide');
-  if(guideEl) guideEl.textContent=`마음이 끌리는 카드를 ${spread}장 고르세요 (${pickedCards.length}/${spread})`;
+  if(guideEl) guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요 (${pickedCards.length}/${spread})`;
 
-  const rotDeg=parseFloat(scene.dataset.rot||'0');
+  // 남은 카드 수 업데이트
+  const countEl=document.getElementById('deck-count');
+  if(countEl) countEl.textContent=`${deckPool.length-pickedCards.length}장`;
+
   const w=54, h=88;
+  const cardRect=topCard.getBoundingClientRect();
 
-  // ① 위로 팝
-  scene.style.transition='transform 0.14s cubic-bezier(0.34,1.56,0.64,1)';
-  scene.style.transform=`rotate(${rotDeg}deg) scale(1.18) translateY(-14px)`;
-  scene.style.zIndex='500';
+  // ① 카드 위로 날아오르기 + 뒤집기 클론 생성
+  const clone=document.createElement('div');
+  clone.style.cssText=`
+    position:fixed;
+    left:${cardRect.left}px;top:${cardRect.top}px;
+    width:${cardRect.width}px;height:${cardRect.height}px;
+    border-radius:6px;overflow:hidden;
+    z-index:9999;pointer-events:none;
+    perspective:600px;
+  `;
 
+  // 3D 뒤집기 컨테이너
+  const flipper=document.createElement('div');
+  flipper.style.cssText=`
+    width:100%;height:100%;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  `;
+
+  // 뒷면
+  const backFace=document.createElement('div');
+  backFace.style.cssText=`
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    border-radius:6px;overflow:hidden;
+    border:1.5px solid rgba(201,168,76,0.85);
+    box-shadow:0 8px 32px rgba(0,0,0,0.9),0 0 18px rgba(201,168,76,0.5);
+  `;
+  backFace.innerHTML=makeCardBackSVG(cardRect.width,cardRect.height);
+
+  // 앞면
+  const frontFace=document.createElement('div');
+  card.reversed=card.isRev;
+  const cardSVG=makeCardSVG(card,cardRect.width,cardRect.height,false);
+  frontFace.style.cssText=`
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    transform:rotateY(180deg);
+    border-radius:6px;overflow:hidden;
+  `;
+  frontFace.innerHTML=cardSVG;
+
+  flipper.appendChild(backFace);
+  flipper.appendChild(frontFace);
+  clone.appendChild(flipper);
+  document.body.appendChild(clone);
+
+  // ② 위로 떠오르기 + 뒤집기
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    clone.style.transition='left 0.5s cubic-bezier(0.4,0,0.2,1),top 0.5s cubic-bezier(0.4,0,0.2,1)';
+    clone.style.top=`${cardRect.top-80}px`;
+    flipper.style.transform='rotateY(180deg)';
+  }));
+
+  // ③ 슬롯으로 이동
   setTimeout(()=>{
-    const cardRect=scene.getBoundingClientRect();
-
-    // ② fixed 클론 생성 (회전 없이 수평으로 날아가게)
-    const clone=document.createElement('div');
-    clone.style.cssText=`
-      position:fixed;
-      left:${cardRect.left}px;top:${cardRect.top}px;
-      width:${cardRect.width}px;height:${cardRect.height}px;
-      border-radius:6px;overflow:hidden;
-      border:1.5px solid rgba(201,168,76,0.85);
-      box-shadow:0 8px 32px rgba(0,0,0,0.9),0 0 18px rgba(201,168,76,0.5);
-      z-index:9999;pointer-events:none;
-      transform:none;transition:none;
-    `;
-    clone.innerHTML=makeCardBackSVG(cardRect.width,cardRect.height);
-    document.body.appendChild(clone);
-
-    // ③ 원본 덱 카드 수축 → 제거 (빈 공간으로 남지 않음)
-    scene.style.transition='transform 0.26s ease,opacity 0.26s ease';
-    scene.style.transform=`rotate(${rotDeg}deg) scale(0)`;
-    scene.style.opacity='0';
-    setTimeout(()=>{ if(scene.parentNode) scene.remove(); },260);
-
-    // ④ 슬롯으로 날아가기
     const slotEl=document.getElementById(`tarot-slot-${slotIdx}`);
     if(slotEl){
       const slotRect=slotEl.getBoundingClientRect();
       const tx=slotRect.left+(slotRect.width-cardRect.width)/2;
       const ty=slotRect.top+(slotRect.height-cardRect.height)/2;
 
-      // double-RAF: DOM 페인트 완료 후 transition 시작
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        clone.style.transition='left 0.46s cubic-bezier(0.4,0,0.2,1),top 0.46s cubic-bezier(0.4,0,0.2,1)';
-        clone.style.left=`${tx}px`;
-        clone.style.top=`${ty}px`;
-      }));
+      clone.style.transition='left 0.4s cubic-bezier(0.4,0,0.2,1),top 0.4s cubic-bezier(0.4,0,0.2,1)';
+      clone.style.left=`${tx}px`;
+      clone.style.top=`${ty}px`;
+    }
 
-      setTimeout(()=>{
-        clone.remove();
-        // 슬롯 채움 (카드 뒷면 + 번호 뱃지)
+    // ④ 슬롯 안착 후 정리
+    setTimeout(()=>{
+      clone.remove();
+      if(slotEl){
         slotEl.style.border='1.5px solid rgba(201,168,76,0.7)';
         slotEl.style.background='rgba(201,168,76,0.1)';
         slotEl.style.display='block';
-        slotEl.innerHTML=makeCardBackSVG(w,h)
-          +`<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;">
-              <div style="background:rgba(0,0,0,0.65);border-radius:4px;padding:1px 6px;font-size:8.5px;color:var(--gold);font-weight:700;">${slotIdx+1}</div>
-            </div>`;
+        slotEl.style.overflow='hidden';
+        // 슬롯에 카드 앞면 축소 표시
+        const miniCard=makeCardSVG(card,w,h,false);
+        slotEl.innerHTML=miniCard;
+        if(card.isRev) slotEl.style.border='1.5px solid rgba(200,80,80,0.7)';
+      }
 
-        if(pickedCards.length===spread){
-          drawnCards=pickedCards.map(idx=>deckPool[idx]);
-          if(guideEl) guideEl.textContent='✦ 카드를 클릭해서 펼쳐보세요';
-          setTimeout(()=>renderRevealDeck(),680);
-        }
-      },490);
-    } else {
-      clone.remove();
+      _deckDrawing=false;
+
       if(pickedCards.length===spread){
         drawnCards=pickedCards.map(idx=>deckPool[idx]);
-        if(guideEl) guideEl.textContent='✦ 카드를 클릭해서 펼쳐보세요';
-        setTimeout(()=>renderRevealDeck(),680);
+        if(guideEl) guideEl.textContent='✦ 운명이 펼쳐집니다';
+        // 슬롯에 이미 카드가 보이므로 바로 결과로
+        setTimeout(()=>showFateMessage(),800);
       }
-    }
-  },150);
+    },440);
+  },520);
 }
+
+// 기존 pickCard는 drawFromDeck으로 대체 (호환용)
+function pickCard(i){ drawFromDeck(); }
 
 function renderRevealDeck(){
   // 슬롯 행 제거 (reveal 단계에서는 불필요)
