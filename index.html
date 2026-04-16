@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FateMix</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --gold: #C9A84C;
@@ -24,7 +24,7 @@
   --blue: #70A8E8;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--dark);color:var(--text);font-family:'Gowun Dodum','Noto Serif KR',sans-serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--dark);color:var(--text);font-family:'Gowun Batang','Noto Serif KR',serif;min-height:100vh;overflow-x:hidden;}
 
 /* 배경 별빛 */
 body::before{
@@ -44,12 +44,12 @@ body::before{
   display:inline-flex;align-items:center;gap:8px;
   color:var(--text-2);font-size:15px;letter-spacing:0.08em;
   background:none;border:none;cursor:pointer;padding:20px 0 0;
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;transition:color 0.2s;
+  font-family:'Gowun Batang','Noto Serif KR',serif;transition:color 0.2s;
 }
 .back-btn:hover{color:var(--gold);}
 /* 페이지 타이틀 — 오늘의 운세 본문과 동일 폰트 스택(Gowun Dodum) */
 .page-title{
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;
+  font-family:'Cinzel','Gowun Batang',serif;
   font-size:30px;font-weight:600;color:var(--gold);
   letter-spacing:0.04em;margin:20px 0 6px;
 }
@@ -59,7 +59,7 @@ body::before{
 .input{
   width:100%;background:#1E1E2E;border:0.5px solid rgba(201,168,76,0.3);
   border-radius:10px;padding:13px 16px;color:#EDE9DF;font-size:16px;
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;outline:none;transition:border-color 0.2s;
+  font-family:'Gowun Batang','Noto Serif KR',serif;outline:none;transition:border-color 0.2s;
 }
 .input:focus{border-color:var(--gold);background:#252535;}
 .input::placeholder{color:#6A6580;}
@@ -67,7 +67,7 @@ body::before{
 .primary-btn{
   width:100%;padding:17px;background:linear-gradient(135deg,#C9A84C 0%,#9A7830 100%);
   border:none;border-radius:10px;color:#080810;font-size:16px;font-weight:600;
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;letter-spacing:0.05em;
+  font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;letter-spacing:0.05em;
   transition:opacity 0.2s;margin-top:4px;
 }
 .primary-btn:hover{opacity:0.88;}
@@ -75,7 +75,7 @@ body::before{
 .ghost-btn{
   width:100%;padding:14px;background:transparent;
   border:0.5px solid var(--border);border-radius:10px;color:var(--text-2);
-  font-size:15px;font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;
+  font-size:15px;font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;
   letter-spacing:0.04em;transition:all 0.2s;margin-top:8px;
 }
 .ghost-btn:hover{border-color:var(--gold);color:var(--gold);}
@@ -92,7 +92,7 @@ body::before{
 .toggle-btn{
   padding:9px 18px;border-radius:20px;border:0.5px solid rgba(201,168,76,0.25);
   background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:15px;
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
+  font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
 }
 .toggle-btn.active,.toggle-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -101,7 +101,7 @@ body::before{
 .gender-btn{
   flex:1;padding:12px;border-radius:8px;border:0.5px solid var(--border);
   background:transparent;color:var(--text-2);font-size:15px;
-  font-family:'Gowun Dodum','Noto Serif KR',sans-serif;cursor:pointer;transition:all 0.2s;
+  font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
 }
 .gender-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
@@ -160,7 +160,7 @@ body::before{
 }
 .mix-banner:hover{background:var(--dark3);}
 .mix-banner-icon{font-size:32px;flex-shrink:0;}
-.mix-banner-text h3{font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:20px;color:var(--gold);font-weight:600;margin-bottom:4px;}
+.mix-banner-text h3{font-family:'Cinzel','Gowun Batang',serif;font-size:20px;color:var(--gold);font-weight:600;margin-bottom:4px;}
 .mix-banner-text p{font-size:14px;color:var(--text-2);line-height:1.6;}
 
 /* 
@@ -226,7 +226,7 @@ body::before{
 
 /* 타임라인 */
 .tl-box{margin-top:14px;background:var(--dark2);border:0.5px solid var(--border);border-radius:12px;padding:20px;display:none;}
-.tl-title{font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:18px;color:var(--gold);font-weight:600;margin-bottom:14px;}
+.tl-title{font-family:'Gowun Batang','Noto Serif KR',serif;font-size:18px;color:var(--gold);font-weight:600;margin-bottom:14px;}
 .tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border-2);}
 .tl-row:last-child{border-bottom:none;}
 .tl-yr{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-light);min-width:52px;}
@@ -680,7 +680,7 @@ body::before{
 
       <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.2em;margin-bottom:10px;">FATEMIX · 통합 운명 분석</div>
 
-      <div style="font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:20px;color:var(--gold);margin-bottom:8px;font-weight:600;letter-spacing:0.02em;">
+      <div style="font-family:'Gowun Batang','Noto Serif KR',serif;font-size:20px;color:var(--gold);margin-bottom:8px;font-weight:600;letter-spacing:0.02em;">
         ✦ 지금 당신의 운명 읽기
       </div>
 
@@ -1247,7 +1247,7 @@ body::before{
   <!-- 결과 -->
   <div id="mix-result-card" style="display:none;">
     <div class="card" style="background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(201,168,76,0.02) 100%);border-color:rgba(201,168,76,0.5);">
-      <div style="font-family:'Gowun Dodum','Noto Serif KR',sans-serif;font-size:18px;color:var(--gold);margin-bottom:16px;letter-spacing:0.02em;font-weight:600;">✦ 운명의 교차점</div>
+      <div style="font-family:'Cinzel','Gowun Batang',serif;font-size:18px;color:var(--gold);margin-bottom:16px;letter-spacing:0.02em;font-weight:600;">✦ 운명의 교차점</div>
       <div class="result-text" id="mixt-summary" style="font-size:15px;line-height:2.4;"></div>
     </div>
     <div class="card" style="background:rgba(201,168,76,0.04);border-color:rgba(201,168,76,0.3);">
@@ -3621,7 +3621,7 @@ ${나이컨텍스트.ageNote}`;
     ? '★ 기혼자. 연애=배우자/부부관계로만. 새 이성만남 절대금지.'
     : sjData?.marital==='divorced' ? '★ 이혼/별거. 연애=감정회복/재출발 방향으로.' : '';
 
-  const sys=`당신은 40년 명리 대가. 수만 명 팔자 봤다. 존댓말 필수. 현대적 직접 화법.
+  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 수만 명 팔자 봤다. 신비롭고 고풍스러우면서도 현대적 존댓말.
 
 금지: 고어체("그대의","~하오니"), 봄비/대나무 같은 시적비유, 공허한위로, 뭉뚱그린말, 데이터나열
 ${나이컨텍스트.forbid.length>0?'절대금지주제: '+나이컨텍스트.forbid.join(', '):''}
@@ -5458,7 +5458,7 @@ async function nuAiAnalyze() {
 
   const cy = new Date().getFullYear();
 
-  const sys=`당신은 20년 경력 서양 수비학 전문가다. 피타고라스 수비학 기반.
+  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 피타고라스 수비학 기반.
 직설적으로. 위로멘트없이. 각 숫자의 에너지를 근거로 사용. 나쁜 면도 돌파구 제시. 마스터 넘버(11,22,33)는 특별히 강조.
 
 형식:
@@ -6300,7 +6300,9 @@ async function runMixAiAnalysis(){
   //   5개(paid):    술법 간 연결 분석 + 현재 조언, 분량 약 2배
   //   7개(premium): 과거·현재·미래 흐름 + 구체적 행동 지침, 분량 약 3배
   //   모든 tier 공통 머릿말 — 말투/금지구/마크다운 금지
-  const TIER_COMMON_HEADER = `당신은 동서양 점술을 40년간 수련한 영적 통찰가다.
+  const TIER_COMMON_HEADER = `당신은 "마담 혜명"이다. 조선 중기 제주 심방 가문 출신으로 동서양 술법을 40년간 두루 수련한 신비로운 역술가.
+마담 혜명의 말투: 신비롭고 고풍스러우면서도 현대적 존댓말. 따뜻하지만 날카로운 통찰. 상대를 꿰뚫어 보는 듯한 어조.
+예시 말투: "~이시군요", "~보이네요", "~하시렵니까", "~느껴집니다", "제가 보기에는~"
 반드시 존댓말. 주어는 "당신은/당신의/당신이". "손님" 단어 자체 절대 금지 — 무조건 "당신".
 술법 이름 나열 절대 금지. 하나의 흐르는 서사로.
 추상·철학적 표현 금지. 구체적 장면·상황·패턴으로.
@@ -9197,7 +9199,7 @@ async function analyzeAstro(){
 
   const planetTxt=planets.map(p=>`${p.name}(${p.sym}): ${p.sign} ${p.degree}도`).join(', ');
 
-  const sys=`당신은 20년 경력 서양 점성술 전문가다.
+  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 서양 점성술의 대가.
 반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요)
 직설적으로. 위로멘트없이. 각 행성 배치를 근거로 사용. 나쁜 배치도 돌파구 제시. 암울하게끝내지않음.
 나이를 반드시 반영해서 현실적인 조언을 한다. 나이에 맞지 않는 조언은 절대 하지 않는다.
@@ -10559,7 +10561,7 @@ async function analyzeTarot(){
     ? `★ 역방향 ${revCount}장 — 내면의 저항, 막힌 에너지, 내면 작업이 필요한 영역 있음`
     : '★ 전부 정방향 — 에너지가 외부로 자연스럽게 흐르는 상태';
 
-  const sys=`당신은 20년 경력 타로 전문가이자 심리 상담가다. 반드시 존댓말로 답변한다.
+  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 타로 해석의 대가. 신비롭고 고풍스러우면서도 현대적 존댓말로 답변한다.
 
 ★ 타로 해석 철학 ★
 - 카드는 미래를 확정하는 게 아니라 현재 에너지의 방향을 보여준다
@@ -10635,7 +10637,7 @@ async function analyzeRune(){
   btn.disabled=true; btn.textContent='AI 해석 중...';
   const q=document.getElementById('rune-q').value.trim()||'전체 운세를 봐주세요.';
   const runeTxt=drawnRunes.map((r,i)=>`${i+1}번: ${r.name}(${r.letter})${r.isRev?'(역방향)':'(정방향)'}`).join(', ');
-  const sys=`당신은 20년 경력 룬 전문가다. 반드시 존댓말로 답변한다.
+  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 룬 해석의 대가. 신비롭고 고풍스러우면서도 현대적 존댓말로 답변한다.
 고대 룬의 에너지를 현대적으로 해석. 룬 간 상호작용 분석. 질문에 맞게 개인화. 마지막은 희망적으로.
 형식:
 [종합] 룬들이 전하는 핵심 에너지 메시지 4문장.
