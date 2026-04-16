@@ -10878,16 +10878,26 @@ function goMixFromFortune() {
     if (mEl) mEl.value = birth.m;
     if (dEl) dEl.value = birth.d;
   }
-  // sjData에서 시진 정보 가져오기
-  if (typeof sjData !== 'undefined' && sjData && sjData.h !== undefined) {
-    const h = sjData.h;
-    const siIdx = h >= 23 || h < 1 ? 0 : Math.floor((h + 1) / 2);
-    mxShijinIdx = siIdx;
-    // 시진 버튼 활성화
-    const grid = document.getElementById('mx-shijin-grid');
-    if (grid) {
-      grid.querySelectorAll('.toggle-btn').forEach((btn, i) => {
-        btn.classList.toggle('active', i === siIdx);
+  // sjData에서 시진 + 성별 정보 가져오기
+  if (typeof sjData !== 'undefined' && sjData) {
+    // 시진
+    if (sjData.h !== undefined) {
+      const h = sjData.h;
+      const siIdx = h >= 23 || h < 1 ? 0 : Math.floor((h + 1) / 2);
+      mxShijinIdx = siIdx;
+      const grid = document.getElementById('mx-shijin-grid');
+      if (grid) {
+        grid.querySelectorAll('.toggle-btn').forEach((btn, i) => {
+          btn.classList.toggle('active', i === siIdx);
+        });
+      }
+    }
+    // 성별
+    const gender = (typeof sjGenderVal !== 'undefined') ? sjGenderVal : null;
+    if (gender) {
+      mxGenderVal = gender;
+      document.querySelectorAll('#screen-mix .gender-btn').forEach((b, i) => {
+        b.classList.toggle('active', (gender === 'male' && i === 0) || (gender === 'female' && i === 1));
       });
     }
   }
