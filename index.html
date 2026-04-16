@@ -3410,7 +3410,7 @@ function sjLoad(id){
   document.getElementById('sj-hour').value=it.h;
   document.getElementById('sj-min').value=it.min||0;
   sjGenderVal=it.gender==='여'?'female':'male';
-  document.querySelectorAll('.gender-btn').forEach((b,i)=>b.classList.toggle('active',(sjGenderVal==='male'?i===0:i===1)));
+  document.querySelectorAll('#screen-saju .gender-btn').forEach((b,i)=>b.classList.toggle('active',(sjGenderVal==='male'?i===0:i===1)));
   calcSaju();window.scrollTo({top:200,behavior:'smooth'});
 }
 function sjDel(id,e){
