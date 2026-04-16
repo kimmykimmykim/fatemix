@@ -1553,7 +1553,12 @@ function go(screen) {
   if (screen === 'ziwei') { zwCalcAge(); }
   if (screen === 'danjusa') djCalcAge();
   if (screen === 'sukyao') syCalcAge();
-  if (screen === 'mix') { renderMxCats(); mxGoStep(1); }
+  if (screen === 'mix') {
+    renderMxCats(); mxGoStep(1);
+    // 이전 결과 숨기기
+    var mrc=document.getElementById('mix-result-card'); if(mrc) mrc.style.display='none';
+    var mbs=document.getElementById('mx-bujeok-section'); if(mbs) mbs.style.display='none';
+  }
 }
 
 function showPaywall(feature) {
@@ -5798,103 +5803,160 @@ function renderTarotDeck(){
   mxFlippedTarot=[];
   mxDrawnTarot=null;
   window._mxTarotCards={};
-  tarotPickPool = _mxBuildTarotPool(); // 78장 전체 새로 셔플
-  const TOTAL = tarotPickPool.length;  // = 78 (메이저 22 + 마이너 56)
+  tarotPickPool = _mxBuildTarotPool();
   const count=mxTarotSpread||1;
+  let _mxTarotDrawing=false;
 
-  let html=`<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;text-align:center;line-height:1.6;">
-    아래 <b style="color:var(--gold);">${TOTAL}장</b> <span style="color:var(--text-3);font-size:10px;">(메이저 22 + 마이너 56)</span> 중 <b style="color:var(--gold);">${count}장</b>을 직접 뽑아주세요
-    <span id="mx-tarot-pick-count" style="display:block;font-size:10px;color:var(--gold);margin-top:3px;">0 / ${count}</span>
-  </div>
-  <div style="display:flex;flex-wrap:wrap;gap:1px;justify-content:center;padding:6px 2px;">`;
-  for(let i=0;i<TOTAL;i++){
-    const rot=((i%3)-1)*(Math.random()*2.5+0.3);
-    html+=`<div id="mx-tcard-${i}" onclick="mxFlipTarot(${i})"
-      style="width:${MX_TAROT_W}px;height:${MX_TAROT_H}px;cursor:pointer;
-      user-select:none;transform:rotate(${rot.toFixed(2)}deg);
-      transition:transform 0.18s ease,filter 0.18s,opacity 0.2s;
-      display:inline-block;line-height:0;margin:1px;"
-      onmouseover="if(!this.dataset.picked){this.style.transform='translateY(-6px) rotate(0deg) scale(1.3)';this.style.filter='drop-shadow(0 4px 12px rgba(201,168,76,0.55))';this.style.zIndex='10';}"
-      onmouseout="if(!this.dataset.picked){this.style.transform='rotate(${rot.toFixed(2)}deg)';this.style.filter='none';this.style.zIndex='';}"
-      title="클릭하여 카드 뽑기">${makeCardBackSVG(MX_TAROT_W,MX_TAROT_H)}</div>`;
+  const w=54, h=88;
+  const CONTAINER_W=Math.min(window.innerWidth-60,400);
+  const CONTAINER_H=170;
+  const deckX=(CONTAINER_W-w)/2;
+  const deckY=(CONTAINER_H-h)/2-10;
+
+  // 슬롯 행
+  const posNames=count===1?['현재']:['과거','현재','미래'];
+  let html=`<div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;">
+    ${posNames.map((p,i)=>`<div style="text-align:center;">
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:3px;width:${w}px;">${p}</div>
+      <div id="mx-tslot-${i}" style="width:${w}px;height:${h}px;border:1.5px dashed rgba(201,168,76,0.3);border-radius:6px;background:rgba(201,168,76,0.04);display:flex;align-items:center;justify-content:center;font-size:18px;color:rgba(201,168,76,0.28);overflow:hidden;">✦</div>
+    </div>`).join('')}
+  </div>`;
+
+  // 덱 파일
+  html+=`<div style="position:relative;width:${CONTAINER_W}px;height:${CONTAINER_H}px;margin:0 auto;">`;
+  for(let s=0;s<4;s++){
+    const ox=(3-s)*1.2, oy=(3-s)*1.2;
+    html+=`<div style="position:absolute;left:${deckX-ox}px;top:${deckY-oy}px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,${0.15+s*0.1});box-shadow:0 2px 8px rgba(0,0,0,0.5);z-index:${s};pointer-events:none;">${makeCardBackSVG(w,h)}</div>`;
   }
-  html+='</div>';
+  html+=`<div id="mx-tdeck-top" style="position:absolute;left:${deckX}px;top:${deckY}px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1.5px solid rgba(201,168,76,0.7);box-shadow:0 4px 16px rgba(0,0,0,0.8),0 0 12px rgba(201,168,76,0.25);z-index:5;cursor:pointer;transition:transform 0.15s ease;"
+    onmouseenter="this.style.transform='scale(1.06) translateY(-4px)'"
+    onmouseleave="this.style.transform='none'"
+  >${makeCardBackSVG(w,h)}</div>`;
+  html+=`<div id="mx-tdeck-count" style="position:absolute;left:${deckX}px;top:${deckY+h+8}px;width:${w}px;text-align:center;font-size:10px;color:var(--gold);opacity:0.7;z-index:6;">${tarotPickPool.length}장</div>`;
+  // 셔플 버튼
+  html+=`<div id="mx-tdeck-shuffle" onclick="mxShuffleTarot()" style="position:absolute;left:${deckX-28}px;top:${deckY+h+26}px;width:${w+56}px;text-align:center;padding:8px 0;border-radius:8px;cursor:pointer;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.35);color:var(--gold);font-size:12px;z-index:6;transition:background 0.2s;"
+    onmouseenter="this.style.background='rgba(201,168,76,0.2)'" onmouseleave="this.style.background='rgba(201,168,76,0.1)'"
+  >✦ 셔플</div>`;
+  html+=`</div>`;
+
   deck.innerHTML=html;
+
+  // 덱 탭 이벤트
+  const topCard=document.getElementById('mx-tdeck-top');
+  if(topCard) topCard.onclick=function(){ mxDrawFromTarotDeck(); };
+
   const resEl=document.getElementById('mx-tarot-result');
   if(resEl){ resEl.style.display='none'; resEl.innerHTML=''; }
 }
 
-function mxFlipTarot(idx){
-  if(mxFlippedTarot.includes(idx)) return;
+function mxShuffleTarot(){
+  const already=mxFlippedTarot.length;
+  if(already>=(mxTarotSpread||1)) return;
+  for(let i=tarotPickPool.length-1;i>already;i--){
+    const j=already+Math.floor(Math.random()*(i-already+1));
+    [tarotPickPool[i],tarotPickPool[j]]=[tarotPickPool[j],tarotPickPool[i]];
+  }
+  for(let i=already;i<tarotPickPool.length;i++) tarotPickPool[i].isRev=Math.random()>0.5;
+  const topCard=document.getElementById('mx-tdeck-top');
+  if(topCard){
+    topCard.style.transition='transform 0.08s ease';
+    topCard.style.transform='rotate(-6deg)';
+    setTimeout(()=>{topCard.style.transform='rotate(5deg)';},80);
+    setTimeout(()=>{topCard.style.transform='rotate(-3deg)';},160);
+    setTimeout(()=>{topCard.style.transform='none';},240);
+  }
+}
+
+let _mxTarotDrawing=false;
+function mxDrawFromTarotDeck(){
+  if(_mxTarotDrawing) return;
   const count=mxTarotSpread||1;
-  if(mxFlippedTarot.length>=count) return; // 이미 최대 뽑음
-  if(!tarotPickPool || !tarotPickPool[idx]) return;
+  if(mxFlippedTarot.length>=count) return;
+  _mxTarotDrawing=true;
 
-  const src = tarotPickPool[idx];
-  const isMajor = src.type === 'major';
-  // 기존 UI/데이터 포맷 유지 (AI 프롬프트와 호환)
-  const card = {
-    name: (isMajor ? '[메이저] ' : '[마이너] ') + src.name,
-    rev: src.isRev,
-    dir: src.isRev ? '역방향' : '정방향',
-    sym: src.sym,
-    isMajor
+  const cardIdx=mxFlippedTarot.length;
+  const slotIdx=cardIdx;
+  const src=tarotPickPool[cardIdx];
+  const isMajor=src.type==='major';
+  const card={
+    name:(isMajor?'[메이저] ':'[마이너] ')+src.name,
+    rev:src.isRev, dir:src.isRev?'역방향':'정방향',
+    sym:src.sym, isMajor, id:src.id, type:src.type, color:src.color, suit:src.suit
   };
-  mxFlippedTarot.push(idx);
-  window._mxTarotCards[idx] = card;
+  mxFlippedTarot.push(cardIdx);
+  window._mxTarotCards[cardIdx]=card;
 
-  // 팬 속 작은 카드: 픽 표시 (크게 띄우고 심볼 확대)
-  const el=document.getElementById('mx-tcard-'+idx);
-  if(el){
-    el.dataset.picked='1';
-    el.style.cursor='default';
-    el.style.zIndex='20';
-    el.style.transform=(card.rev
-      ? 'translateY(-10px) scale(1.4) rotate(180deg)'
-      : 'translateY(-10px) scale(1.4) rotate(0deg)');
-    el.style.filter = card.rev
-      ? 'drop-shadow(0 0 12px rgba(232,112,112,0.55))'
-      : 'drop-shadow(0 0 12px rgba(201,168,76,0.55))';
-    // 메인 타로와 동일한 톤의 SVG 앞면(상징)으로 교체
-    const W=MX_TAROT_W, H=MX_TAROT_H;
-    const accent = card.rev ? '#E87070' : '#C9A84C';
-    el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${W}" height="${H}" rx="10" fill="#0F0F1A" stroke="${accent}" stroke-width="0.8"/>
-      <rect x="5" y="5" width="${W-10}" height="${H-10}" rx="7" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="0.4"/>
-      <text x="${W/2}" y="${H*0.5}" text-anchor="middle" dominant-baseline="central"
-        font-size="${W*0.45}" fill="${accent}" font-family="Cormorant Garamond,serif">${card.sym}</text>
-    </svg>`;
-  }
-  // 진행 표시 업데이트
-  const pc=document.getElementById('mx-tarot-pick-count');
-  if(pc) pc.textContent=`${mxFlippedTarot.length} / ${count}`;
+  const topCard=document.getElementById('mx-tdeck-top');
+  if(!topCard){_mxTarotDrawing=false;return;}
+  const w=54,h=88;
+  const cardRect=topCard.getBoundingClientRect();
 
-  if(mxFlippedTarot.length>=count){
-    // 뽑힌 카드를 클릭 순서대로 [과거, 현재, 미래] 등 라벨에 매핑
-    mxDrawnTarot=mxFlippedTarot.map(i=>window._mxTarotCards[i]);
-    const labels=count===1?['현재']:['과거','현재','미래'];
-    // 뽑히지 않은 78-count 장 비활성화(흐리게)
-    for(let k=0;k<tarotPickPool.length;k++){
-      if(mxFlippedTarot.includes(k)) continue;
-      const u=document.getElementById('mx-tcard-'+k);
-      if(u){ u.style.opacity='0.15'; u.style.cursor='default'; u.onclick=null; }
+  // 클론: 위로 날아오르며 뒤집기
+  const clone=document.createElement('div');
+  clone.style.cssText=`position:fixed;left:${cardRect.left}px;top:${cardRect.top}px;width:${cardRect.width}px;height:${cardRect.height}px;border-radius:6px;overflow:hidden;z-index:9999;pointer-events:none;perspective:600px;`;
+  const flipper=document.createElement('div');
+  flipper.style.cssText='width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);';
+  const backFace=document.createElement('div');
+  backFace.style.cssText='position:absolute;inset:0;backface-visibility:hidden;border-radius:6px;overflow:hidden;border:1.5px solid rgba(201,168,76,0.85);box-shadow:0 8px 32px rgba(0,0,0,0.9),0 0 18px rgba(201,168,76,0.5);';
+  backFace.innerHTML=makeCardBackSVG(cardRect.width,cardRect.height);
+  const frontFace=document.createElement('div');
+  src.reversed=src.isRev;
+  frontFace.style.cssText='position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);border-radius:6px;overflow:hidden;';
+  frontFace.innerHTML=makeCardSVG(src,cardRect.width,cardRect.height,false);
+  flipper.appendChild(backFace);flipper.appendChild(frontFace);clone.appendChild(flipper);
+  document.body.appendChild(clone);
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    clone.style.transition='left 0.5s cubic-bezier(0.4,0,0.2,1),top 0.5s cubic-bezier(0.4,0,0.2,1)';
+    clone.style.top=`${cardRect.top-80}px`;
+    flipper.style.transform='rotateY(180deg)';
+  }));
+
+  setTimeout(()=>{
+    const slotEl=document.getElementById(`mx-tslot-${slotIdx}`);
+    if(slotEl){
+      const slotRect=slotEl.getBoundingClientRect();
+      clone.style.transition='left 0.4s cubic-bezier(0.4,0,0.2,1),top 0.4s cubic-bezier(0.4,0,0.2,1)';
+      clone.style.left=`${slotRect.left+(slotRect.width-cardRect.width)/2}px`;
+      clone.style.top=`${slotRect.top+(slotRect.height-cardRect.height)/2}px`;
     }
-    const res=document.getElementById('mx-tarot-result');
-    res.style.display='block';
-    res.innerHTML=`<div style="font-size:11px;color:var(--gold);margin:14px 0 8px;">✦ 뽑힌 카드</div>`+
-      mxDrawnTarot.map((c,i)=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
-          background:var(--dark3);border:0.5px solid ${c.rev?'rgba(232,112,112,0.4)':'rgba(201,168,76,0.3)'};
-          border-radius:8px;margin-bottom:6px;">
-          <div style="font-size:22px;">${c.sym}</div>
-          <div>
-            <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">${labels[i]} · ${c.isMajor?'메이저':'마이너'}</div>
-            <div style="font-size:13px;color:${c.rev?'#E87070':'var(--gold)'};">${c.name.replace(/\[.+\] /,'')}</div>
-            <div style="font-size:10px;color:var(--text-3);">${c.dir}</div>
-          </div>
-        </div>`).join('')+
-      `<button class="ghost-btn" onclick="renderTarotDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
-  }
+    setTimeout(()=>{
+      clone.remove();
+      if(slotEl){
+        slotEl.style.border=`1.5px solid ${src.isRev?'rgba(200,80,80,0.7)':'rgba(201,168,76,0.7)'}`;
+        slotEl.style.background='rgba(201,168,76,0.1)';
+        slotEl.innerHTML=makeCardSVG(src,w,h,false);
+      }
+      const countEl=document.getElementById('mx-tdeck-count');
+      if(countEl) countEl.textContent=`${tarotPickPool.length-mxFlippedTarot.length}장`;
+      _mxTarotDrawing=false;
+
+      if(mxFlippedTarot.length>=count){
+        mxDrawnTarot=mxFlippedTarot.map(i=>window._mxTarotCards[i]);
+        const labels=count===1?['현재']:['과거','현재','미래'];
+        const res=document.getElementById('mx-tarot-result');
+        if(res){
+          res.style.display='block';
+          res.innerHTML=`<div style="font-size:11px;color:var(--gold);margin:14px 0 8px;">✦ 뽑힌 카드</div>`+
+            mxDrawnTarot.map((c,i)=>`
+              <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--dark3);border:0.5px solid ${c.rev?'rgba(232,112,112,0.4)':'rgba(201,168,76,0.3)'};border-radius:8px;margin-bottom:6px;">
+                <div style="font-size:22px;">${c.sym}</div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">${labels[i]} · ${c.isMajor?'메이저':'마이너'}</div>
+                  <div style="font-size:13px;color:${c.rev?'#E87070':'var(--gold)'};">${c.name.replace(/\[.+\] /,'')}</div>
+                  <div style="font-size:10px;color:var(--text-3);">${c.dir}</div>
+                </div>
+              </div>`).join('')+
+            `<button class="ghost-btn" onclick="renderTarotDeck()" style="margin-top:6px;width:100%;font-size:12px;padding:8px;">🔄 다시 뽑기</button>`;
+        }
+        // 셔플 버튼 숨기기
+        const sb=document.getElementById('mx-tdeck-shuffle');
+        if(sb) sb.style.display='none';
+        // 덱 탑 카드 비활성화
+        if(topCard){topCard.onclick=null;topCard.style.opacity='0.3';topCard.style.cursor='default';}
+      }
+    },440);
+  },520);
 }
 
 // 룬 덱 렌더 — 여러 돌 중 직접 선택
