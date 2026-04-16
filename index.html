@@ -4239,8 +4239,11 @@ function renderPickDeck(){
   window.scrollTo({top:deckArea.offsetTop-20,behavior:'smooth'});
 }
 
+let _shuffling=false;
 function shuffleDeck(){
-  if(pickedCards.length>0) return; // 이미 뽑기 시작했으면 셔플 불가
+  if(_shuffling) return;
+  _shuffling=true;
+
   // Fisher-Yates 셔플
   for(let i=deckPool.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -4248,21 +4251,122 @@ function shuffleDeck(){
   }
   // 역방향 재배정 (25%)
   deckPool.forEach(c=>{ c.isRev=Math.random()>0.75; });
-  // 덱 흔들기 애니메이션
+  // 뽑기 리셋 (언제든 재셔플 가능)
+  pickedCards=[];
+  pickCount=0;
+  drawnCards=[];
+  flippedCount=0;
+
+  const deckEl=document.getElementById('tarot-deck-cards');
   const topCard=document.getElementById('deck-top-card');
-  if(topCard){
-    topCard.style.transition='transform 0.08s ease';
-    topCard.style.transform='rotate(-6deg)';
-    setTimeout(()=>{ topCard.style.transform='rotate(5deg)'; },80);
-    setTimeout(()=>{ topCard.style.transform='rotate(-3deg)'; },160);
-    setTimeout(()=>{ topCard.style.transform='rotate(2deg)'; },240);
-    setTimeout(()=>{ topCard.style.transform='none'; },320);
-  }
+  if(!topCard||!deckEl){ _shuffling=false; return; }
+
   const guideEl=document.getElementById('tarot-deck-guide');
-  if(guideEl){
-    guideEl.textContent='✦ 덱을 셔플했습니다';
-    setTimeout(()=>{ guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`; },1200);
+  if(guideEl) guideEl.textContent='✦ 셔플 중...';
+
+  // 슬롯 초기화
+  const posNames=spPos[spread];
+  posNames.forEach((_,i)=>{
+    const slot=document.getElementById(`tarot-slot-${i}`);
+    if(slot){
+      slot.style.border='1.5px dashed rgba(201,168,76,0.3)';
+      slot.style.background='rgba(201,168,76,0.04)';
+      slot.innerHTML='✦';
+    }
+  });
+
+  // 남은 카드 수 복원
+  const countEl=document.getElementById('deck-count');
+  if(countEl) countEl.textContent=`${deckPool.length}장`;
+
+  // ── 부채꼴 펼침 애니메이션 ──
+  const rect=topCard.getBoundingClientRect();
+  const cx=rect.left+rect.width/2;
+  const cy=rect.top+rect.height/2;
+  const fanCount=7;
+  const fanCards=[];
+
+  // 셔플 버튼·덱 일시 비활성
+  topCard.style.pointerEvents='none';
+  const shuffleBtn=document.getElementById('deck-shuffle-btn');
+  if(shuffleBtn) shuffleBtn.style.pointerEvents='none';
+
+  // 팬 카드 생성
+  for(let i=0;i<fanCount;i++){
+    const fc=document.createElement('div');
+    fc.style.cssText=`
+      position:fixed;
+      left:${rect.left}px;top:${rect.top}px;
+      width:${rect.width}px;height:${rect.height}px;
+      border-radius:6px;overflow:hidden;
+      border:1px solid rgba(201,168,76,${0.4+i*0.08});
+      box-shadow:0 4px 20px rgba(0,0,0,0.7),0 0 8px rgba(201,168,76,0.2);
+      z-index:${8000+i};pointer-events:none;
+      transform-origin:center bottom;
+      transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s ease;
+      opacity:0;
+    `;
+    fc.innerHTML=makeCardBackSVG(rect.width,rect.height);
+    document.body.appendChild(fc);
+    fanCards.push(fc);
   }
+
+  // Phase 1: 부채꼴로 펼치기 (0→450ms)
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    fanCards.forEach((fc,i)=>{
+      const angle=(i-Math.floor(fanCount/2))*12;
+      const lift=-30-Math.abs(i-Math.floor(fanCount/2))*8;
+      fc.style.opacity='1';
+      fc.style.transform=`rotate(${angle}deg) translateY(${lift}px)`;
+    });
+  }));
+
+  // Phase 2: 카드 빠르게 돌리기 (500→1100ms)
+  setTimeout(()=>{
+    fanCards.forEach((fc,i)=>{
+      fc.style.transition='transform 0.12s ease';
+    });
+    let flipStep=0;
+    const flipInterval=setInterval(()=>{
+      flipStep++;
+      fanCards.forEach((fc,i)=>{
+        const baseAngle=(i-Math.floor(fanCount/2))*12;
+        const shuffle=((flipStep+i)%2===0?1:-1)*(8-flipStep*0.8);
+        fc.style.transform=`rotate(${baseAngle+shuffle}deg) translateY(${-30-Math.abs(i-Math.floor(fanCount/2))*8}px)`;
+      });
+      if(flipStep>=7) clearInterval(flipInterval);
+    },85);
+  },500);
+
+  // Phase 3: 다시 모이기 (1200→1650ms)
+  setTimeout(()=>{
+    fanCards.forEach((fc)=>{
+      fc.style.transition='transform 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.35s ease';
+      fc.style.transform='rotate(0deg) translateY(0px)';
+      fc.style.opacity='0';
+    });
+  },1200);
+
+  // Phase 4: 정리 + 덱 펄스
+  setTimeout(()=>{
+    fanCards.forEach(fc=>fc.remove());
+    // 덱 빛나는 펄스
+    topCard.style.transition='box-shadow 0.3s ease,transform 0.15s ease';
+    topCard.style.boxShadow='0 4px 16px rgba(0,0,0,0.8),0 0 24px rgba(201,168,76,0.6)';
+    topCard.style.transform='scale(1.08)';
+    setTimeout(()=>{
+      topCard.style.boxShadow='0 4px 16px rgba(0,0,0,0.8),0 0 12px rgba(201,168,76,0.25)';
+      topCard.style.transform='none';
+    },300);
+
+    topCard.style.pointerEvents='auto';
+    if(shuffleBtn) shuffleBtn.style.pointerEvents='auto';
+    if(guideEl){
+      guideEl.textContent='✦ 셔플 완료!';
+      setTimeout(()=>{ guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요`; },1000);
+    }
+    _shuffling=false;
+  },1650);
 }
 
 let _deckDrawing=false;
@@ -4282,11 +4386,9 @@ function drawFromDeck(){
   const guideEl=document.getElementById('tarot-deck-guide');
   if(guideEl) guideEl.textContent=`덱을 탭해서 카드를 ${spread}장 뽑으세요 (${pickedCards.length}/${spread})`;
 
-  // 남은 카드 수 업데이트 + 셔플 버튼 숨기기
+  // 남은 카드 수 업데이트
   const countEl=document.getElementById('deck-count');
   if(countEl) countEl.textContent=`${deckPool.length-pickedCards.length}장`;
-  const shuffleBtn=document.getElementById('deck-shuffle-btn');
-  if(shuffleBtn) shuffleBtn.style.display='none';
 
   const w=54, h=88;
   const cardRect=topCard.getBoundingClientRect();
