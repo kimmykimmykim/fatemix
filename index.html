@@ -293,6 +293,21 @@ body::before{
   from { opacity:0; transform:translateY(12px); }
   to   { opacity:1; transform:translateY(0); }
 }
+/* 간단확인 타로 안내 점 애니메이션 */
+.qk-dots{display:inline-block;letter-spacing:0.1em;animation:qkDotsPulse 1.2s ease-in-out infinite;}
+@keyframes qkDotsPulse { 0%,100%{opacity:0.35;} 50%{opacity:1;} }
+/* 타로 셔플 애니메이션 — 1.8s 멀티 스테이지 (교차 스와이프 + 팝 + 스핀 + 착지) */
+@keyframes mxShuffleSeq {
+  0%   { transform: translate(0,0) rotate(0deg) scale(1); }
+  12%  { transform: translate(-28px,-8px) rotate(-10deg) scale(1.02); }
+  24%  { transform: translate( 32px,-6px) rotate(  8deg) scale(1.03); }
+  36%  { transform: translate(-22px,-12px) rotate(-7deg) scale(1.04); }
+  48%  { transform: translate( 26px,-10px) rotate( 6deg) scale(1.05); }
+  60%  { transform: translate(  0, -34px) rotate( 0deg) scale(1.10); }
+  72%  { transform: translate(  0, -22px) rotate(180deg) scale(1.06); }
+  84%  { transform: translate(  0, -10px) rotate(360deg) scale(1.02); }
+  100% { transform: translate(0,0) rotate(360deg) scale(1); }
+}
 @keyframes mxStarFadeIn { from{opacity:0} to{opacity:1} }
 @keyframes mxStarFadeOut { from{opacity:1} to{opacity:0} }
 @keyframes mxStarTwinkle {
@@ -405,14 +420,19 @@ body::before{
   100% { background-position:200% center; }
 }
 .today-oracle{
-  margin:0 20px 20px;max-width:680px;margin-left:auto;margin-right:auto;
+  max-width:760px;width:calc(100% - 24px);
+  margin:0 auto 26px auto;
   background:linear-gradient(135deg,#12122A 0%,#0E0E1C 55%,#161024 100%);
-  border:1px solid rgba(201,168,76,0.42);border-radius:20px;
-  padding:20px;position:relative;overflow:hidden;
+  border:1px solid rgba(201,168,76,0.42);border-radius:22px;
+  padding:28px 26px;position:relative;overflow:hidden;
+  box-sizing:border-box;
   animation:oracleFadeIn 0.6s ease-out,oraclePulse 4s ease-in-out 1s infinite;
 }
+@media (min-width:640px){
+  .today-oracle{width:calc(100% - 48px);padding:34px 32px;}
+}
 .today-oracle::before{
-  content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+  content:'';position:absolute;inset:0;border-radius:22px;pointer-events:none;
   background:radial-gradient(ellipse at 85% 10%,rgba(140,80,200,0.06) 0%,transparent 55%),
              radial-gradient(ellipse at 10% 90%,rgba(201,168,76,0.07) 0%,transparent 50%);
 }
@@ -600,7 +620,7 @@ body{padding-bottom:64px;}
  -->
 <div id="screen-home" class="screen active">
   <div class="home-header">
-    <div class="home-logo">Fate<em>Mix</em></div>
+    <div class="home-logo" onclick="onLogoTap()" style="cursor:pointer;user-select:none;">Fate<em>Mix</em></div>
     <div class="home-tagline">운명의 교차점에서 답을 찾다</div>
   </div>
 
@@ -659,154 +679,22 @@ body{padding-bottom:64px;}
       </div>
     </div>
 
-    <!-- [B] 생년월일 없을 때: 입력 안내 + CTA -->
-    <div id="tf-empty" style="display:none;padding:30px 18px 22px;text-align:center;">
-      <div style="font-size:42px;opacity:0.32;margin-bottom:10px;line-height:1;">🗓️</div>
-      <div class="oracle-label" style="margin-bottom:10px;">TODAY'S ORACLE</div>
-      <div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:8px;">
-        오늘의 운세는 <b style="color:var(--gold);">생년월일 입력 후</b> 확인할 수 있어요
+    <!-- [B] 생년월일 없을 때: 입력 안내 + CTA (간단확인 탭으로 이동) -->
+    <div id="tf-empty" style="display:none;padding:40px 24px 36px;text-align:center;">
+      <div class="oracle-label" style="margin-bottom:6px;font-size:13px;letter-spacing:0.2em;">✨ TODAY'S ORACLE ✨</div>
+      <div id="tf-empty-date" style="font-size:13px;color:var(--text-2);letter-spacing:0.04em;margin-bottom:22px;"></div>
+      <div style="height:0.5px;background:rgba(201,168,76,0.22);max-width:240px;margin:0 auto 26px;"></div>
+      <div style="font-size:26px;color:rgba(201,168,76,0.55);margin-bottom:16px;line-height:1;letter-spacing:0.4em;">✦</div>
+      <div style="font-size:15px;color:var(--text-2);line-height:1.85;margin-bottom:26px;">
+        오늘의 운세를 보려면<br><b style="color:var(--gold);">생년월일을 알려주세요</b>
       </div>
-      <div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-bottom:18px;max-width:320px;margin-left:auto;margin-right:auto;">
-        생일 × 오늘 날짜의 <b style="color:var(--text-2);">수비학적 에너지</b>로 당신만의 개인화된 카드를 뽑아드립니다
-      </div>
-      <button onclick="go('saju')" style="padding:11px 22px;font-size:13px;border-radius:24px;border:0.5px solid rgba(201,168,76,0.55);background:rgba(201,168,76,0.08);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;"
-        onmouseover="this.style.background='rgba(201,168,76,0.16)';this.style.borderColor='rgba(201,168,76,0.85)';"
-        onmouseout="this.style.background='rgba(201,168,76,0.08)';this.style.borderColor='rgba(201,168,76,0.55)';">
-        ✦ 생년월일 입력하기 →
+      <button onclick="go('quick')" style="padding:13px 32px;font-size:14px;border-radius:10px;border:1px solid rgba(201,168,76,0.7);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;min-width:240px;"
+        onmouseover="this.style.background='rgba(201,168,76,0.22)';this.style.borderColor='rgba(201,168,76,0.95)';"
+        onmouseout="this.style.background='rgba(201,168,76,0.12)';this.style.borderColor='rgba(201,168,76,0.7)';">
+        사주 정보 넣기 →
       </button>
     </div>
   </div>
-
-  <!-- 철학 문구 -->
-  <div style="text-align:center;padding:0 28px 24px;max-width:680px;margin:0 auto;">
-    <div style="font-size:14px;color:var(--text-3);line-height:2.1;letter-spacing:0.04em;font-style:italic;">
-      "하나의 점술은 틀릴 수 있다<br>
-      하지만 여러 개가 같은 답을 말한다면?"
-    </div>
-  </div>
-
-  <!-- 메인 CTA — Mix 주인공 -->
-  <div style="padding:0 20px;max-width:680px;margin:0 auto 12px;">
-    <div onclick="go('mix')" style="
-      background:linear-gradient(135deg,rgba(201,168,76,0.14) 0%,rgba(201,168,76,0.04) 100%);
-      border:1px solid rgba(201,168,76,0.6);border-radius:20px;
-      padding:28px 24px;cursor:pointer;transition:all 0.25s;
-      position:relative;overflow:hidden;"
-      onmouseover="this.style.borderColor='rgba(201,168,76,0.9)'"
-      onmouseout="this.style.borderColor='rgba(201,168,76,0.6)'">
-      <div style="position:absolute;top:-30px;right:-30px;font-size:120px;opacity:0.06;pointer-events:none;">✨</div>
-
-      <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.2em;margin-bottom:10px;">FATEMIX · 통합 운명 분석</div>
-
-      <div style="font-family:'Gowun Batang','Noto Serif KR',serif;font-size:20px;color:var(--gold);margin-bottom:8px;font-weight:600;letter-spacing:0.02em;">
-        ✦ 지금 당신의 운명 읽기
-      </div>
-
-      <!-- 술법 태그 나열 -->
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">사주</span>
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">타로</span>
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">자미두수</span>
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">기문둔갑</span>
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">룬</span>
-        <span style="font-size:11px;color:var(--text-3);padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:20px;border:0.5px solid rgba(255,255,255,0.08);">이집트</span>
-        <span style="font-size:11px;color:rgba(201,168,76,0.5);padding:3px 10px;background:rgba(201,168,76,0.06);border-radius:20px;border:0.5px solid rgba(201,168,76,0.2);">+5개 더</span>
-      </div>
-
-      <button class="primary-btn" onclick="event.stopPropagation();go('mix')" style="font-size:15px;padding:16px;border-radius:12px;letter-spacing:0.06em;">
-        ✨ 믹스 시작하기
-      </button>
-    </div>
-  </div>
-
-  <!-- 개별 술법 — 보조 -->
-  <div style="padding:0 20px;max-width:680px;margin:0 auto 8px;">
-    <div style="font-size:10px;color:var(--text-3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;text-align:center;">개별 술법 보기</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-      <div class="menu-item" onclick="go('saju')" style="padding:14px 10px;">
-        <div class="menu-icon">🧧</div>
-        <div class="menu-name">사주</div>
-        <div class="menu-desc" style="font-size:11px;">태어난 년·월·일·시, 오행의 균형으로 타고난 운명의 설계도를 읽는 동양 명리학</div>
-      </div>
-      <div class="menu-item" onclick="go('tarot')" style="padding:14px 10px;">
-        <div class="menu-icon"><svg width="28" height="28" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="4" width="16" height="22" rx="2" fill="#1a1a2e" stroke="#6a5a3a" stroke-width="0.8"/>
-          <rect x="5" y="7" width="16" height="22" rx="2" fill="#0f0f1a" stroke="#C9A84C" stroke-width="1"/>
-          <text x="13" y="21" font-size="9" fill="#C9A84C" text-anchor="middle" font-family="serif">✦</text>
-          <text x="13" y="14" font-size="7" fill="#E8C97A" text-anchor="middle">☽</text>
-        </svg></div>
-        <div class="menu-name">타로</div>
-        <div class="menu-desc" style="font-size:11px;">78장 카드의 상징으로 지금 이 순간의 에너지와 숨겨진 흐름을 포착하는 직관의 거울</div>
-      </div>
-      <div class="menu-item" onclick="go('astro')" style="padding:14px 10px;">
-        <div class="menu-icon">⭐</div>
-        <div class="menu-name">점성술</div>
-        <div class="menu-desc" style="font-size:11px;">태어난 순간 행성들의 위치로 성격·재능·인연의 패턴을 읽는 서양 점성술</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 12가지 술법 안내 -->
-  <div style="padding:0 20px;max-width:680px;margin:0 auto 20px;">
-    <div style="background:var(--dark2);border:0.5px solid var(--border-2);border-radius:14px;padding:18px 20px;">
-      <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">✦ 믹스에서 선택 가능한 12가지 술법</div>
-      <div style="display:grid;gap:11px;">
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">🧧</span>
-          <div><span style="font-size:13px;color:var(--text);">사주</span> <span style="font-size:10px;color:var(--text-3);">四柱</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">생년월일시를 연·월·일·시 네 기둥으로 세워 일간을 중심으로 신강·신약, 격국, 용신, 대운의 흐름까지 산출</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">⭐</span>
-          <div><span style="font-size:13px;color:var(--text);">서양 점성술</span> <span style="font-size:10px;color:var(--text-3);">Astrology</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">출생 시각과 장소 기준 네이탈 차트에서 태양궁·달·상승궁과 10행성 위치를 계산해 성격 패턴 분석</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">🎴</span>
-          <div><span style="font-size:13px;color:var(--text);">타로</span> <span style="font-size:10px;color:var(--text-3);">Tarot</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">14장의 뒷면 중 직접 뽑은 카드의 정·역방향을 과거·현재·미래 포지션에 매핑해 현재 에너지 해석</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">◎</span>
-          <div><span style="font-size:13px;color:var(--text);">베딕 점성술</span> <span style="font-size:10px;color:var(--text-3);">Jyotish</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">항성좌 기준으로 태양 라시와 달의 나크샤트라(27수)를 산출하고 현재 마하다샤(대운) 지배성을 알려줌</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">☯</span>
-          <div><span style="font-size:13px;color:var(--text);">자미두수</span> <span style="font-size:10px;color:var(--text-3);">紫微斗數</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">생년월일을 14주성 체계에 대입해 명궁의 주성(자미·천기·태양 등)을 배정, 본인의 운명 구조를 읽음</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">☰</span>
-          <div><span style="font-size:13px;color:var(--text);">기문둔갑</span> <span style="font-size:10px;color:var(--text-3);">奇門遁甲</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">8문·9궁을 시각에 맞게 포국해 길문·길성이 머무는 방위를 찾아 유리한 타이밍과 방향을 추출</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">子</span>
-          <div><span style="font-size:13px;color:var(--text);">당사주</span> <span style="font-size:10px;color:var(--text-3);">唐四柱</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">연·월·일·시 사주의 띠를 조합해 당나라 전통의 십이신살·공망 체계로 인생 굴곡과 결정적 시기를 판독</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">≡</span>
-          <div><span style="font-size:13px;color:var(--text);">주역</span> <span style="font-size:10px;color:var(--text-3);">I Ching</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">생년월일시를 수로 환원해 64괘 중 하나의 본괘를 뽑고, 괘사·효사로 현 상황의 길흉과 변화의 방향 판독</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">ᚱ</span>
-          <div><span style="font-size:13px;color:var(--text);">룬</span> <span style="font-size:10px;color:var(--text-3);">Runes</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">24개 돌 중 직접 집은 엘더 푸타르크 룬 한 개의 상징과 정·역방향으로 지금 필요한 조언을 전함</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">𓂀</span>
-          <div><span style="font-size:13px;color:var(--text);">이집트 점성술</span> <span style="font-size:10px;color:var(--text-3);">Egyptian</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">생월일을 고대 이집트 12데칸 달력에 대입해 호루스·이시스·오시리스 등 12신 중 수호신을 배정</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">文</span>
-          <div><span style="font-size:13px;color:var(--text);">성명학</span> <span style="font-size:10px;color:var(--text-3);">Onomancy</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">이름 글자의 획수로 원형·형격·이격·정격(수리사격)을 산출해 평생에 더해지는 기운과 인간관계를 분석</div></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <span style="font-size:15px;flex-shrink:0;width:22px;text-align:center;">💞</span>
-          <div><span style="font-size:13px;color:#E87070;">궁합</span> <span style="font-size:10px;color:var(--text-3);">宮合</span><div style="font-size:11px;color:var(--text-3);line-height:1.7;margin-top:2px;">본인과 상대 두 사주를 나란히 세워 연지·일지 기준 충·형·합·원진·오행 조화를 교차 분석 <span style="color:#E87070;font-size:10px;">· 보너스</span></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <style>
-  @keyframes shimmer{0%,100%{opacity:0.4;}50%{opacity:0.9;}}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.4);}50%{box-shadow:0 0 0 5px rgba(201,168,76,0);}}
-  </style>
 
 </div>
 
@@ -816,18 +704,152 @@ body{padding-bottom:64px;}
 <div id="screen-quick" class="screen">
 <div class="container">
   <div class="page-title">간단 확인</div>
-  <div class="page-subtitle" style="margin-bottom:20px;" id="qk-today-date">오늘의 타로 × 점성술 × 사주 · 매일 자정 갱신</div>
-  <div id="quick-results" style="display:block;">
-    <!-- 🔓 오늘의 타로 -->
-    <div class="card" id="qk-tarot" style="margin-bottom:14px;"></div>
-    <!-- 🔓 오늘의 점성술 -->
-    <div class="card" id="qk-astro" style="margin-bottom:14px;"></div>
-    <!-- 🔒 오늘의 사주 운세 (사주 없으면 잠금) -->
-    <div class="card" id="qk-saju" style="margin-bottom:14px;position:relative;overflow:hidden;"></div>
-    <div style="text-align:center;padding:16px 0 8px;">
+  <div class="page-subtitle" style="margin-bottom:20px;" id="qk-today-date">매일 자정 갱신</div>
+
+  <!-- [A] 사주 입력 전: 안내 + 입력 폼 -->
+  <div id="quick-need-birth" style="display:none;">
+    <div class="card" style="margin-bottom:14px;border:0.5px solid rgba(201,168,76,0.45);background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(201,168,76,0.02) 100%);">
+      <div style="font-size:13.5px;color:var(--text-2);line-height:1.85;">
+        <span style="font-size:16px;">✨</span> <b style="color:var(--gold);">생년월일을 입력</b>하시면<br>
+        오늘의 타로 + 내 별자리 + 내 사주 운세를<br>
+        한 번에 보여드립니다.
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="label">생년월일</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="qk-cal-solar" class="toggle-btn active" onclick="qkSetCal('solar',this)" style="flex:1;font-size:12px;">양력</button>
+        <button id="qk-cal-lunar" class="toggle-btn" onclick="qkSetCal('lunar',this)" style="flex:1;font-size:12px;">음력</button>
+        <button id="qk-cal-leap"  class="toggle-btn" onclick="qkSetCal('leap',this)"  style="flex:1;font-size:12px;">윤달(음력)</button>
+      </div>
+      <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">년</div>
+          <input class="input" type="number" id="qk-year" min="1900" max="2050" placeholder="예) 1990"></div>
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">월</div>
+          <input class="input" type="number" id="qk-month" min="1" max="12" placeholder="1~12"></div>
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">일</div>
+          <input class="input" type="number" id="qk-day" min="1" max="31" placeholder="1~31"></div>
+      </div>
+
+      <div class="label">태어난 시간</div>
+      <div class="toggle-group" style="margin-bottom:10px;">
+        <button class="toggle-btn active" id="qk-time-mode-shijin"  onclick="qkTimeMode('shijin',this)">시진 선택</button>
+        <button class="toggle-btn"        id="qk-time-mode-direct"  onclick="qkTimeMode('direct',this)">직접 입력</button>
+        <button class="toggle-btn"        id="qk-time-mode-unknown" onclick="qkTimeMode('unknown',this)">모름</button>
+      </div>
+      <div id="qk-shijin-picker">
+        <div id="qk-shijin-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;">
+          <button class="toggle-btn qk-shi-btn active" onclick="qkSelectShijin(23,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">자시<br><span style="font-size:9px;color:var(--text-3);">23~01</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(1,this)"  style="padding:7px 2px;font-size:11px;line-height:1.35;">축시<br><span style="font-size:9px;color:var(--text-3);">01~03</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(3,this)"  style="padding:7px 2px;font-size:11px;line-height:1.35;">인시<br><span style="font-size:9px;color:var(--text-3);">03~05</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(5,this)"  style="padding:7px 2px;font-size:11px;line-height:1.35;">묘시<br><span style="font-size:9px;color:var(--text-3);">05~07</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(7,this)"  style="padding:7px 2px;font-size:11px;line-height:1.35;">진시<br><span style="font-size:9px;color:var(--text-3);">07~09</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(9,this)"  style="padding:7px 2px;font-size:11px;line-height:1.35;">사시<br><span style="font-size:9px;color:var(--text-3);">09~11</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(11,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">오시<br><span style="font-size:9px;color:var(--text-3);">11~13</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(13,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">미시<br><span style="font-size:9px;color:var(--text-3);">13~15</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(15,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">신시<br><span style="font-size:9px;color:var(--text-3);">15~17</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(17,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">유시<br><span style="font-size:9px;color:var(--text-3);">17~19</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(19,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">술시<br><span style="font-size:9px;color:var(--text-3);">19~21</span></button>
+          <button class="toggle-btn qk-shi-btn" onclick="qkSelectShijin(21,this)" style="padding:7px 2px;font-size:11px;line-height:1.35;">해시<br><span style="font-size:9px;color:var(--text-3);">21~23</span></button>
+        </div>
+      </div>
+      <div id="qk-direct-picker" style="display:none;margin-bottom:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="input" type="number" id="qk-hour" min="0" max="23" placeholder="시(0~23)" style="width:90px;text-align:center;">
+          <span style="color:var(--text-3);font-size:11px;">시</span>
+          <input class="input" type="number" id="qk-min"  min="0" max="59" placeholder="분"  style="width:90px;text-align:center;">
+          <span style="color:var(--text-3);font-size:11px;">분</span>
+        </div>
+      </div>
+
+      <div class="label">성별</div>
+      <div class="gender-row" style="margin-bottom:12px;">
+        <button class="gender-btn qk-gender-btn" onclick="qkSetGender('male',this)">남성</button>
+        <button class="gender-btn qk-gender-btn active" onclick="qkSetGender('female',this)">여성</button>
+      </div>
+
+      <div class="label">결혼 여부</div>
+      <div class="toggle-group" style="margin-bottom:14px;">
+        <button class="toggle-btn active" id="qk-marital-single"   onclick="qkSetMarital('single',this)">미혼</button>
+        <button class="toggle-btn"        id="qk-marital-married"  onclick="qkSetMarital('married',this)">기혼</button>
+        <button class="toggle-btn"        id="qk-marital-divorced" onclick="qkSetMarital('divorced',this)">이혼/별거</button>
+      </div>
+
+      <div class="label">이름 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(성명학 풀이용, 선택)</span></div>
+      <input class="input" type="text" id="qk-name" placeholder="비워두셔도 됩니다" style="margin-bottom:14px;">
+
+      <button class="primary-btn" onclick="qkSubmitSaju()" style="width:100%;">✦ 확인하기</button>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.65;text-align:center;margin-top:12px;">
+        한 번 입력하시면 홈의 오늘의 운세와 믹스 분석에도 자동으로 저장돼요.
+      </div>
+    </div>
+  </div>
+
+  <!-- [B] 사주 입력 후: 오늘의 한 줄 + 3 카드 (토글 펼침) -->
+  <div id="quick-results" style="display:none;">
+    <!-- 오늘의 한 줄 -->
+    <div class="card" id="qk-oneline" style="margin-bottom:18px;"></div>
+
+    <div style="text-align:center;font-size:12px;color:var(--text-3);letter-spacing:0.06em;margin-bottom:12px;">자유롭게 확인해보세요</div>
+
+    <!-- 3 카드 그리드 (가로 3 / 모바일 좁으면 세로) -->
+    <div id="qk-cards-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px;">
+      <!-- 사주 카드 -->
+      <div>
+        <div class="qk-mini-card" id="qk-card-saju" onclick="qkToggleCard('saju')"
+          style="padding:14px 10px;background:var(--dark3);border:0.5px solid rgba(232,112,112,0.45);border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"
+          onmouseover="this.style.borderColor='rgba(232,112,112,0.85)'"
+          onmouseout="this.style.borderColor='rgba(232,112,112,0.45)'">
+          <div style="font-size:22px;color:#E87070;">♦</div>
+          <div style="font-size:13px;color:var(--gold);font-weight:500;">사주</div>
+          <div style="font-size:10.5px;color:var(--text-3);line-height:1.4;">오늘 내 운 보기</div>
+          <div class="qk-chev" id="qk-chev-saju" style="font-size:11px;color:rgba(201,168,76,0.6);margin-top:3px;transition:transform 0.25s;">▼</div>
+        </div>
+      </div>
+      <!-- 타로 카드 -->
+      <div>
+        <div class="qk-mini-card" id="qk-card-tarot" onclick="qkToggleCard('tarot')"
+          style="padding:14px 10px;background:var(--dark3);border:0.5px solid rgba(134,180,235,0.45);border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"
+          onmouseover="this.style.borderColor='rgba(134,180,235,0.85)'"
+          onmouseout="this.style.borderColor='rgba(134,180,235,0.45)'">
+          <div style="font-size:22px;color:#86B4EB;">🎴</div>
+          <div style="font-size:13px;color:var(--gold);font-weight:500;">타로</div>
+          <div style="font-size:10.5px;color:var(--text-3);line-height:1.4;">오늘의 카드</div>
+          <div class="qk-chev" id="qk-chev-tarot" style="font-size:11px;color:rgba(201,168,76,0.6);margin-top:3px;transition:transform 0.25s;">▼</div>
+        </div>
+      </div>
+      <!-- 별자리 카드 -->
+      <div>
+        <div class="qk-mini-card" id="qk-card-astro" onclick="qkToggleCard('astro')"
+          style="padding:14px 10px;background:var(--dark3);border:0.5px solid rgba(201,168,76,0.45);border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;"
+          onmouseover="this.style.borderColor='rgba(201,168,76,0.85)'"
+          onmouseout="this.style.borderColor='rgba(201,168,76,0.45)'">
+          <div style="font-size:22px;color:#E8C97A;">⭐</div>
+          <div style="font-size:13px;color:var(--gold);font-weight:500;">별자리</div>
+          <div style="font-size:10.5px;color:var(--text-3);line-height:1.4;" id="qk-astro-sub">오늘의 별자리</div>
+          <div class="qk-chev" id="qk-chev-astro" style="font-size:11px;color:rgba(201,168,76,0.6);margin-top:3px;transition:transform 0.25s;">▼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 각 카드 펼침 영역: 각 카드 바로 아래에 그리드 밖에서 별도 배치 (모든 너비) -->
+    <div class="card qk-expand" id="qk-expand-saju"  style="display:none;margin-top:12px;"></div>
+    <div class="card qk-expand" id="qk-expand-tarot" style="display:none;margin-top:12px;"></div>
+    <div class="card qk-expand" id="qk-expand-astro" style="display:none;margin-top:12px;"></div>
+
+    <div style="text-align:center;padding:22px 0 8px;">
       <button class="primary-btn" onclick="goTab('mix')" style="max-width:360px;margin:0 auto;">✦ 더 깊은 AI 믹스 분석 받기 →</button>
     </div>
   </div>
+
+  <style>
+    @media (max-width:480px){
+      #qk-cards-grid{grid-template-columns:1fr;}
+    }
+    .qk-mini-card.active{background:linear-gradient(135deg,rgba(201,168,76,0.12) 0%,rgba(201,168,76,0.04) 100%);box-shadow:0 2px 14px rgba(201,168,76,0.18);}
+    .qk-mini-card.active .qk-chev{transform:rotate(180deg);}
+  </style>
 </div>
 </div>
 
@@ -1249,7 +1271,10 @@ body{padding-bottom:64px;}
   <!-- ═══ STEP 2: 술법 선택 + 분석 ═══ -->
   <div id="mx-step-2" style="display:none;animation:mxStepFadeIn 0.35s ease;">
   <div class="card">
-    <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 2 — 술법 선택</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;">STEP 2 — 술법 선택</div>
+      <a onclick="mxGoStep(1)" style="font-size:10.5px;color:var(--text-3);text-decoration:underline;cursor:pointer;letter-spacing:0.03em;">사주 수정</a>
+    </div>
 
     <!-- 개수 선택 -->
     <div class="label" style="margin-bottom:8px;">몇 개 술법을 섞을까요?</div>
@@ -1614,14 +1639,18 @@ function _autoFillSajuFromStorage(){
 function _autoFillMixFromSaju(){
   // sjData(현재 세션) → localStorage fm_saju_last → fm_saju 목록 순으로 시도
   var d=null;
+  // fm_saju_last 는 name 필드를 포함할 수 있으므로 별도로 먼저 조회
+  var last=null;
+  try{ var _rawLast=localStorage.getItem('fm_saju_last'); if(_rawLast) last=JSON.parse(_rawLast); }catch(e){}
   if(typeof sjData!=='undefined'&&sjData&&sjData.y){
-    d={y:sjData.y,m:sjData.m,d:sjData.d,h:sjData.h,gender:(typeof sjGenderVal!=='undefined')?sjGenderVal:'female'};
+    d={y:sjData.y,m:sjData.m,d:sjData.d,h:sjData.h,gender:(typeof sjGenderVal!=='undefined')?sjGenderVal:'female',
+       name:(last&&typeof last.name==='string')?last.name:''};
   }
   if(!d||!d.y){
-    try{var raw=localStorage.getItem('fm_saju_last');if(raw){d=JSON.parse(raw);}}catch(e){}
+    if(last) d=last;
   }
   if(!d||!d.y){
-    try{var list=JSON.parse(localStorage.getItem('fm_saju')||'[]');if(list.length>0){var it=list[0];d={y:it.y,m:it.m,d:it.d,h:it.h,min:it.min,gender:it.gender==='여'?'female':it.gender==='남'?'male':it.gender};}}catch(e){}
+    try{var list=JSON.parse(localStorage.getItem('fm_saju')||'[]');if(list.length>0){var it=list[0];d={y:it.y,m:it.m,d:it.d,h:it.h,min:it.min,gender:it.gender==='여'?'female':it.gender==='남'?'male':it.gender,name:it.name||''};}}catch(e){}
   }
   if(!d||!d.y) return;
 
@@ -1631,6 +1660,10 @@ function _autoFillMixFromSaju(){
   if(yEl&&!yEl.value) yEl.value=d.y;
   if(mEl&&!mEl.value) mEl.value=d.m;
   if(dEl&&!dEl.value) dEl.value=d.d;
+
+  // 이름 자동 채움 (성명학 선택 시 필요, 없으면 빈값 유지)
+  var nameEl=document.getElementById('mx-name');
+  if(nameEl && !nameEl.value && d && typeof d.name==='string') nameEl.value=d.name;
 
   // 시진
   if(d.h!=null){
@@ -1652,25 +1685,183 @@ function _autoFillMixFromSaju(){
   }
 }
 
+// 프리미엄 플래그 (궁합 언락용)
+function isPremium(){
+  try { return localStorage.getItem('fm_is_premium') === 'true'; } catch(e) { return false; }
+}
+
+// ─── FIX F: FATEMIX 로고 5탭 개발자 패널 ───
+let _logoTapCount = 0;
+let _logoTapTimer = null;
+function onLogoTap(){
+  _logoTapCount++;
+  clearTimeout(_logoTapTimer);
+  _logoTapTimer = setTimeout(function(){ _logoTapCount = 0; }, 3000);
+  if(_logoTapCount >= 5){
+    _logoTapCount = 0;
+    clearTimeout(_logoTapTimer);
+    openDevPanel();
+  }
+}
+
+function openDevPanel(){
+  var existing = document.getElementById('fm-dev-panel');
+  if(existing) existing.remove();
+
+  var premiumNow = isPremium();
+  var nameNow = '';
+  try{
+    var raw = localStorage.getItem('fm_saju_last');
+    if(raw){ var o=JSON.parse(raw); if(o && typeof o.name==='string') nameNow = o.name; }
+  }catch(e){}
+
+  var modal = document.createElement('div');
+  modal.id = 'fm-dev-panel';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="max-width:380px;width:100%;background:linear-gradient(135deg,#1a1a2e 0%,#12121e 100%);border:0.5px solid rgba(201,168,76,0.5);border-radius:18px;padding:24px 22px;box-shadow:0 8px 40px rgba(0,0,0,0.75);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:0.5px solid rgba(201,168,76,0.2);">
+        <span style="font-size:20px;">🔧</span>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);letter-spacing:0.16em;">개발자 도구</div>
+      </div>
+
+      <!-- 프리미엄 토글 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:4px;">프리미엄 모드</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">현재: <b style="color:${premiumNow?'#70C49A':'#E87070'};">${premiumNow?'프리미엄':'비프리미엄'}</b></div>
+        <button id="fm-dev-prem" onclick="_devTogglePremium()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid ${premiumNow?'rgba(232,112,112,0.55)':'rgba(112,196,154,0.55)'};background:${premiumNow?'rgba(232,112,112,0.12)':'rgba(112,196,154,0.12)'};color:${premiumNow?'#E87070':'#70C49A'};font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">
+          ${premiumNow?'● 프리미엄 OFF':'○ 프리미엄 ON'}
+        </button>
+      </div>
+
+      <!-- 이름 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:4px;">이름 저장 상태</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">현재: <b style="color:${nameNow?'var(--text-2)':'var(--text-3)'};">${nameNow?('"'+nameNow+'"'):'(없음)'}</b></div>
+        <button onclick="_devClearName()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);color:var(--gold);font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;"${nameNow?'':' disabled style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-3);font-size:13px;opacity:0.5;cursor:not-allowed;font-family:inherit;"'}>
+          이름 지우기
+        </button>
+      </div>
+
+      <!-- 전체 초기화 -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:12px;color:#E87070;letter-spacing:0.08em;margin-bottom:4px;">전체 초기화</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.55;">저장된 사주·이름·오늘의 타로 모두 삭제 (신규 유저 시뮬레이션)</div>
+        <button onclick="_devClearAll()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(232,112,112,0.55);background:rgba(232,112,112,0.12);color:#E87070;font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">
+          Clear All
+        </button>
+      </div>
+
+      <!-- 닫기 -->
+      <button onclick="_devClose()" style="width:100%;padding:12px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-3);font-size:13px;cursor:pointer;font-family:inherit;">
+        닫기
+      </button>
+    </div>`;
+  // 배경 클릭 시 닫기
+  modal.addEventListener('click', function(ev){ if(ev.target===modal) _devClose(); });
+  document.body.appendChild(modal);
+}
+
+function _devClose(){
+  var m = document.getElementById('fm-dev-panel');
+  if(m) m.remove();
+}
+
+function _devTogglePremium(){
+  try{
+    if(isPremium()){
+      localStorage.removeItem('fm_is_premium');
+    } else {
+      localStorage.setItem('fm_is_premium', 'true');
+    }
+  }catch(e){}
+  location.reload();
+}
+
+function _devClearName(){
+  try{
+    var raw = localStorage.getItem('fm_saju_last');
+    if(raw){
+      var o = JSON.parse(raw);
+      o.name = '';
+      localStorage.setItem('fm_saju_last', JSON.stringify(o));
+    }
+  }catch(e){}
+  location.reload();
+}
+
+function _devClearAll(){
+  if(!confirm('정말 초기화할까요?\n\n저장된 사주·이름·오늘의 타로 기록이 모두 삭제됩니다.')) return;
+  try{
+    localStorage.removeItem('fm_saju');
+    localStorage.removeItem('fm_saju_last');
+    localStorage.removeItem('fm_today_tarot_oneCard');
+    localStorage.removeItem('fm_is_premium');
+  }catch(e){}
+  location.reload();
+}
+
+// 프리미엄 모달 표시 (궁합 클릭 시 비프리미엄)
+function showPremiumLockModal(){
+  let modal=document.getElementById('fm-premium-modal');
+  if(modal){ modal.style.display='flex'; return; }
+  modal=document.createElement('div');
+  modal.id='fm-premium-modal';
+  modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML=`
+    <div style="max-width:360px;width:100%;background:linear-gradient(135deg,#1a1a2e 0%,#12121e 100%);border:0.5px solid rgba(201,168,76,0.5);border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.7);">
+      <div style="font-size:38px;margin-bottom:12px;">👑</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:13px;color:rgba(201,168,76,0.85);letter-spacing:0.2em;margin-bottom:8px;">PREMIUM</div>
+      <div style="font-size:18px;color:var(--gold);margin-bottom:14px;font-family:'Gowun Batang',serif;">프리미엄 전용 기능</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.8;margin-bottom:22px;">
+        두 사람의 사주를 깊이 분석하는<br>
+        <b style="color:var(--gold);">궁합 기능</b>은 프리미엄 회원만<br>
+        이용할 수 있어요.
+      </div>
+      <button onclick="alert('결제 기능 준비 중! 곧 만나요 💖')" style="width:100%;padding:13px;border-radius:10px;border:0;background:linear-gradient(135deg,#C9A84C 0%,#B08A30 100%);color:#0F0F1A;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;letter-spacing:0.04em;">지금 프리미엄 시작하기</button>
+      <button onclick="document.getElementById('fm-premium-modal').style.display='none'" style="width:100%;padding:12px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-3);font-size:13px;cursor:pointer;">닫기</button>
+    </div>`;
+  // 배경 클릭 시 닫기
+  modal.addEventListener('click', function(ev){
+    if(ev.target===modal) modal.style.display='none';
+  });
+  document.body.appendChild(modal);
+}
+
 function renderMxCats(){
   const grid=document.getElementById('mx-cats-grid');
   if(!grid) return;
   // 카운트 대상: 궁합은 별도 화면으로 이동하므로 제외, 타로/룬 포함 나머지 전부
   const countedSelected=mxSelected.filter(id=>id!=='gunghap');
+  const premium=isPremium();
+  const hasNameNow=hasName();
   let html='';
   MIX_CATS.forEach(cat=>{
     const isGunghap=cat.id==='gunghap';
+    const isSeong=cat.id==='seong';
     const sel=mxSelected.includes(cat.id);
-    const disabled=!isGunghap&&!sel&&countedSelected.length>=MX_MAX;
+    const gLocked = isGunghap && !premium;
+    const nLocked = isSeong && !hasNameNow && !sel; // 이름 없으면 성명학 잠금
+    const disabled=!isGunghap&&!isSeong&&!sel&&countedSelected.length>=MX_MAX;
+    const opacityVal = (gLocked||nLocked) ? '0.5' : (disabled?'0.4':'1');
+    const borderColor = isGunghap?'rgba(232,112,112,0.45)' : sel?'rgba(201,168,76,0.7)' : (nLocked?'rgba(255,255,255,0.12)':'var(--border)');
     html+=`<div onclick="${disabled?'':'mxToggleCat(\''+cat.id+'\')'}"
-      style="display:flex;flex-direction:column;gap:5px;padding:11px 12px;
+      style="position:relative;display:flex;flex-direction:column;gap:5px;padding:11px 12px;
       background:var(--dark3);border-radius:10px;cursor:${disabled?'not-allowed':'pointer'};
-      border:0.5px solid ${isGunghap?'rgba(232,112,112,0.45)':sel?'rgba(201,168,76,0.7)':'var(--border)'};
-      opacity:${disabled?'0.4':'1'};transition:all 0.2s;min-height:78px;">
+      border:0.5px solid ${borderColor};
+      opacity:${opacityVal};transition:all 0.2s;min-height:78px;">
+      ${gLocked?`<div style="position:absolute;top:7px;right:9px;display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:#C9A84C;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.45);border-radius:10px;padding:2px 7px;letter-spacing:0.04em;">👑 프리미엄</span>
+        <span style="font-size:13px;">🔒</span>
+      </div>`:''}
+      ${nLocked?`<div style="position:absolute;top:7px;right:9px;display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:var(--text-2);background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.18);border-radius:10px;padding:2px 7px;letter-spacing:0.04em;">이름이 필요해요</span>
+        <span style="font-size:13px;">🔒</span>
+      </div>`:''}
       <div style="display:flex;align-items:center;gap:8px;">
         <div style="font-size:16px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text-3)'};flex-shrink:0;">${cat.icon}</div>
         <div style="font-size:13px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text)'};font-weight:500;">${cat.name}</div>
-        ${isGunghap?'<div style="margin-left:auto;color:#E87070;font-size:10px;letter-spacing:0.05em;">→</div>':sel?'<div style="margin-left:auto;color:var(--gold);font-size:12px;">✓</div>':''}
+        ${(isGunghap&&!gLocked)?'<div style="margin-left:auto;color:#E87070;font-size:10px;letter-spacing:0.05em;">→</div>':(sel?'<div style="margin-left:auto;color:var(--gold);font-size:12px;">✓</div>':'')}
       </div>
       ${cat.desc?`<div style="font-size:10.5px;color:var(--text-3);line-height:1.55;letter-spacing:0.01em;">${cat.desc}</div>`:''}
     </div>`;
@@ -1707,8 +1898,28 @@ function renderMxCats(){
   }
 }
 
+// 이름이 저장되어 있는지 (fm_saju_last.name 또는 mx-name 필드)
+function hasName(){
+  try{
+    var r=localStorage.getItem('fm_saju_last');
+    if(r){ var o=JSON.parse(r); if(o && typeof o.name==='string' && o.name.trim()) return true; }
+  }catch(e){}
+  var el=document.getElementById('mx-name');
+  if(el && el.value && el.value.trim()) return true;
+  return false;
+}
+
 function mxToggleCat(id){
-  if(id==='gunghap'){ go('gunghap'); return; }
+  if(id==='gunghap'){
+    // 비프리미엄: 모달 표시 + 선택 막음. 프리미엄: 기존 동작(궁합 화면 이동) 유지.
+    if(!isPremium()){ showPremiumLockModal(); return; }
+    go('gunghap'); return;
+  }
+  // 성명학: 이름 없으면 토스트 + 선택 막음 (모달 금지)
+  if(id==='seong' && !mxSelected.includes(id) && !hasName()){
+    showToast('간단확인에서 이름을 입력해주세요');
+    return;
+  }
   if(mxSelected.includes(id)){
     mxSelected=mxSelected.filter(s=>s!==id);
   } else {
@@ -1718,6 +1929,22 @@ function mxToggleCat(id){
     mxSelected.push(id);
   }
   renderMxCats();
+}
+
+// 가벼운 토스트 (화면 하단 fade)
+function showToast(msg){
+  var t=document.getElementById('fm-toast');
+  if(t) t.remove();
+  t=document.createElement('div');
+  t.id='fm-toast';
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(15,15,26,0.95);border:0.5px solid rgba(201,168,76,0.55);color:var(--gold);font-size:13px;padding:11px 20px;border-radius:24px;z-index:10001;box-shadow:0 6px 22px rgba(0,0,0,0.55);letter-spacing:0.02em;opacity:0;transition:opacity 0.25s ease, transform 0.25s ease;pointer-events:none;';
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){ t.style.opacity='1'; t.style.transform='translate(-50%,-6px)'; });
+  setTimeout(function(){
+    t.style.opacity='0'; t.style.transform='translateX(-50%)';
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 300);
+  }, 2100);
 }
 
 //  (solarlunar 알고리즘 독립 구현)
@@ -1760,6 +1987,8 @@ function go(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-'+screen).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+  // 홈 진입 시 오늘의 운세 재렌더 — 간단확인에서 사주 입력 후 돌아와도 즉시 반영
+  if (screen === 'home') { try { if (typeof initTodayFortune === 'function') initTodayFortune(); } catch(e){} }
   if (screen === 'saju') { renderSjSaved(); _autoFillSajuFromStorage(); }
   if (screen === 'astro') asCalcAge();
   if (screen === 'vedic') veCalcAge();
@@ -1767,10 +1996,18 @@ function go(screen) {
   if (screen === 'danjusa') djCalcAge();
   if (screen === 'sukyao') syCalcAge();
   if (screen === 'mix') {
-    renderMxCats(); mxGoStep(1);
+    renderMxCats();
     var mrc=document.getElementById('mix-result-card'); if(mrc) mrc.style.display='none';
     var mbs=document.getElementById('mx-bujeok-section'); if(mbs) mbs.style.display='none';
     _autoFillMixFromSaju();
+    // fm_saju_last(또는 세션 sjData) 있으면 STEP 1(기본 정보 입력) 건너뛰고 바로 STEP 2(술법 선택)로
+    var _hasSaved=false;
+    try{
+      if(typeof sjData!=='undefined'&&sjData&&sjData.y) _hasSaved=true;
+      if(!_hasSaved){ var _r=localStorage.getItem('fm_saju_last'); if(_r){ var _o=JSON.parse(_r); if(_o&&_o.y&&_o.m&&_o.d) _hasSaved=true; } }
+      if(!_hasSaved){ var _l=JSON.parse(localStorage.getItem('fm_saju')||'[]'); if(_l.length>0&&_l[0].y) _hasSaved=true; }
+    }catch(e){}
+    mxGoStep(_hasSaved ? 2 : 1);
   }
   if (screen === 'quick') renderQuickCheck();
   // 탭바 active 동기화
@@ -1791,16 +2028,314 @@ function _syncTabBar(screen){
   });
 }
 
-// 간단확인 렌더링 — 3섹션: 🔓 오늘의 타로 / 🔓 오늘의 점성술 / 🔒 오늘의 사주 운세
+// ─── 간단확인 페이지 내 사주 입력 폼 핸들러 ───
+// 기존 P3(screen-saju)의 calcSaju/sjSave 로직을 그대로 재사용해서
+// 같은 localStorage 키(fm_saju_last, fm_saju)에 저장되도록 함.
+let _qkCalType='solar', _qkTimeMode='shijin', _qkShijinHour=23, _qkGender='female', _qkMarital='single';
+
+function qkSetCal(t, btn){
+  _qkCalType=t;
+  document.querySelectorAll('#qk-cal-solar,#qk-cal-lunar,#qk-cal-leap').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function qkTimeMode(t, btn){
+  _qkTimeMode=t;
+  document.querySelectorAll('#qk-time-mode-shijin,#qk-time-mode-direct,#qk-time-mode-unknown').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const sh=document.getElementById('qk-shijin-picker');
+  const dr=document.getElementById('qk-direct-picker');
+  if(sh) sh.style.display = t==='shijin' ? 'block' : 'none';
+  if(dr) dr.style.display = t==='direct' ? 'block' : 'none';
+}
+function qkSelectShijin(h, btn){
+  _qkShijinHour=h;
+  document.querySelectorAll('#qk-shijin-grid .qk-shi-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function qkSetGender(g, btn){
+  _qkGender=g;
+  document.querySelectorAll('.qk-gender-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+function qkSetMarital(m, btn){
+  _qkMarital=m;
+  document.querySelectorAll('#qk-marital-single,#qk-marital-married,#qk-marital-divorced').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+// "확인하기" — P3의 calcSaju/sjSave 로직 재사용. fm_saju_last + fm_saju 양쪽 저장.
+function qkSubmitSaju(){
+  const y=+document.getElementById('qk-year').value;
+  const m=+document.getElementById('qk-month').value;
+  const d=+document.getElementById('qk-day').value;
+  if(!y||!m||!d){ alert('생년월일을 정확히 입력해주세요.'); return; }
+
+  try{
+    document.getElementById('sj-year').value=y;
+    document.getElementById('sj-month').value=m;
+    document.getElementById('sj-day').value=d;
+    if(typeof sjCalType!=='undefined')     sjCalType=_qkCalType;
+    if(typeof sjTimeModeVal!=='undefined') sjTimeModeVal=_qkTimeMode;
+    if(typeof sjShijinHour!=='undefined')  sjShijinHour=_qkShijinHour;
+    if(typeof sjGenderVal!=='undefined')   sjGenderVal=_qkGender;
+    if(typeof sjMaritalVal!=='undefined')  sjMaritalVal=_qkMarital;
+    if(_qkTimeMode==='direct'){
+      const hh=+document.getElementById('qk-hour').value||12;
+      const mn=+document.getElementById('qk-min').value||0;
+      const he=document.getElementById('sj-hour'); if(he) he.value=hh;
+      const me=document.getElementById('sj-min'); if(me) me.value=mn;
+    }
+  }catch(e){}
+
+  // P3 로직 실행 — 내부에서 fm_saju_last 자동 저장 + sjData 설정 + initTodayFortune 트리거됨
+  try{ if(typeof calcSaju==='function') calcSaju(); }catch(e){ console.warn(e); }
+
+  // 간단확인 페이지 재렌더 (3섹션 전환)
+  try{ renderQuickCheck(); }catch(e){}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── 간단확인 타로 뽑기 UX (FIX E) ───
+// 상태: 재방문이면 저장된 카드 바로 렌더 / 신규면 섞기→부채꼴→탭 UX
+var _qkTarotPickFan = null; // 부채꼴로 펼친 7장 {cardIdx, isRev}[]
+
+// 결과 렌더러 (cardIdx 0~77, isRev, fromSaved 플래그)
+function _qkRenderTarotResult(cardIdx, isRev, fromSaved){
+  var cards = allCards();
+  if(cardIdx<0||cardIdx>=cards.length) cardIdx=0;
+  var tCard = {...cards[cardIdx], isRev:isRev, reversed:isRev};
+  var tKw = isRev ? (tCard.rev||tCard.key) : tCard.key;
+  var tMeaning='', tLove='', tWork='', tCaution='', tOneline='';
+  if(tCard.type==='major' && typeof TAROT_CARD_DEEP !== 'undefined'){
+    var deep = TAROT_CARD_DEEP['major_'+tCard.id];
+    if(deep){
+      var fullTxt = isRev ? (deep.reversed||deep.upright) : deep.upright;
+      var sentences = String(fullTxt).split(/(?<=[.!?。])\s+/).filter(Boolean);
+      tMeaning = sentences.slice(0,3).join(' ');
+      if(deep.domain){
+        tLove = deep.domain.연애||'';
+        tWork = deep.domain.직업||'';
+        tCaution = deep.domain.재물||'';
+      }
+    }
+  }
+  if(!tMeaning){
+    tMeaning = isRev
+      ? `${tCard.name} 역방향은 "${tKw}"의 흐름이 막히거나 뒤틀린 상태를 암시합니다. 속도를 늦추고 내면을 돌아볼 때입니다. 지금의 정체는 방향 점검의 신호입니다.`
+      : `${tCard.name}는 "${tKw}"의 에너지를 가져옵니다. 지금 이 순간 당신에게 흐르는 주된 기운입니다. 이 카드가 말하는 흐름에 귀 기울여 보세요.`;
+  }
+  if(!tLove)    tLove    = isRev ? '감정 표현을 잠시 미루고 관찰할 것' : '마음을 솔직히 표현할 좋은 타이밍';
+  if(!tWork)    tWork    = isRev ? '중요한 결정은 하루 미루는 게 유리' : '행동으로 옮길 때, 실행력이 결과를 만듦';
+  if(!tCaution) tCaution = isRev ? '작은 실수를 흘려보내지 말 것' : '들뜬 기분으로 세부사항을 놓치지 말 것';
+  tOneline = isRev
+    ? `"잠시 멈추고, ${tCard.name}의 그림자를 돌아보세요."`
+    : `"${tCard.name}의 빛을 오늘 당신의 선택으로 옮기세요."`;
+
+  var banner = fromSaved
+    ? `<div style="font-size:11px;color:var(--text-3);background:rgba(201,168,76,0.06);border:0.5px dashed rgba(201,168,76,0.3);border-radius:8px;padding:7px 12px;margin-bottom:12px;text-align:center;letter-spacing:0.02em;">오늘 이미 뽑은 카드예요 · 내일 자정에 새 카드가 열려요</div>`
+    : '';
+
+  var el = document.getElementById('qk-expand-tarot');
+  if(!el) return;
+  el.innerHTML = banner + `
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
+      <div style="width:92px;height:146px;flex-shrink:0;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.5);border:0.5px solid ${isRev?'rgba(232,112,112,0.5)':'rgba(201,168,76,0.5)'};">${makeCardSVG(tCard,92,146)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:17px;color:${isRev?'#E87070':'var(--gold)'};margin-bottom:3px;font-family:'Gowun Batang',serif;">${tCard.name}</div>
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:8px;letter-spacing:0.05em;">${isRev?'▽ 역방향':'△ 정방향'} · ${tCard.type==='major'?'메이저':'마이너'}</div>
+        <div style="font-size:12px;color:var(--gold);padding:4px 10px;background:rgba(201,168,76,0.08);border-radius:12px;display:inline-block;letter-spacing:0.03em;">${tKw}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 카드 의미</div>
+    <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;margin-bottom:14px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">${tMeaning}</div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 조언</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(237,147,177,0.3);"><b style="color:#ED93B1;">연애</b> · ${tLove}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(134,180,235,0.3);"><b style="color:#86B4EB;">일</b> · ${tWork}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(232,112,112,0.3);"><b style="color:#E87070;">주의</b> · ${tCaution}</div>
+    </div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 한 줄</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.06);border:0.5px solid rgba(201,168,76,0.3);border-radius:8px;font-style:italic;text-align:center;">${tOneline}</div>`;
+}
+
+// 뽑기 UI 초기 상태 — 스택된 덱 + "카드 섞기" 버튼
+function _qkRenderTarotPicker(){
+  var el = document.getElementById('qk-expand-tarot');
+  if(!el) return;
+  var w=56, h=88;
+  var stackCnt = 5; // 시각적으로 쌓인 뒷면 카드 개수
+  var backSvg = makeCardBackSVG(w, h);
+  var stackHtml = '';
+  for(var i=0;i<stackCnt;i++){
+    var ox = (stackCnt-1-i)*1.5;
+    stackHtml += `<div class="qk-tdeck-back" style="position:absolute;left:calc(50% - ${w/2}px - ${ox}px);top:${ox}px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,${0.25+i*0.08});box-shadow:0 2px 8px rgba(0,0,0,0.4);z-index:${i+1};">${backSvg}</div>`;
+  }
+  el.innerHTML = `
+    <div id="qk-tarot-guide" style="font-size:13px;color:var(--text-2);line-height:1.7;text-align:center;margin-bottom:16px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">
+      오늘의 카드를 <b style="color:var(--gold);">한 장</b> 뽑아보세요
+    </div>
+    <div id="qk-tarot-stage" style="position:relative;width:100%;height:${h+24}px;margin-bottom:14px;">
+      ${stackHtml}
+    </div>
+    <div id="qk-tarot-controls" style="text-align:center;">
+      <button id="qk-tarot-start" onclick="_qkStartTarotShuffle()" style="padding:11px 26px;font-size:13px;border-radius:10px;border:1px solid rgba(201,168,76,0.7);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;"
+        onmouseover="this.style.background='rgba(201,168,76,0.22)'"
+        onmouseout="this.style.background='rgba(201,168,76,0.12)'">
+        ✦ 카드 섞기
+      </button>
+    </div>`;
+}
+
+// 셔플 애니메이션 → 부채꼴 전개
+function _qkStartTarotShuffle(){
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  var ctrl = document.getElementById('qk-tarot-controls');
+  if(!stage) return;
+  if(ctrl) ctrl.style.display='none';
+  if(guide) guide.innerHTML = '카드를 섞고 있습니다<span class="qk-dots">...</span>';
+
+  // 78장에서 7장 무작위 (isRev 개별 50:50)
+  var cards = allCards();
+  var indices = [];
+  for(var i=0;i<cards.length;i++) indices.push(i);
+  // Fisher-Yates
+  for(var i=indices.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=indices[i]; indices[i]=indices[j]; indices[j]=t;
+  }
+  var fanN = 7;
+  _qkTarotPickFan = indices.slice(0, fanN).map(function(idx){
+    return { cardIdx: idx, isRev: Math.random() > 0.5 };
+  });
+
+  // 스택된 뒷면 카드 흔들기 (기존 mxShuffleSeq 키프레임 재활용)
+  var backs = stage.querySelectorAll('.qk-tdeck-back');
+  backs.forEach(function(b, i){
+    b.style.willChange = 'transform';
+    b.style.animation = `mxShuffleSeq 1.6s cubic-bezier(0.45,0.05,0.35,1) ${i*0.04}s forwards`;
+  });
+
+  // 1.8초 후 부채꼴로 전개
+  setTimeout(function(){
+    backs.forEach(function(b){ b.style.animation=''; b.style.willChange=''; });
+    _qkFanOutTarotDeck();
+  }, 1800);
+}
+
+// 부채꼴(한 줄) 전개
+function _qkFanOutTarotDeck(){
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  if(!stage || !_qkTarotPickFan) return;
+  var w=50, h=80;
+  var fanN = _qkTarotPickFan.length;
+  // 스테이지 너비 계산 (컨테이너 기준)
+  var stageW = Math.min(stage.clientWidth || 300, 360);
+  var spread = Math.min(stageW - w - 10, fanN * 36);
+  var step = spread / Math.max(fanN-1,1);
+  var cx = stageW/2;
+  var backSvg = makeCardBackSVG(w, h);
+  // 스테이지 다시 그리기 (부채꼴 카드)
+  stage.style.height = (h+24)+'px';
+  var fanHtml = '';
+  for(var i=0;i<fanN;i++){
+    var tx = -spread/2 + i*step;
+    var rot = (i - (fanN-1)/2) * 4; // ±12도 정도
+    fanHtml += `<div class="qk-tfan-card" data-i="${i}" onclick="_qkPickTarot(${i})"
+      style="position:absolute;left:calc(50% - ${w/2}px);top:8px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,0.55);box-shadow:0 3px 12px rgba(0,0,0,0.55);cursor:pointer;z-index:${10+i};transform:translateX(0) rotate(0deg) scale(0.9);opacity:0;transition:transform 0.55s cubic-bezier(0.4,0,0.2,1) ${i*0.06}s, opacity 0.5s ease ${i*0.06}s, box-shadow 0.2s;"
+      onmouseover="if(!this.dataset.picked){this.style.transform=this.dataset.base+' translateY(-8px) scale(1.05)';this.style.boxShadow='0 6px 18px rgba(201,168,76,0.35)'}"
+      onmouseout="if(!this.dataset.picked){this.style.transform=this.dataset.base;this.style.boxShadow='0 3px 12px rgba(0,0,0,0.55)'}"
+      data-base="translateX(${tx}px) rotate(${rot}deg)">
+      ${backSvg}
+    </div>`;
+  }
+  stage.innerHTML = fanHtml;
+  // 다음 프레임에 transform 적용 → transition으로 펼쳐지는 애니메이션
+  requestAnimationFrame(function(){
+    stage.querySelectorAll('.qk-tfan-card').forEach(function(c){
+      c.style.opacity = '1';
+      c.style.transform = c.dataset.base;
+    });
+  });
+  if(guide) guide.innerHTML = '마음에 이끌리는 <b style="color:var(--gold);">카드 한 장</b>을 탭하세요';
+}
+
+// 카드 탭 → 저장 + 결과 렌더
+function _qkPickTarot(fanIdx){
+  if(!_qkTarotPickFan || fanIdx<0 || fanIdx>=_qkTarotPickFan.length) return;
+  var picked = _qkTarotPickFan[fanIdx];
+  if(!picked) return;
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  if(!stage) return;
+  // 다른 카드 페이드아웃 + 선택 카드 중앙으로 확대·회전 초기화
+  var cardEls = stage.querySelectorAll('.qk-tfan-card');
+  cardEls.forEach(function(c){
+    c.dataset.picked = '1';
+    c.onclick = null; c.onmouseover = null; c.onmouseout = null;
+    var i = parseInt(c.dataset.i,10);
+    if(i===fanIdx){
+      c.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s';
+      c.style.transform='translateX(0) rotate(0deg) scale(1.25)';
+      c.style.zIndex='100';
+      c.style.boxShadow='0 10px 30px rgba(201,168,76,0.5),0 0 22px rgba(201,168,76,0.45)';
+    } else {
+      c.style.transition='opacity 0.35s ease, transform 0.35s ease';
+      c.style.opacity='0';
+      c.style.transform=(c.dataset.base||'')+' translateY(12px) scale(0.85)';
+    }
+  });
+  if(guide) guide.innerHTML = '<span style="color:var(--gold);">카드를 공개합니다</span><span class="qk-dots">...</span>';
+
+  // 0.6초 후 플립 애니메이션
+  setTimeout(function(){
+    var chosen = stage.querySelector('.qk-tfan-card[data-i="'+fanIdx+'"]');
+    if(!chosen) { _qkFinalizeTarot(picked); return; }
+    // 3D 플립: 컨테이너에 perspective, 이너 요소 rotateY 180
+    chosen.style.perspective='700px';
+    chosen.style.backgroundColor='transparent';
+    chosen.style.border='0';
+    chosen.style.overflow='visible';
+    chosen.innerHTML = `
+      <div class="qk-flipper" style="width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);">
+        <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,0.7);">${makeCardBackSVG(50,80)}</div>
+        <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);border-radius:6px;overflow:hidden;border:1px solid ${picked.isRev?'rgba(232,112,112,0.7)':'rgba(201,168,76,0.7)'};box-shadow:0 0 14px rgba(201,168,76,0.45);">${makeCardSVG({...allCards()[picked.cardIdx], isRev:picked.isRev, reversed:picked.isRev}, 50, 80)}</div>
+      </div>`;
+    requestAnimationFrame(function(){
+      var flipper = chosen.querySelector('.qk-flipper');
+      if(flipper) flipper.style.transform='rotateY(180deg)';
+    });
+    setTimeout(function(){ _qkFinalizeTarot(picked); }, 900);
+  }, 650);
+}
+
+// 뽑기 완료 — localStorage 저장 + 결과 렌더
+function _qkFinalizeTarot(picked){
+  try{
+    var now = new Date();
+    var todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    localStorage.setItem('fm_today_tarot_oneCard', JSON.stringify({
+      date: todayStr,
+      cardIndex: picked.cardIdx,
+      isReverse: !!picked.isRev,
+      savedAt: Date.now()
+    }));
+  }catch(e){}
+  // 결과 렌더 (fromSaved=false — 첫 뽑기)
+  _qkRenderTarotResult(picked.cardIdx, !!picked.isRev, false);
+}
+
+// 간단확인 렌더링 — 사주 없음: 입력 폼 / 사주 있음: 3섹션 (타로/별자리/사주)
 function renderQuickCheck(){
-  // 저장된 사주 (없을 수도 있음)
+  // 저장된 사주 (없을 수도 있음) — sjData → fm_saju_last → fm_saju[0]
   var d=null;
   if(typeof sjData!=='undefined'&&sjData&&sjData.y) d={y:sjData.y,m:sjData.m,d:sjData.d};
   if(!d){try{var raw=localStorage.getItem('fm_saju_last');if(raw){d=JSON.parse(raw);}}catch(e){}}
   if(!d){try{var list=JSON.parse(localStorage.getItem('fm_saju')||'[]');if(list.length)d=list[0];}catch(e){}}
 
+  var needEl=document.getElementById('quick-need-birth');
   var resEl=document.getElementById('quick-results');
-  if(resEl) resEl.style.display='block';
 
   var now=new Date();
   var ty=now.getFullYear(),tm=now.getMonth()+1,td=now.getDate();
@@ -1809,46 +2344,142 @@ function renderQuickCheck(){
   var dtEl=document.getElementById('qk-today-date');
   if(dtEl) dtEl.textContent=`${ty}년 ${tm}월 ${td}일 (${WK[now.getDay()]}) · 매일 자정 갱신`;
 
-  // ═══ 🔓 오늘의 타로 카드 (무료) ═══
-  var cards=allCards();
-  var tIdx=Math.abs(daySeed*7919)%cards.length;
-  var tIsRev=(daySeed*13)%2===0;
-  var tCard={...cards[tIdx],isRev:tIsRev,reversed:tIsRev};
-  var tKw = tIsRev ? (tCard.rev||tCard.key) : tCard.key;
-  // 2~3줄 해석 — 메이저면 TAROT_CARD_DEEP에서 첫 2문장 발췌, 마이너는 키워드 기반 짧은 문장
-  var tInterp='';
-  if(tCard.type==='major' && typeof TAROT_CARD_DEEP !== 'undefined'){
-    var deep=TAROT_CARD_DEEP['major_'+tCard.id];
-    if(deep){
-      var fullTxt=tIsRev?(deep.reversed||deep.upright):deep.upright;
-      var sentences=String(fullTxt).split(/(?<=[.!?。])\s+/).filter(Boolean);
-      tInterp=sentences.slice(0,2).join(' ');
-    }
+  // [A] 사주 없음 → 입력 폼 표시, 결과 숨김
+  if(!d||!d.y){
+    if(needEl) needEl.style.display='block';
+    if(resEl)  resEl.style.display='none';
+    return;
   }
-  if(!tInterp){
-    tInterp = tIsRev
-      ? `${tCard.name} 역방향의 기운은 "${tKw}"로 흐릅니다. 지금은 잠시 멈추고 내면을 돌아볼 때입니다.`
-      : `오늘 당신에게 ${tCard.name}의 에너지가 흐릅니다. 키워드는 "${tKw}". 이 카드가 말하는 흐름에 귀 기울여 보세요.`;
+  // [B] 사주 있음 → 3섹션 결과 표시
+  if(needEl) needEl.style.display='none';
+  if(resEl)  resEl.style.display='block';
+
+  // 오늘의 사주 일진 계산
+  var y=d.y,m=d.m,dd=d.d;
+  var myDp=getDP(y,m,dd);
+  var myGanOh=천간오행[myDp.g];
+  var myGanYinYang=천간음양[myDp.g]; // 0=양, 1=음
+  var todayDp=getDP(ty,tm,td);
+  var iljin=천간[todayDp.g]+지지[todayDp.j]+'일';
+  var todayOh=천간오행[todayDp.g];
+  var todayGanYinYang=천간음양[todayDp.g];
+  var todayJi=지지[todayDp.j];
+  var luckLbl=JI_LUCK_LABEL[todayDp.j];
+  var luckCls=JI_LUCK_CLASS[todayDp.j];
+  var 상생={'목':'화','화':'토','토':'금','금':'수','수':'목'};
+  var 상극={'목':'토','토':'수','수':'화','화':'금','금':'목'};
+
+  // ─── 십신(Ten Gods) 판정 : 내 일간 vs 오늘 일간 오행·음양 관계 ───
+  var sameYinYang = (myGanYinYang===todayGanYinYang);
+  var sipsin='', sipsinKo='', sipsinHanja='';
+  if(todayOh===myGanOh){
+    sipsin = sameYinYang ? 'bigyun' : 'gyeopjae';
+    sipsinKo = sameYinYang ? '비견' : '겁재';
+    sipsinHanja = sameYinYang ? '比肩' : '劫財';
+  } else if(상생[myGanOh]===todayOh){
+    sipsin = sameYinYang ? 'siksin' : 'sanggwan';
+    sipsinKo = sameYinYang ? '식신' : '상관';
+    sipsinHanja = sameYinYang ? '食神' : '傷官';
+  } else if(상극[myGanOh]===todayOh){
+    sipsin = sameYinYang ? 'pyeonjae' : 'jeongjae';
+    sipsinKo = sameYinYang ? '편재' : '정재';
+    sipsinHanja = sameYinYang ? '偏財' : '正財';
+  } else if(상극[todayOh]===myGanOh){
+    sipsin = sameYinYang ? 'pyeongwan' : 'jeonggwan';
+    sipsinKo = sameYinYang ? '편관' : '정관';
+    sipsinHanja = sameYinYang ? '偏官' : '正官';
+  } else if(상생[todayOh]===myGanOh){
+    sipsin = sameYinYang ? 'pyeonin' : 'jeongin';
+    sipsinKo = sameYinYang ? '편인' : '정인';
+    sipsinHanja = sameYinYang ? '偏印' : '正印';
   }
-  document.getElementById('qk-tarot').innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-      <span style="font-size:14px;">🔓</span>
-      <div style="font-size:11px;color:var(--gold);letter-spacing:0.14em;">오늘의 타로 카드</div>
+
+  // ─── 십신별 해석 / 조언 / 시간대 / 방위 / 색 / 한 줄 ───
+  var SIPSIN_DB = {
+    bigyun: { title:'비견운', rel:'동등한 기운·친구와 경쟁자', interp:'나와 같은 에너지가 도는 날. 동료·친구와 함께 움직일 때 힘이 배가됩니다. 단, 고집이 센 상대와는 부딪힐 수 있으니 자기 주장보다 협업을 앞세우세요.',
+      good:'동료·친구와 협업, 팀 프로젝트, 운동', avoid:'혼자 결정, 경쟁적 논쟁, 지출 증가', hour:'오전(9~13시)', dir:'동쪽', color:'녹색·초록',
+      love:'친구 같은 편안한 관계. 감정 표현은 담백하게', work:'동료와 함께하는 일이 유리. 단독 승부는 지양', caution:'친구 빚보증·금전 거래 주의',
+      oneline:'"오늘은 혼자보다 함께. 좋은 사람과 움직이세요."' },
+    gyeopjae: { title:'겁재운', rel:'같은 기운이지만 서로 빼앗는', interp:'경쟁과 변동의 에너지가 흐릅니다. 기회가 있지만 라이벌도 많은 날. 감정이 쉽게 달아오르니 즉흥 결정은 피하고, 확실한 것만 취하세요.',
+      good:'경쟁·시험·운동 경기, 빠른 판단', avoid:'도박·투기, 충동 소비, 큰 결정', hour:'오후(13~15시)', dir:'동남쪽', color:'짙은 녹색',
+      love:'밀당보다 직진. 단, 삼각관계 주의', work:'경쟁에서 이길 힘 있음. 다만 과신 금물', caution:'돈이 빠져나가기 쉬운 날',
+      oneline:'"욕심보다 중심. 작게 이기는 게 크게 이깁니다."' },
+    siksin: { title:'식신운', rel:'내가 표현하고 베푸는', interp:'재능과 매력이 자연스럽게 흘러나오는 날. 창작·표현·소통에 유리. 맛있는 음식·편안한 자리가 관계를 풀어줍니다. 여유롭게 즐기는 태도가 운을 불러옵니다.',
+      good:'창작, 글쓰기, 요리, 외식, 가벼운 만남', avoid:'과식, 게으름, 미루기', hour:'점심(11~15시)', dir:'남쪽', color:'붉은색·주황',
+      love:'편안한 데이트, 즐거운 대화가 관계를 깊게', work:'창의적 결과물이 잘 나옴. 발표·브랜딩 유리', caution:'너무 풀어지면 중요한 일 미룸',
+      oneline:'"즐거움이 재능을 깨웁니다. 오늘은 가볍게."' },
+    sanggwan: { title:'상관운', rel:'날카로운 재능·표현력 폭발', interp:'재능과 비판력이 동시에 솟는 날. 아이디어가 빛나지만 말이 날카로워질 수 있습니다. 창작·기획에는 최고지만, 윗사람·고객 대응은 말투를 한 번 다듬으세요.',
+      good:'기획, 아이디어 회의, 창작, SNS 콘텐츠', avoid:'상사·어른과의 언쟁, 경솔한 발언', hour:'오전(9~11시)', dir:'남서쪽', color:'선명한 빨강',
+      love:'재치로 관심 끌기 유리. 단, 상대를 비평하지 말 것', work:'혁신적 제안이 통하는 날. 문서로 남기기', caution:'말 한마디가 오래 남음',
+      oneline:'"빛나는 재능, 부드러운 말투. 오늘의 숙제입니다."' },
+    pyeonjae: { title:'편재운', rel:'큰 재물·유동적 기회', interp:'돈과 기회가 크게 움직이는 날. 사업·투자·영업에 유리하지만 변동성도 큼. 과감하게 움직이되 한 번에 다 걸지 말고 분산하세요. 사람 만남이 돈을 부릅니다.',
+      good:'영업, 네트워킹, 투자 정보 수집, 외출', avoid:'한 곳에 몰빵, 감정 소비', hour:'오후(15~17시)', dir:'서쪽', color:'황금색·노랑',
+      love:'이성 인연이 활발. 다만 가벼운 만남에 주의', work:'거래·계약·영업이 잘 풀림', caution:'유흥·허영 지출 폭증 우려',
+      oneline:'"돈이 움직이는 날. 숫자와 흐름을 읽으세요."' },
+    jeongjae: { title:'정재운', rel:'안정된 수입·정돈된 재물', interp:'성실함이 재물로 연결되는 날. 월급·정기 수입·꾸준한 거래가 잘 맞는 흐름입니다. 충동보다 계획, 한 탕보다 차곡차곡. 가족·배우자와의 재정 대화도 유리합니다.',
+      good:'예산 짜기, 저축, 정기 입금, 가계부 정리', avoid:'투기, 빠른 수익 유혹', hour:'오전(7~11시)', dir:'서남쪽', color:'베이지·갈색',
+      love:'안정적 관계가 깊어짐. 배우자·연인과 미래 대화', work:'꾸준한 성과가 인정받음. 승진·정규화 유리', caution:'너무 신중해서 기회 놓치지 말 것',
+      oneline:'"작지만 확실한 이득이 오늘의 답입니다."' },
+    pyeongwan: { title:'편관운', rel:'강한 압박·시험·도전', interp:'외부 압박이 커지는 날. 어려운 결정·책임·도전이 찾아옵니다. 피하지 말고 정면돌파하면 크게 성장하는 기회. 단, 혼자 무리하면 번아웃. 중요한 조언자를 찾으세요.',
+      good:'담판, 결단, 운동, 마감 업무', avoid:'충동 대응, 과로, 무리한 약속', hour:'저녁(17~21시)', dir:'북서쪽', color:'검정·남색',
+      love:'강한 끌림 or 갈등. 진심을 분명히', work:'압박 속 성과 기회. 책임자에게 인정받음', caution:'건강 주의(허리·어깨)',
+      oneline:'"두려움 뒤에 성장. 오늘 피하면 내일 더 큽니다."' },
+    jeonggwan: { title:'정관운', rel:'올바른 규율·명예·직책', interp:'원칙과 질서가 힘을 발휘하는 날. 공식 업무·인증·규정 처리에 유리합니다. 관공서·계약·면접 등 "공식" 자리가 잘 풀립니다. 감정보다 절차, 편법보다 정공법.',
+      good:'계약·면접·관공서 업무, 공식 문서', avoid:'편법·지름길, 규정 위반', hour:'오전(9~11시)', dir:'북쪽', color:'남색·네이비',
+      love:'결혼·공식적 관계 진전 유리', work:'승진·인사·평가에 좋은 흐름', caution:'딱딱해지지 않도록 유연함 유지',
+      oneline:'"정도(正道)가 가장 빠른 길. 바르게 움직이세요."' },
+    pyeonin: { title:'편인운', rel:'특수한 지혜·직관·영감', interp:'독특한 통찰과 영감이 찾아오는 날. 연구·분석·종교·예술 활동에 유리합니다. 단 생각이 많아져 행동이 늦어질 수 있으니, 떠오른 아이디어는 바로 기록하세요.',
+      good:'연구, 명상, 책 읽기, 혼자만의 시간', avoid:'사교 모임, 즉흥 발언, 과식', hour:'밤(21~23시)', dir:'북동쪽', color:'보라·짙은 청색',
+      love:'이성보다 영혼의 교감. 대화의 깊이가 관건', work:'혼자 집중하는 작업 유리. 문서·기획 정리', caution:'의심·고립에 빠지지 말 것',
+      oneline:'"번뜩이는 통찰을 놓치지 마세요. 메모가 생명."' },
+    jeongin: { title:'정인운', rel:'나를 키우고 받쳐주는 인성운', interp:'나를 지지해주는 기운이 강한 날. 조언·도움·배움·정보가 들어옵니다. 새로운 공부·상담·계약 문서 정리에 특히 좋습니다. 받아들이고 흡수하는 자세가 오늘의 키워드.',
+      good:'배움, 계약, 문서 작성, 상담, 계획 수립', avoid:'충동 결정, 급한 투자, 과로', hour:'아침(7~11시), 저녁(19~21시)', dir:'서쪽, 북서쪽', color:'흰색·실버·남색',
+      love:'연상·스승 같은 상대와 인연. 편안한 관계', work:'선배·멘토의 도움. 자격·학습이 성과로', caution:'의존적이 되지 않기',
+      oneline:'"오늘은 받아들이는 하루. 배우고 흡수하고 기록하세요."' }
+  };
+  var SIP = SIPSIN_DB[sipsin] || SIPSIN_DB.jeongin;
+
+  // 오늘의 한 줄 — 3섹션 요약
+  var onelineEmoji = {bigyun:'🤝',gyeopjae:'⚔️',siksin:'🍀',sanggwan:'💡',pyeonjae:'💰',jeongjae:'📒',pyeongwan:'🔥',jeonggwan:'📜',pyeonin:'🔮',jeongin:'📚'}[sipsin]||'🌟';
+  document.getElementById('qk-oneline').innerHTML=`
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.14em;margin-bottom:10px;">✦ 오늘의 한 줄</div>
+    <div style="font-size:15px;color:var(--text);line-height:1.8;">
+      <span style="font-size:18px;margin-right:6px;">${onelineEmoji}</span> 오늘은 <b style="color:var(--gold);">${todayOh}</b>의 <b style="color:var(--gold);">${sipsinKo}</b> 기운. <b>${SIP.rel}</b> 흐름입니다.
     </div>
-    <div style="display:flex;align-items:flex-start;gap:14px;">
-      <div style="width:82px;height:130px;flex-shrink:0;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.5);border:0.5px solid ${tIsRev?'rgba(232,112,112,0.5)':'rgba(201,168,76,0.5)'};">${makeCardSVG(tCard,82,130)}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:16px;color:${tIsRev?'#E87070':'var(--gold)'};margin-bottom:3px;font-family:'Gowun Batang',serif;">${tCard.name}</div>
-        <div style="font-size:10px;color:var(--text-3);margin-bottom:8px;letter-spacing:0.05em;">${tIsRev?'▽ 역방향':'△ 정방향'} · ${tCard.type==='major'?'메이저':'마이너'}</div>
-        <div style="font-size:12px;color:var(--gold);margin-bottom:8px;padding:4px 10px;background:rgba(201,168,76,0.08);border-radius:12px;display:inline-block;letter-spacing:0.03em;">${tKw}</div>
-        <div style="font-size:12.5px;color:var(--text-2);line-height:1.75;">${tInterp}</div>
-      </div>
+    <div style="font-size:12px;color:var(--text-2);line-height:1.75;margin-top:10px;padding-top:10px;border-top:0.5px dashed rgba(201,168,76,0.2);">
+      ${SIP.oneline}
     </div>`;
 
-  // ═══ 🔓 오늘의 점성술 (무료) ═══
+  // ═══ ① 타로 — 뽑기 UX (첫방문: 섞기→부채꼴→탭 / 재방문: 저장된 카드 표시) ═══
+  var cards=allCards();
+  var todayStr = `${ty}-${String(tm).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
+
+  // 재방문 체크 — localStorage에 저장된 오늘 카드 있으면 복원
+  var _savedPick = null;
+  try{
+    var _rawPick = localStorage.getItem('fm_today_tarot_oneCard');
+    if(_rawPick){
+      var _op = JSON.parse(_rawPick);
+      if(_op && _op.date === todayStr && typeof _op.cardIndex === 'number' && _op.cardIndex >= 0 && _op.cardIndex < cards.length){
+        _savedPick = _op;
+      }
+    }
+  }catch(e){}
+
+  if(_savedPick){
+    // 재방문 — 저장된 카드 바로 표시
+    _qkRenderTarotResult(_savedPick.cardIndex, !!_savedPick.isReverse, true);
+  } else {
+    // 신규 — 뽑기 UI 표시
+    _qkRenderTarotPicker();
+  }
+
+  // (타로 섹션 끝)
+
+  // ═══ 내 별자리 (서양점성술) — 사용자 생년월일 기반 태양궁 + 오늘 달 위상 ═══
   var signs=['양자리','황소자리','쌍둥이자리','게자리','사자자리','처녀자리','천칭자리','전갈자리','사수자리','염소자리','물병자리','물고기자리'];
   var signDates=[[3,21],[4,20],[5,21],[6,21],[7,23],[8,23],[9,23],[10,23],[11,22],[12,22],[1,20],[2,19]];
-  function _todaySign(mo,da){
+  function _sunSign(mo,da){
     for(var i=0;i<12;i++){
       var s=signDates[i]; var nx=signDates[(i+1)%12];
       if(i<11){ if((mo===s[0]&&da>=s[1])||(mo===nx[0]&&da<nx[1])) return i; }
@@ -1856,7 +2487,7 @@ function renderQuickCheck(){
     }
     return 11;
   }
-  var sunIdx=_todaySign(tm,td);
+  var sunIdx=_sunSign(d.m, d.d);
   // 달 위상: 2000-01-06 기준 synodic 29.53일
   var JD=(Date.UTC(ty,tm-1,td)-Date.UTC(2000,0,6))/86400000;
   var phase=((JD%29.53)+29.53)%29.53;
@@ -1884,90 +2515,173 @@ function renderQuickCheck(){
     '독창적 발상이 통하는 날. 평범함을 넘어서 보세요.',
     '공감과 상상력이 오늘의 힘입니다.'
   ];
-  document.getElementById('qk-astro').innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-      <span style="font-size:14px;">🔓</span>
-      <div style="font-size:11px;color:var(--gold);letter-spacing:0.14em;">오늘의 점성술</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-      <div style="padding:10px 12px;background:var(--dark3);border-radius:8px;border:0.5px solid var(--border-2);">
-        <div style="font-size:10px;color:var(--text-3);margin-bottom:4px;letter-spacing:0.05em;">☉ 태양궁(오늘 입궁)</div>
-        <div style="font-size:14px;color:var(--gold);margin-bottom:2px;">${signs[sunIdx]}</div>
-        <div style="font-size:11px;color:var(--text-2);">${signTraits[sunIdx]}</div>
+  // ─── 별자리 확장 정보: 기호, 범위, 지배행성 ───
+  var signSymbols=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+  var signRanges=['3/21 ~ 4/19','4/20 ~ 5/20','5/21 ~ 6/20','6/21 ~ 7/22','7/23 ~ 8/22','8/23 ~ 9/22','9/23 ~ 10/22','10/23 ~ 11/21','11/22 ~ 12/21','12/22 ~ 1/19','1/20 ~ 2/18','2/19 ~ 3/20'];
+  var signRulers=['화성','금성','수성','달','태양','수성','금성','명왕성','목성','토성','천왕성','해왕성'];
+  // 달 위상별 키워드·활동·주의·시간·한 줄
+  var moonPhaseIdx = phase<1.84?0:phase<5.53?1:phase<9.22?2:phase<12.91?3:phase<16.61?4:phase<20.30?5:phase<23.99?6:7;
+  var phaseKeywords=['새 시작','성장','결단','집중','결실','감사','정리','휴식'];
+  var moonActions = [
+    '명상·의도 세우기, 목표 적기',
+    '씨앗 심기 활동, 새 배움 시작',
+    '결정하고 실행, 일 추진',
+    '디테일 정리, 완성도 높이기',
+    '관계·성과 드러내기, 축하',
+    '감사 표현, 결과 나눔',
+    '놓을 것 정리, 방향 재점검',
+    '깊은 휴식, 꿈·직관 기록'
+  ];
+  var moonCaution = [
+    '너무 많은 의도를 동시에 세우지 말 것',
+    '성급히 결과 보려 하지 않기',
+    '충동 결정 피하기',
+    '완벽주의로 멈추지 말 것',
+    '감정 격앙·관계 갈등 주의',
+    '과한 지출·약속 주의',
+    '후회·미련에 머물지 말 것',
+    '우울·고립에 빠지지 않기'
+  ];
+  var moonGoodHour = ['밤 자정 전후','저녁 7~9시','오후 3~6시','오전 10~12시','보름달 뜨는 밤 9시','저녁 6~9시','이른 아침','새벽·밤 9시 이후'];
+
+  // 태양궁 × 달 위상 조합 해석 (키워드 결합으로 자연 문장 생성)
+  var comboMsg = `${signs[sunIdx]}의 <b>${signTraits[sunIdx]}</b> 성향과 <b>${phaseKeywords[moonPhaseIdx]}</b>의 달 에너지가 만나는 날입니다. ` + (
+    moonPhaseIdx<=2 ? `${signs[sunIdx]} 특유의 힘을 새 시작에 쏟기 좋은 흐름. ${signMsg[sunIdx]}` :
+    moonPhaseIdx<=4 ? `지금까지 쌓아온 것이 드러나는 시기. ${signMsg[sunIdx]}` :
+    `마무리와 정리에 집중하세요. ${signMsg[sunIdx]}`
+  );
+
+  // 태양궁별 오늘의 한 줄 (달 위상과 조합)
+  var astroOneline = {
+    0:['"불씨를 지피세요. 당신의 첫 걸음이 흐름을 만듭니다."','"뜨거운 직감이 오늘의 정답입니다."'],
+    1:['"느리더라도 확실하게. 땅 위에 씨앗을 심으세요."','"감각을 믿고, 한 입씩 천천히."'],
+    2:['"말이 다리가 되는 날. 먼저 건네세요."','"궁금함이 인연을 불러옵니다."'],
+    3:['"마음의 집으로 돌아가 문을 여세요."','"가까운 사람에게 따뜻한 말 한마디."'],
+    4:['"당신의 빛을 숨기지 마세요."','"자신을 축하하는 하루로."'],
+    5:['"디테일이 오늘의 운을 바꿉니다."','"완벽하지 않아도, 한 걸음은 분명히."'],
+    6:['"관계의 저울을 다시 맞추세요."','"예술적 감각이 답을 알고 있습니다."'],
+    7:['"겉이 아니라 속을 들여다보세요."','"감춰진 진실이 오늘 드러납니다."'],
+    8:['"더 넓은 세상으로 한 발. 두려움보다 호기심."','"여행처럼 하루를 살아보세요."'],
+    9:['"견디는 자가 정상에 섭니다. 하나씩 쌓으세요."','"책임이 오늘의 훈장입니다."'],
+    10:['"남들과 다른 길도 당신에겐 정답입니다."','"독창적 생각을 기록하세요."'],
+    11:['"꿈과 현실 사이, 다리를 놓으세요."','"공감이 오늘의 통화입니다."']
+  }[sunIdx];
+  var onelineMsg = (moonPhaseIdx<=3 ? astroOneline[0] : astroOneline[1]);
+
+  // 미니 카드 부제에 별자리 이름 반영
+  var astroSub=document.getElementById('qk-astro-sub');
+  if(astroSub) astroSub.textContent = `${signs[sunIdx]} 운세`;
+
+  document.getElementById('qk-expand-astro').innerHTML=`
+    <!-- 태양궁 섹션 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 내 태양궁</div>
+    <div style="padding:12px 14px;background:var(--dark3);border-radius:8px;border:0.5px solid rgba(201,168,76,0.25);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:22px;color:var(--gold);">${signSymbols[sunIdx]}</span>
+        <div style="font-size:16px;color:var(--gold);">${signs[sunIdx]}</div>
+        <div style="font-size:10px;color:var(--text-3);margin-left:auto;">(${signRanges[sunIdx]})</div>
       </div>
-      <div style="padding:10px 12px;background:var(--dark3);border-radius:8px;border:0.5px solid var(--border-2);">
-        <div style="font-size:10px;color:var(--text-3);margin-bottom:4px;letter-spacing:0.05em;">☽ 달 위상</div>
-        <div style="font-size:14px;color:var(--gold);margin-bottom:2px;">${phaseLbl}</div>
-        <div style="font-size:11px;color:var(--text-2);">${phaseDesc}</div>
+      <div style="font-size:11.5px;color:var(--text-2);line-height:1.7;">
+        <span style="color:var(--text-3);">키워드</span> · ${signTraits[sunIdx]}<br>
+        <span style="color:var(--text-3);">지배행성</span> · ${signRulers[sunIdx]}
       </div>
     </div>
-    <div style="font-size:12.5px;color:var(--text-2);line-height:1.75;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.5);">
-      ${signMsg[sunIdx]} ${phase<14.77?'달이 차오르는 시기라 시작의 힘이 유리합니다.':'달이 기울어가는 시기라 정리·마무리에 유리합니다.'}
+    <!-- 달 위상 섹션 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 달 위상</div>
+    <div style="padding:12px 14px;background:var(--dark3);border-radius:8px;border:0.5px solid rgba(201,168,76,0.25);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <span style="font-size:18px;color:var(--gold);">☽</span>
+        <div style="font-size:15px;color:var(--gold);">${phaseLbl}</div>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-2);line-height:1.7;">
+        <span style="color:var(--text-3);">에너지</span> · ${phaseKeywords[moonPhaseIdx]}<br>
+        <span style="color:var(--text-3);">흐름</span> · ${phaseDesc}
+      </div>
+    </div>
+    <!-- 조합 해석 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘의 조합</div>
+    <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.45);margin-bottom:14px;">
+      ${comboMsg}
+    </div>
+    <!-- 조언 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 조언</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(201,168,76,0.22);"><b style="color:var(--gold);">추천 활동</b> · ${moonActions[moonPhaseIdx]}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(232,112,112,0.3);"><b style="color:#E87070;">주의</b> · ${moonCaution[moonPhaseIdx]}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(134,180,235,0.3);"><b style="color:#86B4EB;">유리 시간</b> · ${moonGoodHour[moonPhaseIdx]}</div>
+    </div>
+    <!-- 한 줄 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 한 줄</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.06);border:0.5px solid rgba(201,168,76,0.3);border-radius:8px;font-style:italic;text-align:center;">
+      ${onelineMsg}
     </div>`;
 
-  // ═══ 🔒 오늘의 사주 운세 (조건부 잠금) ═══
-  var sajuEl=document.getElementById('qk-saju');
-  if(!d||!d.y){
-    // 잠금 상태
-    sajuEl.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-        <span style="font-size:14px;opacity:0.75;">🔒</span>
-        <div style="font-size:11px;color:var(--text-3);letter-spacing:0.14em;">오늘의 사주 운세</div>
-      </div>
-      <div style="position:relative;filter:blur(1.4px);opacity:0.38;pointer-events:none;user-select:none;padding:6px 0;">
-        <div style="font-size:24px;color:var(--gold);font-family:'Cinzel',serif;margin-bottom:8px;">◆◆◆일</div>
-        <div style="font-size:12px;color:var(--text-2);line-height:1.8;">
-          오늘 당신의 일주 에너지는 ◆◆로 흐릅니다. ◆◆와 ◆◆의 기운이 겹치며 중요한 흐름이 열립니다. 구체적 해석은 사주 입력 후 확인하세요.
-        </div>
-      </div>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;background:linear-gradient(to bottom, rgba(15,15,26,0.3), rgba(15,15,26,0.75));">
-        <div style="font-size:32px;margin-bottom:10px;">🔒</div>
-        <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.6;">사주를 입력하시면<br><b style="color:var(--gold);">오늘의 사주 운세</b>를 봐드려요</div>
-        <button onclick="go('saju')" style="padding:10px 22px;font-size:13px;border-radius:22px;border:1px solid rgba(201,168,76,0.65);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;"
-          onmouseover="this.style.background='rgba(201,168,76,0.22)'"
-          onmouseout="this.style.background='rgba(201,168,76,0.12)'">
-          ✦ 사주 입력하러 가기 →
-        </button>
-      </div>`;
-    return;
-  }
+  // ═══ ③ 사주 — 펼침 영역 (5 섹션: 일진 / 오늘 기운 / 오늘 조언 / 한 줄) ═══
+  // 상생 관계 이름 (금생수, 수생목 ...)
+  var sangSaengName = `${todayOh}생${myGanOh}`;
+  var isSaengMine = (상생[todayOh]===myGanOh); // 오늘이 나를 生
+  var isSaengOther = (상생[myGanOh]===todayOh); // 내가 오늘을 生
+  var isGeukMine = (상극[todayOh]===myGanOh);  // 오늘이 나를 克
+  var isGeukOther = (상극[myGanOh]===todayOh); // 내가 오늘을 克
+  var relLabel = (todayOh===myGanOh) ? (sameYinYang?'비화(비견)':'비화(겁재)') :
+                  isSaengMine ? `${todayOh}생${myGanOh}(인성)` :
+                  isSaengOther ? `${myGanOh}생${todayOh}(식상)` :
+                  isGeukOther ? `${myGanOh}극${todayOh}(재성)` :
+                  isGeukMine ? `${todayOh}극${myGanOh}(관성)` : '';
 
-  // 사주 있음 — 오늘 일진 기반 2~3줄 해석
-  var y=d.y,m=d.m,dd=d.d;
-  var myDp=getDP(y,m,dd);
-  var myGanOh=천간오행[myDp.g];
-  var todayDp=getDP(ty,tm,td);
-  var iljin=천간[todayDp.g]+지지[todayDp.j]+'일';
-  var todayOh=천간오행[todayDp.g];
-  var todayJi=지지[todayDp.j];
-  var luckLbl=JI_LUCK_LABEL[todayDp.j];
-  var luckCls=JI_LUCK_CLASS[todayDp.j];
-  // 오행 상생/상극 관계
-  var 상생={'목':'화','화':'토','토':'금','금':'수','수':'목'};
-  var 상극={'목':'토','토':'수','수':'화','화':'금','금':'목'};
-  var rel='';
-  if(todayOh===myGanOh) rel='같은 오행이 겹치며 고유의 기운이 강화되는';
-  else if(상생[myGanOh]===todayOh) rel='내 기운이 자연스럽게 빛을 발하는';
-  else if(상생[todayOh]===myGanOh) rel='외부에서 힘과 도움이 들어오는';
-  else if(상극[myGanOh]===todayOh) rel='행동을 절제하고 방향을 재점검할';
-  else if(상극[todayOh]===myGanOh) rel='내면의 중심을 지키며 신중히 움직일';
-  else rel='균형을 살피며 천천히 흘러갈';
-
-  sajuEl.innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-      <span style="font-size:14px;">🔓</span>
-      <div style="font-size:11px;color:var(--gold);letter-spacing:0.14em;">오늘의 사주 운세</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
-      <div style="font-size:28px;color:var(--gold);font-family:'Cinzel',serif;flex-shrink:0;">${iljin}</div>
+  document.getElementById('qk-expand-saju').innerHTML=`
+    <!-- 오늘 일진 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 일진</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:12px 14px;background:var(--dark3);border-radius:8px;border:0.5px solid rgba(201,168,76,0.25);">
+      <div style="font-size:26px;color:var(--gold);font-family:'Cinzel',serif;flex-shrink:0;">${iljin}</div>
       <div style="flex:1;min-width:0;">
-        <div style="margin-bottom:4px;"><span class="${luckCls}" style="font-size:12px;">${luckLbl}</span> <span style="font-size:11px;color:var(--text-3);">${JI_DESC[todayDp.j]}</span></div>
-        <div style="font-size:11px;color:var(--text-2);">오늘 오행: <b style="color:var(--gold);">${todayOh}</b> · 내 일간: ${천간[myDp.g]}(${myGanOh})</div>
+        <div style="margin-bottom:3px;"><span class="${luckCls}" style="font-size:12px;">${luckLbl}</span> <span style="font-size:11px;color:var(--text-3);">${JI_DESC[todayDp.j]}</span></div>
+        <div style="font-size:11.5px;color:var(--text-2);">${천간[todayDp.g]}(${todayOh}) + ${지지[todayDp.j]} · 오늘 간지</div>
       </div>
     </div>
-    <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.5);">
-      오늘은 <b style="color:var(--gold);">${todayOh}${todayJi}</b>의 기운이 도는 날. 당신의 일간(${천간[myDp.g]}·${myGanOh}) 기준으로 <b>${rel} 하루</b>입니다. ${luckLbl==='길'?'좋은 흐름을 살려 중요한 일을 진행해 보세요.':luckLbl==='흉'?'무리한 결정은 뒤로 미루고, 작은 실수를 조심하세요.':'평온 속에 집중력을 유지하면 무탈한 하루가 됩니다.'}
+    <!-- 오늘 기운 (십신) -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 기운 · <b>${SIP.title}</b></div>
+    <div style="padding:12px 14px;background:var(--dark3);border-radius:8px;border:0.5px solid rgba(201,168,76,0.25);margin-bottom:14px;">
+      <div style="font-size:11.5px;color:var(--text-2);line-height:1.75;margin-bottom:8px;">
+        <span style="color:var(--text-3);">오늘 일간</span> · <b style="color:var(--gold);">${천간[todayDp.g]} (${todayOh})</b><br>
+        <span style="color:var(--text-3);">내 일간</span> · <b style="color:var(--gold);">${천간[myDp.g]} (${myGanOh})</b><br>
+        <span style="color:var(--text-3);">관계</span> · <b>${relLabel||sipsinKo}</b> (${sipsinHanja}) — ${SIP.rel}
+      </div>
+      <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;padding-top:8px;border-top:0.5px dashed rgba(201,168,76,0.18);">
+        ${SIP.interp}
+      </div>
+    </div>
+    <!-- 오늘 조언 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 조언</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(112,196,154,0.3);"><b style="color:#70C49A;">좋은 활동</b> · ${SIP.good}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(232,112,112,0.3);"><b style="color:#E87070;">피할 것</b> · ${SIP.avoid}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(134,180,235,0.3);"><b style="color:#86B4EB;">유리한 시간</b> · ${SIP.hour}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(201,168,76,0.3);"><b style="color:var(--gold);">유리한 방위</b> · ${SIP.dir}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(237,147,177,0.3);"><b style="color:#ED93B1;">추천 색</b> · ${SIP.color}</div>
+    </div>
+    <!-- 분야별 조언 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 분야별 조언</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
+      <div style="padding:7px 10px;background:rgba(237,147,177,0.06);border-radius:6px;border:0.5px solid rgba(237,147,177,0.25);"><b style="color:#ED93B1;">연애</b> · ${SIP.love}</div>
+      <div style="padding:7px 10px;background:rgba(134,180,235,0.06);border-radius:6px;border:0.5px solid rgba(134,180,235,0.25);"><b style="color:#86B4EB;">일</b> · ${SIP.work}</div>
+      <div style="padding:7px 10px;background:rgba(232,112,112,0.06);border-radius:6px;border:0.5px solid rgba(232,112,112,0.25);"><b style="color:#E87070;">주의</b> · ${SIP.caution}</div>
+    </div>
+    <!-- 오늘 한 줄 -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 한 줄</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.06);border:0.5px solid rgba(201,168,76,0.3);border-radius:8px;font-style:italic;text-align:center;">
+      ${SIP.oneline}
     </div>`;
+}
+
+// 간단확인 3 카드 토글 (사주/타로/별자리)
+function qkToggleCard(key){
+  const panel = document.getElementById('qk-expand-'+key);
+  const card  = document.getElementById('qk-card-'+key);
+  if(!panel||!card) return;
+  const isOpen = panel.style.display === 'block';
+  panel.style.display = isOpen ? 'none' : 'block';
+  card.classList.toggle('active', !isOpen);
 }
 
 function showPaywall(feature) {
@@ -2966,7 +3680,19 @@ function calcSaju(){
   // ── 사주 자동 저장: 다음 앱 실행 시 자동 복원용 ──
   //   사용자가 "저장" 버튼을 따로 누르지 않아도
   //   계산 성공 시점에 마지막 사주를 별도 키 fm_saju_last 로 보존.
+  // 기존 저장 로직 확장: 성명학 풀이용 이름(선택) 함께 저장.
   try {
+    // 이름 소스 우선순위: P3 screen-saju 내 입력 → 간단확인 _qkName 캐시 → 기존 저장값 유지
+    var _qkNameField = (typeof document!=='undefined') ? document.getElementById('qk-name') : null;
+    var _savedName = '';
+    try {
+      var _prevRaw = localStorage.getItem('fm_saju_last');
+      if(_prevRaw){ var _prev = JSON.parse(_prevRaw); if(_prev && typeof _prev.name === 'string') _savedName = _prev.name; }
+    } catch(e){}
+    var _nameToSave = (_qkNameField && typeof _qkNameField.value === 'string' && _qkNameField.value.trim() !== '')
+      ? _qkNameField.value.trim()
+      : _savedName; // 빈 값이면 기존 이름 유지 (의도 없는 덮어쓰기 방지)
+
     localStorage.setItem('fm_saju_last', JSON.stringify({
       y, m, d, h, min,
       calType: (typeof sjCalType !== 'undefined') ? sjCalType : 'solar',
@@ -2975,6 +3701,7 @@ function calcSaju(){
       topic: sjTopicVal,
       timeMode: sjTimeModeVal,
       shijinHour: sjShijinHour,
+      name: _nameToSave || '',
       savedAt: Date.now()
     }));
   } catch(e) { /* storage 실패는 무해 */ }
@@ -6258,22 +6985,77 @@ function renderTarotDeck(){
   if(resEl){ resEl.style.display='none'; resEl.innerHTML=''; }
 }
 
+let _mxShuffling=false;
 function mxShuffleTarot(){
+  if(_mxShuffling) return;
   const already=mxFlippedTarot.length;
   if(already>=(mxTarotSpread||1)) return;
+  _mxShuffling=true;
+
+  // 데이터 셔플 (Fisher-Yates + 역방향 재배정 50:50)
   for(let i=tarotPickPool.length-1;i>already;i--){
     const j=already+Math.floor(Math.random()*(i-already+1));
     [tarotPickPool[i],tarotPickPool[j]]=[tarotPickPool[j],tarotPickPool[i]];
   }
   for(let i=already;i<tarotPickPool.length;i++) tarotPickPool[i].isRev=Math.random()>0.5;
+
+  // 가이드 텍스트 업데이트
+  const shuffleBtn=document.getElementById('mx-tdeck-shuffle');
+  if(shuffleBtn){ shuffleBtn.style.pointerEvents='none'; shuffleBtn.style.opacity='0.55'; shuffleBtn.textContent='✦ 섞는 중...'; }
+
   const topCard=document.getElementById('mx-tdeck-top');
-  if(topCard){
-    topCard.style.transition='transform 0.08s ease';
-    topCard.style.transform='rotate(-6deg)';
-    setTimeout(()=>{topCard.style.transform='rotate(5deg)';},80);
-    setTimeout(()=>{topCard.style.transform='rotate(-3deg)';},160);
-    setTimeout(()=>{topCard.style.transform='none';},240);
+  const countEl=document.getElementById('mx-tdeck-count');
+  if(!topCard){ _mxShuffling=false; return; }
+
+  // 1.8s 멀티 스테이지 셔플 애니메이션 (교차 스와이프 4회 + 팝업 + 스핀 + 착지)
+  topCard.style.willChange='transform';
+  topCard.style.transition='';
+  topCard.style.animation='mxShuffleSeq 1.8s cubic-bezier(0.45,0.05,0.35,1) forwards';
+
+  // 고스트 카드 (4장) 팬 아웃 효과 — 좌우 교차 swipe
+  const deckParent = topCard.parentElement;
+  const rect = topCard.getBoundingClientRect();
+  const ghosts=[];
+  const ghostConfigs=[
+    {dx:-55, rot:-14, delay:0,   dur:600},
+    {dx: 55, rot: 14, delay:120, dur:600},
+    {dx:-40, rot:-9,  delay:280, dur:640},
+    {dx: 40, rot: 9,  delay:420, dur:640}
+  ];
+  for(const cfg of ghostConfigs){
+    const g=document.createElement('div');
+    g.style.cssText=`position:absolute;left:${topCard.offsetLeft}px;top:${topCard.offsetTop}px;width:${topCard.offsetWidth}px;height:${topCard.offsetHeight}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,0.55);box-shadow:0 4px 14px rgba(0,0,0,0.6),0 0 8px rgba(201,168,76,0.3);z-index:4;pointer-events:none;will-change:transform,opacity;opacity:0;`;
+    g.innerHTML=makeCardBackSVG(topCard.offsetWidth, topCard.offsetHeight);
+    if(deckParent) deckParent.appendChild(g);
+    ghosts.push(g);
+    setTimeout(()=>{
+      g.style.transition=`transform ${cfg.dur}ms cubic-bezier(0.45,0.05,0.25,1), opacity ${cfg.dur}ms ease`;
+      g.style.opacity='0.9';
+      g.style.transform=`translate(${cfg.dx}px, -18px) rotate(${cfg.rot}deg)`;
+      // 복귀
+      setTimeout(()=>{
+        g.style.transform=`translate(0,0) rotate(0deg)`;
+        g.style.opacity='0';
+      }, cfg.dur*0.6);
+    }, cfg.delay);
   }
+
+  // count 숫자 깜빡임
+  if(countEl){
+    countEl.style.transition='opacity 0.2s';
+    countEl.style.opacity='0.3';
+    setTimeout(()=>{ if(countEl) countEl.style.opacity='0.7'; }, 1400);
+  }
+
+  // 정리
+  setTimeout(()=>{
+    topCard.style.animation='';
+    topCard.style.transform='';
+    topCard.style.willChange='';
+    ghosts.forEach(g=>{ if(g.parentNode) g.parentNode.removeChild(g); });
+    if(shuffleBtn){ shuffleBtn.style.pointerEvents=''; shuffleBtn.style.opacity=''; shuffleBtn.textContent='✦ 셔플'; }
+    _mxShuffling=false;
+  }, 1850);
 }
 
 let _mxTarotDrawing=false;
@@ -11174,21 +11956,46 @@ function initTodayFortune() {
   // 섹션 자체는 항상 표시 (내부 분기로 populated/empty 선택)
   sec.style.display = '';
 
-  // 생년월일 존재 여부 확인
-  const savedList = (typeof getSjList === 'function') ? getSjList() : [];
-  const hasLive = (typeof sjData !== 'undefined' && sjData);
-  if (!hasLive && !savedList.length) {
+  // 데이터 소스 우선순위 (renderQuickCheck / _autoFillSajuFromStorage / _autoFillMixFromSaju 와 동일하게 통일):
+  //   sjData (세션) → fm_saju_last (단일 객체) → fm_saju[0] (배열 첫 항목)
+  const hasLive = (typeof sjData !== 'undefined' && sjData && sjData.y);
+  let birthSrc = null;
+  if (hasLive) {
+    birthSrc = { y: sjData.y, m: sjData.m, d: sjData.d };
+  } else {
+    // fm_saju_last (단일 객체)
+    try {
+      const raw = localStorage.getItem('fm_saju_last');
+      if (raw) {
+        const o = JSON.parse(raw);
+        if (o && o.y && o.m && o.d) birthSrc = { y: o.y, m: o.m, d: o.d };
+      }
+    } catch (e) {}
+    // fm_saju[0] (배열 첫 항목)
+    if (!birthSrc) {
+      const savedList = (typeof getSjList === 'function') ? getSjList() : [];
+      if (savedList.length && savedList[0].y && savedList[0].m && savedList[0].d) {
+        birthSrc = { y: savedList[0].y, m: savedList[0].m, d: savedList[0].d };
+      }
+    }
+  }
+
+  if (!birthSrc) {
+    // tf-empty 상태: 오늘 날짜만 표시하고 종료
     populated.style.display = 'none';
     empty.style.display = '';
+    try {
+      const _nowE = new Date();
+      const _DOW = ['일','월','화','수','목','금','토'];
+      const _dateEl = document.getElementById('tf-empty-date');
+      if (_dateEl) _dateEl.textContent = `${_nowE.getFullYear()}년 ${_nowE.getMonth()+1}월 ${_nowE.getDate()}일 (${_DOW[_nowE.getDay()]}요일)`;
+    } catch (e) {}
     return;
   }
   populated.style.display = '';
   empty.style.display = 'none';
 
-  // 현재 세션 사주 데이터 우선 → 저장된 목록의 첫 항목 fallback
-  const birth = hasLive
-    ? { y: sjData.y, m: sjData.m, d: sjData.d }
-    : { y: savedList[0].y, m: savedList[0].m, d: savedList[0].d };
+  const birth = birthSrc;
 
   _tfVariant = 0;
   const now = new Date();
