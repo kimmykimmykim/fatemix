@@ -293,6 +293,9 @@ body::before{
   from { opacity:0; transform:translateY(12px); }
   to   { opacity:1; transform:translateY(0); }
 }
+/* 간단확인 타로 안내 점 애니메이션 */
+.qk-dots{display:inline-block;letter-spacing:0.1em;animation:qkDotsPulse 1.2s ease-in-out infinite;}
+@keyframes qkDotsPulse { 0%,100%{opacity:0.35;} 50%{opacity:1;} }
 /* 타로 셔플 애니메이션 — 1.8s 멀티 스테이지 (교차 스와이프 + 팝 + 스핀 + 착지) */
 @keyframes mxShuffleSeq {
   0%   { transform: translate(0,0) rotate(0deg) scale(1); }
@@ -617,7 +620,7 @@ body{padding-bottom:64px;}
  -->
 <div id="screen-home" class="screen active">
   <div class="home-header">
-    <div class="home-logo">Fate<em>Mix</em></div>
+    <div class="home-logo" onclick="onLogoTap()" style="cursor:pointer;user-select:none;">Fate<em>Mix</em></div>
     <div class="home-tagline">운명의 교차점에서 답을 찾다</div>
   </div>
 
@@ -1687,6 +1690,117 @@ function isPremium(){
   try { return localStorage.getItem('fm_is_premium') === 'true'; } catch(e) { return false; }
 }
 
+// ─── FIX F: FATEMIX 로고 5탭 개발자 패널 ───
+let _logoTapCount = 0;
+let _logoTapTimer = null;
+function onLogoTap(){
+  _logoTapCount++;
+  clearTimeout(_logoTapTimer);
+  _logoTapTimer = setTimeout(function(){ _logoTapCount = 0; }, 3000);
+  if(_logoTapCount >= 5){
+    _logoTapCount = 0;
+    clearTimeout(_logoTapTimer);
+    openDevPanel();
+  }
+}
+
+function openDevPanel(){
+  var existing = document.getElementById('fm-dev-panel');
+  if(existing) existing.remove();
+
+  var premiumNow = isPremium();
+  var nameNow = '';
+  try{
+    var raw = localStorage.getItem('fm_saju_last');
+    if(raw){ var o=JSON.parse(raw); if(o && typeof o.name==='string') nameNow = o.name; }
+  }catch(e){}
+
+  var modal = document.createElement('div');
+  modal.id = 'fm-dev-panel';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="max-width:380px;width:100%;background:linear-gradient(135deg,#1a1a2e 0%,#12121e 100%);border:0.5px solid rgba(201,168,76,0.5);border-radius:18px;padding:24px 22px;box-shadow:0 8px 40px rgba(0,0,0,0.75);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:0.5px solid rgba(201,168,76,0.2);">
+        <span style="font-size:20px;">🔧</span>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);letter-spacing:0.16em;">개발자 도구</div>
+      </div>
+
+      <!-- 프리미엄 토글 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:4px;">프리미엄 모드</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">현재: <b style="color:${premiumNow?'#70C49A':'#E87070'};">${premiumNow?'프리미엄':'비프리미엄'}</b></div>
+        <button id="fm-dev-prem" onclick="_devTogglePremium()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid ${premiumNow?'rgba(232,112,112,0.55)':'rgba(112,196,154,0.55)'};background:${premiumNow?'rgba(232,112,112,0.12)':'rgba(112,196,154,0.12)'};color:${premiumNow?'#E87070':'#70C49A'};font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">
+          ${premiumNow?'● 프리미엄 OFF':'○ 프리미엄 ON'}
+        </button>
+      </div>
+
+      <!-- 이름 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:4px;">이름 저장 상태</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">현재: <b style="color:${nameNow?'var(--text-2)':'var(--text-3)'};">${nameNow?('"'+nameNow+'"'):'(없음)'}</b></div>
+        <button onclick="_devClearName()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(201,168,76,0.5);background:rgba(201,168,76,0.08);color:var(--gold);font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;"${nameNow?'':' disabled style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-3);font-size:13px;opacity:0.5;cursor:not-allowed;font-family:inherit;"'}>
+          이름 지우기
+        </button>
+      </div>
+
+      <!-- 전체 초기화 -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:12px;color:#E87070;letter-spacing:0.08em;margin-bottom:4px;">전체 초기화</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.55;">저장된 사주·이름·오늘의 타로 모두 삭제 (신규 유저 시뮬레이션)</div>
+        <button onclick="_devClearAll()" style="width:100%;padding:11px;border-radius:10px;border:0.5px solid rgba(232,112,112,0.55);background:rgba(232,112,112,0.12);color:#E87070;font-size:13px;cursor:pointer;letter-spacing:0.04em;font-family:inherit;">
+          Clear All
+        </button>
+      </div>
+
+      <!-- 닫기 -->
+      <button onclick="_devClose()" style="width:100%;padding:12px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-3);font-size:13px;cursor:pointer;font-family:inherit;">
+        닫기
+      </button>
+    </div>`;
+  // 배경 클릭 시 닫기
+  modal.addEventListener('click', function(ev){ if(ev.target===modal) _devClose(); });
+  document.body.appendChild(modal);
+}
+
+function _devClose(){
+  var m = document.getElementById('fm-dev-panel');
+  if(m) m.remove();
+}
+
+function _devTogglePremium(){
+  try{
+    if(isPremium()){
+      localStorage.removeItem('fm_is_premium');
+    } else {
+      localStorage.setItem('fm_is_premium', 'true');
+    }
+  }catch(e){}
+  location.reload();
+}
+
+function _devClearName(){
+  try{
+    var raw = localStorage.getItem('fm_saju_last');
+    if(raw){
+      var o = JSON.parse(raw);
+      o.name = '';
+      localStorage.setItem('fm_saju_last', JSON.stringify(o));
+    }
+  }catch(e){}
+  location.reload();
+}
+
+function _devClearAll(){
+  if(!confirm('정말 초기화할까요?\n\n저장된 사주·이름·오늘의 타로 기록이 모두 삭제됩니다.')) return;
+  try{
+    localStorage.removeItem('fm_saju');
+    localStorage.removeItem('fm_saju_last');
+    localStorage.removeItem('fm_today_tarot_oneCard');
+    localStorage.removeItem('fm_is_premium');
+  }catch(e){}
+  location.reload();
+}
+
 // 프리미엄 모달 표시 (궁합 클릭 시 비프리미엄)
 function showPremiumLockModal(){
   let modal=document.getElementById('fm-premium-modal');
@@ -1981,6 +2095,237 @@ function qkSubmitSaju(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// ─── 간단확인 타로 뽑기 UX (FIX E) ───
+// 상태: 재방문이면 저장된 카드 바로 렌더 / 신규면 섞기→부채꼴→탭 UX
+var _qkTarotPickFan = null; // 부채꼴로 펼친 7장 {cardIdx, isRev}[]
+
+// 결과 렌더러 (cardIdx 0~77, isRev, fromSaved 플래그)
+function _qkRenderTarotResult(cardIdx, isRev, fromSaved){
+  var cards = allCards();
+  if(cardIdx<0||cardIdx>=cards.length) cardIdx=0;
+  var tCard = {...cards[cardIdx], isRev:isRev, reversed:isRev};
+  var tKw = isRev ? (tCard.rev||tCard.key) : tCard.key;
+  var tMeaning='', tLove='', tWork='', tCaution='', tOneline='';
+  if(tCard.type==='major' && typeof TAROT_CARD_DEEP !== 'undefined'){
+    var deep = TAROT_CARD_DEEP['major_'+tCard.id];
+    if(deep){
+      var fullTxt = isRev ? (deep.reversed||deep.upright) : deep.upright;
+      var sentences = String(fullTxt).split(/(?<=[.!?。])\s+/).filter(Boolean);
+      tMeaning = sentences.slice(0,3).join(' ');
+      if(deep.domain){
+        tLove = deep.domain.연애||'';
+        tWork = deep.domain.직업||'';
+        tCaution = deep.domain.재물||'';
+      }
+    }
+  }
+  if(!tMeaning){
+    tMeaning = isRev
+      ? `${tCard.name} 역방향은 "${tKw}"의 흐름이 막히거나 뒤틀린 상태를 암시합니다. 속도를 늦추고 내면을 돌아볼 때입니다. 지금의 정체는 방향 점검의 신호입니다.`
+      : `${tCard.name}는 "${tKw}"의 에너지를 가져옵니다. 지금 이 순간 당신에게 흐르는 주된 기운입니다. 이 카드가 말하는 흐름에 귀 기울여 보세요.`;
+  }
+  if(!tLove)    tLove    = isRev ? '감정 표현을 잠시 미루고 관찰할 것' : '마음을 솔직히 표현할 좋은 타이밍';
+  if(!tWork)    tWork    = isRev ? '중요한 결정은 하루 미루는 게 유리' : '행동으로 옮길 때, 실행력이 결과를 만듦';
+  if(!tCaution) tCaution = isRev ? '작은 실수를 흘려보내지 말 것' : '들뜬 기분으로 세부사항을 놓치지 말 것';
+  tOneline = isRev
+    ? `"잠시 멈추고, ${tCard.name}의 그림자를 돌아보세요."`
+    : `"${tCard.name}의 빛을 오늘 당신의 선택으로 옮기세요."`;
+
+  var banner = fromSaved
+    ? `<div style="font-size:11px;color:var(--text-3);background:rgba(201,168,76,0.06);border:0.5px dashed rgba(201,168,76,0.3);border-radius:8px;padding:7px 12px;margin-bottom:12px;text-align:center;letter-spacing:0.02em;">오늘 이미 뽑은 카드예요 · 내일 자정에 새 카드가 열려요</div>`
+    : '';
+
+  var el = document.getElementById('qk-expand-tarot');
+  if(!el) return;
+  el.innerHTML = banner + `
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
+      <div style="width:92px;height:146px;flex-shrink:0;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.5);border:0.5px solid ${isRev?'rgba(232,112,112,0.5)':'rgba(201,168,76,0.5)'};">${makeCardSVG(tCard,92,146)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:17px;color:${isRev?'#E87070':'var(--gold)'};margin-bottom:3px;font-family:'Gowun Batang',serif;">${tCard.name}</div>
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:8px;letter-spacing:0.05em;">${isRev?'▽ 역방향':'△ 정방향'} · ${tCard.type==='major'?'메이저':'마이너'}</div>
+        <div style="font-size:12px;color:var(--gold);padding:4px 10px;background:rgba(201,168,76,0.08);border-radius:12px;display:inline-block;letter-spacing:0.03em;">${tKw}</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 카드 의미</div>
+    <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;margin-bottom:14px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">${tMeaning}</div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 조언</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(237,147,177,0.3);"><b style="color:#ED93B1;">연애</b> · ${tLove}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(134,180,235,0.3);"><b style="color:#86B4EB;">일</b> · ${tWork}</div>
+      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(232,112,112,0.3);"><b style="color:#E87070;">주의</b> · ${tCaution}</div>
+    </div>
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 한 줄</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.06);border:0.5px solid rgba(201,168,76,0.3);border-radius:8px;font-style:italic;text-align:center;">${tOneline}</div>`;
+}
+
+// 뽑기 UI 초기 상태 — 스택된 덱 + "카드 섞기" 버튼
+function _qkRenderTarotPicker(){
+  var el = document.getElementById('qk-expand-tarot');
+  if(!el) return;
+  var w=56, h=88;
+  var stackCnt = 5; // 시각적으로 쌓인 뒷면 카드 개수
+  var backSvg = makeCardBackSVG(w, h);
+  var stackHtml = '';
+  for(var i=0;i<stackCnt;i++){
+    var ox = (stackCnt-1-i)*1.5;
+    stackHtml += `<div class="qk-tdeck-back" style="position:absolute;left:calc(50% - ${w/2}px - ${ox}px);top:${ox}px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,${0.25+i*0.08});box-shadow:0 2px 8px rgba(0,0,0,0.4);z-index:${i+1};">${backSvg}</div>`;
+  }
+  el.innerHTML = `
+    <div id="qk-tarot-guide" style="font-size:13px;color:var(--text-2);line-height:1.7;text-align:center;margin-bottom:16px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">
+      오늘의 카드를 <b style="color:var(--gold);">한 장</b> 뽑아보세요
+    </div>
+    <div id="qk-tarot-stage" style="position:relative;width:100%;height:${h+24}px;margin-bottom:14px;">
+      ${stackHtml}
+    </div>
+    <div id="qk-tarot-controls" style="text-align:center;">
+      <button id="qk-tarot-start" onclick="_qkStartTarotShuffle()" style="padding:11px 26px;font-size:13px;border-radius:10px;border:1px solid rgba(201,168,76,0.7);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;"
+        onmouseover="this.style.background='rgba(201,168,76,0.22)'"
+        onmouseout="this.style.background='rgba(201,168,76,0.12)'">
+        ✦ 카드 섞기
+      </button>
+    </div>`;
+}
+
+// 셔플 애니메이션 → 부채꼴 전개
+function _qkStartTarotShuffle(){
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  var ctrl = document.getElementById('qk-tarot-controls');
+  if(!stage) return;
+  if(ctrl) ctrl.style.display='none';
+  if(guide) guide.innerHTML = '카드를 섞고 있습니다<span class="qk-dots">...</span>';
+
+  // 78장에서 7장 무작위 (isRev 개별 50:50)
+  var cards = allCards();
+  var indices = [];
+  for(var i=0;i<cards.length;i++) indices.push(i);
+  // Fisher-Yates
+  for(var i=indices.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=indices[i]; indices[i]=indices[j]; indices[j]=t;
+  }
+  var fanN = 7;
+  _qkTarotPickFan = indices.slice(0, fanN).map(function(idx){
+    return { cardIdx: idx, isRev: Math.random() > 0.5 };
+  });
+
+  // 스택된 뒷면 카드 흔들기 (기존 mxShuffleSeq 키프레임 재활용)
+  var backs = stage.querySelectorAll('.qk-tdeck-back');
+  backs.forEach(function(b, i){
+    b.style.willChange = 'transform';
+    b.style.animation = `mxShuffleSeq 1.6s cubic-bezier(0.45,0.05,0.35,1) ${i*0.04}s forwards`;
+  });
+
+  // 1.8초 후 부채꼴로 전개
+  setTimeout(function(){
+    backs.forEach(function(b){ b.style.animation=''; b.style.willChange=''; });
+    _qkFanOutTarotDeck();
+  }, 1800);
+}
+
+// 부채꼴(한 줄) 전개
+function _qkFanOutTarotDeck(){
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  if(!stage || !_qkTarotPickFan) return;
+  var w=50, h=80;
+  var fanN = _qkTarotPickFan.length;
+  // 스테이지 너비 계산 (컨테이너 기준)
+  var stageW = Math.min(stage.clientWidth || 300, 360);
+  var spread = Math.min(stageW - w - 10, fanN * 36);
+  var step = spread / Math.max(fanN-1,1);
+  var cx = stageW/2;
+  var backSvg = makeCardBackSVG(w, h);
+  // 스테이지 다시 그리기 (부채꼴 카드)
+  stage.style.height = (h+24)+'px';
+  var fanHtml = '';
+  for(var i=0;i<fanN;i++){
+    var tx = -spread/2 + i*step;
+    var rot = (i - (fanN-1)/2) * 4; // ±12도 정도
+    fanHtml += `<div class="qk-tfan-card" data-i="${i}" onclick="_qkPickTarot(${i})"
+      style="position:absolute;left:calc(50% - ${w/2}px);top:8px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,0.55);box-shadow:0 3px 12px rgba(0,0,0,0.55);cursor:pointer;z-index:${10+i};transform:translateX(0) rotate(0deg) scale(0.9);opacity:0;transition:transform 0.55s cubic-bezier(0.4,0,0.2,1) ${i*0.06}s, opacity 0.5s ease ${i*0.06}s, box-shadow 0.2s;"
+      onmouseover="if(!this.dataset.picked){this.style.transform=this.dataset.base+' translateY(-8px) scale(1.05)';this.style.boxShadow='0 6px 18px rgba(201,168,76,0.35)'}"
+      onmouseout="if(!this.dataset.picked){this.style.transform=this.dataset.base;this.style.boxShadow='0 3px 12px rgba(0,0,0,0.55)'}"
+      data-base="translateX(${tx}px) rotate(${rot}deg)">
+      ${backSvg}
+    </div>`;
+  }
+  stage.innerHTML = fanHtml;
+  // 다음 프레임에 transform 적용 → transition으로 펼쳐지는 애니메이션
+  requestAnimationFrame(function(){
+    stage.querySelectorAll('.qk-tfan-card').forEach(function(c){
+      c.style.opacity = '1';
+      c.style.transform = c.dataset.base;
+    });
+  });
+  if(guide) guide.innerHTML = '마음에 이끌리는 <b style="color:var(--gold);">카드 한 장</b>을 탭하세요';
+}
+
+// 카드 탭 → 저장 + 결과 렌더
+function _qkPickTarot(fanIdx){
+  if(!_qkTarotPickFan || fanIdx<0 || fanIdx>=_qkTarotPickFan.length) return;
+  var picked = _qkTarotPickFan[fanIdx];
+  if(!picked) return;
+  var stage = document.getElementById('qk-tarot-stage');
+  var guide = document.getElementById('qk-tarot-guide');
+  if(!stage) return;
+  // 다른 카드 페이드아웃 + 선택 카드 중앙으로 확대·회전 초기화
+  var cardEls = stage.querySelectorAll('.qk-tfan-card');
+  cardEls.forEach(function(c){
+    c.dataset.picked = '1';
+    c.onclick = null; c.onmouseover = null; c.onmouseout = null;
+    var i = parseInt(c.dataset.i,10);
+    if(i===fanIdx){
+      c.style.transition='transform 0.5s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s';
+      c.style.transform='translateX(0) rotate(0deg) scale(1.25)';
+      c.style.zIndex='100';
+      c.style.boxShadow='0 10px 30px rgba(201,168,76,0.5),0 0 22px rgba(201,168,76,0.45)';
+    } else {
+      c.style.transition='opacity 0.35s ease, transform 0.35s ease';
+      c.style.opacity='0';
+      c.style.transform=(c.dataset.base||'')+' translateY(12px) scale(0.85)';
+    }
+  });
+  if(guide) guide.innerHTML = '<span style="color:var(--gold);">카드를 공개합니다</span><span class="qk-dots">...</span>';
+
+  // 0.6초 후 플립 애니메이션
+  setTimeout(function(){
+    var chosen = stage.querySelector('.qk-tfan-card[data-i="'+fanIdx+'"]');
+    if(!chosen) { _qkFinalizeTarot(picked); return; }
+    // 3D 플립: 컨테이너에 perspective, 이너 요소 rotateY 180
+    chosen.style.perspective='700px';
+    chosen.style.backgroundColor='transparent';
+    chosen.style.border='0';
+    chosen.style.overflow='visible';
+    chosen.innerHTML = `
+      <div class="qk-flipper" style="width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);">
+        <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,0.7);">${makeCardBackSVG(50,80)}</div>
+        <div style="position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);border-radius:6px;overflow:hidden;border:1px solid ${picked.isRev?'rgba(232,112,112,0.7)':'rgba(201,168,76,0.7)'};box-shadow:0 0 14px rgba(201,168,76,0.45);">${makeCardSVG({...allCards()[picked.cardIdx], isRev:picked.isRev, reversed:picked.isRev}, 50, 80)}</div>
+      </div>`;
+    requestAnimationFrame(function(){
+      var flipper = chosen.querySelector('.qk-flipper');
+      if(flipper) flipper.style.transform='rotateY(180deg)';
+    });
+    setTimeout(function(){ _qkFinalizeTarot(picked); }, 900);
+  }, 650);
+}
+
+// 뽑기 완료 — localStorage 저장 + 결과 렌더
+function _qkFinalizeTarot(picked){
+  try{
+    var now = new Date();
+    var todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    localStorage.setItem('fm_today_tarot_oneCard', JSON.stringify({
+      date: todayStr,
+      cardIndex: picked.cardIdx,
+      isReverse: !!picked.isRev,
+      savedAt: Date.now()
+    }));
+  }catch(e){}
+  // 결과 렌더 (fromSaved=false — 첫 뽑기)
+  _qkRenderTarotResult(picked.cardIdx, !!picked.isRev, false);
+}
+
 // 간단확인 렌더링 — 사주 없음: 입력 폼 / 사주 있음: 3섹션 (타로/별자리/사주)
 function renderQuickCheck(){
   // 저장된 사주 (없을 수도 있음) — sjData → fm_saju_last → fm_saju[0]
@@ -2105,65 +2450,31 @@ function renderQuickCheck(){
       ${SIP.oneline}
     </div>`;
 
-  // ═══ ① 타로 — 펼침 영역 (daySeed 기반 고정, 4 섹션: 의미/조언/한 줄) ═══
+  // ═══ ① 타로 — 뽑기 UX (첫방문: 섞기→부채꼴→탭 / 재방문: 저장된 카드 표시) ═══
   var cards=allCards();
-  var tIdx=Math.abs(daySeed*7919)%cards.length;
-  var tIsRev=(daySeed*13)%2===0;
-  var tCard={...cards[tIdx],isRev:tIsRev,reversed:tIsRev};
-  var tKw = tIsRev ? (tCard.rev||tCard.key) : tCard.key;
-  // 카드 의미 (3~4문장)
-  var tMeaning='', tLove='', tWork='', tCaution='', tOneline='';
-  if(tCard.type==='major' && typeof TAROT_CARD_DEEP !== 'undefined'){
-    var deep=TAROT_CARD_DEEP['major_'+tCard.id];
-    if(deep){
-      var fullTxt=tIsRev?(deep.reversed||deep.upright):deep.upright;
-      var sentences=String(fullTxt).split(/(?<=[.!?。])\s+/).filter(Boolean);
-      tMeaning=sentences.slice(0,3).join(' ');
-      // domain 조언
-      if(deep.domain){
-        tLove=deep.domain.연애||'';
-        tWork=deep.domain.직업||'';
-        var 재물=deep.domain.재물||'';
-        tCaution=재물;
+  var todayStr = `${ty}-${String(tm).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
+
+  // 재방문 체크 — localStorage에 저장된 오늘 카드 있으면 복원
+  var _savedPick = null;
+  try{
+    var _rawPick = localStorage.getItem('fm_today_tarot_oneCard');
+    if(_rawPick){
+      var _op = JSON.parse(_rawPick);
+      if(_op && _op.date === todayStr && typeof _op.cardIndex === 'number' && _op.cardIndex >= 0 && _op.cardIndex < cards.length){
+        _savedPick = _op;
       }
     }
-  }
-  if(!tMeaning){
-    tMeaning = tIsRev
-      ? `${tCard.name} 역방향은 "${tKw}"의 흐름이 막히거나 뒤틀린 상태를 암시합니다. 속도를 늦추고 내면을 돌아볼 때입니다. 지금의 정체는 방향 점검의 신호입니다.`
-      : `${tCard.name}는 "${tKw}"의 에너지를 가져옵니다. 지금 이 순간 당신에게 흐르는 주된 기운입니다. 이 카드가 말하는 흐름에 귀 기울여 보세요.`;
-  }
-  if(!tLove) tLove = tIsRev ? '감정 표현을 잠시 미루고 관찰할 것' : '마음을 솔직히 표현할 좋은 타이밍';
-  if(!tWork) tWork = tIsRev ? '중요한 결정은 하루 미루는 게 유리' : '행동으로 옮길 때, 실행력이 결과를 만듦';
-  if(!tCaution) tCaution = tIsRev ? '작은 실수를 흘려보내지 말 것' : '들뜬 기분으로 세부사항을 놓치지 말 것';
-  // 한 줄 (카드 방향별)
-  tOneline = tIsRev
-    ? `"잠시 멈추고, ${tCard.name}의 그림자를 돌아보세요."`
-    : `"${tCard.name}의 빛을 오늘 당신의 선택으로 옮기세요."`;
+  }catch(e){}
 
-  document.getElementById('qk-expand-tarot').innerHTML=`
-    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
-      <div style="width:92px;height:146px;flex-shrink:0;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.5);border:0.5px solid ${tIsRev?'rgba(232,112,112,0.5)':'rgba(201,168,76,0.5)'};">${makeCardSVG(tCard,92,146)}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:17px;color:${tIsRev?'#E87070':'var(--gold)'};margin-bottom:3px;font-family:'Gowun Batang',serif;">${tCard.name}</div>
-        <div style="font-size:10px;color:var(--text-3);margin-bottom:8px;letter-spacing:0.05em;">${tIsRev?'▽ 역방향':'△ 정방향'} · ${tCard.type==='major'?'메이저':'마이너'}</div>
-        <div style="font-size:12px;color:var(--gold);padding:4px 10px;background:rgba(201,168,76,0.08);border-radius:12px;display:inline-block;letter-spacing:0.03em;">${tKw}</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 카드 의미</div>
-    <div style="font-size:12.5px;color:var(--text-2);line-height:1.8;margin-bottom:14px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">
-      ${tMeaning}
-    </div>
-    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 조언</div>
-    <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px;font-size:12px;color:var(--text-2);line-height:1.65;">
-      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(237,147,177,0.3);"><b style="color:#ED93B1;">연애</b> · ${tLove}</div>
-      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(134,180,235,0.3);"><b style="color:#86B4EB;">일</b> · ${tWork}</div>
-      <div style="padding:7px 10px;background:var(--dark3);border-radius:6px;border:0.5px solid rgba(232,112,112,0.3);"><b style="color:#E87070;">주의</b> · ${tCaution}</div>
-    </div>
-    <div style="font-size:11px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">▸ 오늘 한 줄</div>
-    <div style="font-size:13px;color:var(--text);line-height:1.8;padding:10px 12px;background:rgba(201,168,76,0.06);border:0.5px solid rgba(201,168,76,0.3);border-radius:8px;font-style:italic;text-align:center;">
-      ${tOneline}
-    </div>`;
+  if(_savedPick){
+    // 재방문 — 저장된 카드 바로 표시
+    _qkRenderTarotResult(_savedPick.cardIndex, !!_savedPick.isReverse, true);
+  } else {
+    // 신규 — 뽑기 UI 표시
+    _qkRenderTarotPicker();
+  }
+
+  // (타로 섹션 끝)
 
   // ═══ 내 별자리 (서양점성술) — 사용자 생년월일 기반 태양궁 + 오늘 달 위상 ═══
   var signs=['양자리','황소자리','쌍둥이자리','게자리','사자자리','처녀자리','천칭자리','전갈자리','사수자리','염소자리','물병자리','물고기자리'];
