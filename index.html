@@ -5259,7 +5259,9 @@ function showTarotLoading() {
   function cycleMsg() {
     textEl.style.animation = 'none';
     textEl.offsetHeight; // reflow
-    textEl.textContent = _tarotLoadingMsgs[msgIdx % _tarotLoadingMsgs.length];
+    textEl.textContent = window._fateRetrying
+      ? '조금만 더 기다려주세요 🌙'
+      : _tarotLoadingMsgs[msgIdx % _tarotLoadingMsgs.length];
     textEl.style.animation = 'loadingTextFade 1.8s ease-in-out forwards';
     msgIdx++;
     _tarotLoadingMsgTimer = setTimeout(cycleMsg, 1700);
@@ -7385,7 +7387,10 @@ function _showMixStarLoading(){
   overlay._msgTimer=setInterval(()=>{
     mi=(mi+1)%msgs.length;
     const el=document.getElementById('mx-star-msg');
-    if(el){el.style.opacity='0';setTimeout(()=>{el.textContent=msgs[mi];el.style.opacity='1';},300);}
+    if(el){el.style.opacity='0';setTimeout(()=>{
+      el.textContent = window._fateRetrying ? '조금만 더 기다려주세요 🌙' : msgs[mi];
+      el.style.opacity='1';
+    },300);}
   },3000);
 }
 
@@ -12720,10 +12725,21 @@ function showAiError(msg) {
 }
 
 // =============================================
+function _setFateRetryMsg(retrying) {
+  window._fateRetrying = retrying;
+  if (!retrying) return;
+  const msg = '운명의 별이 정렬 중이에요... ✨';
+  const tarotEl = document.getElementById('tarot-loading-text');
+  const tarotOverlay = document.getElementById('tarot-loading-overlay');
+  if (tarotEl && tarotOverlay && tarotOverlay.style.display !== 'none') tarotEl.textContent = msg;
+  const mixEl = document.getElementById('mx-star-msg');
+  if (mixEl) mixEl.textContent = msg;
+}
+
 async function callGemini(sys, userMsg, maxTok=1200) {
   const MAX = 3;
   for (let i = 1; i <= MAX; i++) {
-    if (i > 1) await new Promise(r => setTimeout(r, i * 1200)); // 재시도 딜레이
+    if (i > 1) { _setFateRetryMsg(true); await new Promise(r => setTimeout(r, i * 1200)); } // 재시도 딜레이
     try {
       const res = await fetch('/api/gemini', {
         method: 'POST',
@@ -12731,7 +12747,7 @@ async function callGemini(sys, userMsg, maxTok=1200) {
         body: JSON.stringify({sys, userMsg, maxTok})
       });
       const d = await res.json();
-      if (d.text) return d.text;
+      if (d.text) { _setFateRetryMsg(false); return d.text; }
       const raw = d.error || '';
       // 일시적 오류면 재시도
       const isTransient = res.status >= 500 || /high demand|overload|503|resource_exhausted/i.test(raw);
@@ -12740,14 +12756,15 @@ async function callGemini(sys, userMsg, maxTok=1200) {
     } catch(e) {
       if (i < MAX) continue; // 남은 재시도 있으면 그냥 넘어감
       // 모든 재시도 소진 — 친화적 메시지로 변환
+      _setFateRetryMsg(false);
       const r = (e.message||'').toLowerCase();
       if (/high demand|overload|503|서버/.test(r))
-        throw new Error('AI 서버가 잠시 혼잡합니다. 잠시 후 다시 시도해주세요.');
+        throw new Error('운명의 기운이 잠시 흐려졌어요. 곧 다시 별이 빛날 거예요 ✨');
       if (/quota|rate.?limit|429|resource_exhausted/.test(r))
-        throw new Error('AI 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.');
+        throw new Error('오늘의 별빛이 가득 찼어요. 잠시 후 다시 만나요 🌙');
       if (/fetch|network|failed/.test(r))
-        throw new Error('네트워크 연결을 확인해주세요.');
-      throw new Error('AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        throw new Error('별과의 연결이 끊겼어요. 네트워크를 확인해주세요 🌌');
+      throw new Error('운명의 별이 잠시 흐려졌어요. 잠시 후 다시 시도해주세요 ✨');
     }
   }
 }
