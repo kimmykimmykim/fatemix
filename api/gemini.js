@@ -59,37 +59,54 @@ export default async function handler(req, res) {
 
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY),
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Referer': 'https://fatemix.vercel.app'
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
+    const fetchOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Referer': 'https://fatemix.vercel.app'
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: '반드시 한국어로만 답변하세요. 모든 응답은 자연스러운 한국어로 작성합니다.\n\n' + (sys || '') }]
         },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: '반드시 한국어로만 답변하세요. 모든 응답은 자연스러운 한국어로 작성합니다.\n\n' + (sys || '') }]
-          },
-          contents: [
-            { role: 'user', parts: [{ text: userMsg || '' }] }
-          ],
-          generationConfig: {
-            maxOutputTokens: maxTok,
-            temperature: 0.8
-          }
-        })
+        contents: [
+          { role: 'user', parts: [{ text: userMsg || '' }] }
+        ],
+        generationConfig: {
+          maxOutputTokens: maxTok,
+          temperature: 0.8
+        }
+      })
+    };
+
+    // 재시도: 503/429일 때만, 최대 3회 (2s → 4s → 6s)
+    const MAX_ATTEMPTS = 3;
+    const RETRY_DELAYS_MS = [2000, 4000, 6000];
+    let response, data;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      response = await fetch(url, fetchOptions);
+      if (response.ok) {
+        data = await response.json();
+        break;
       }
-    );
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      const shouldRetry = (response.status === 503 || response.status === 429) && attempt < MAX_ATTEMPTS;
+      if (!shouldRetry) {
+        data = await response.json().catch(() => ({}));
+        break;
+      }
+      console.log(`[Gemini retry] status=${response.status}, attempt=${attempt}`);
+      await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt - 1]));
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
     if (text) {
       return res.status(200).json({ text });
     }
     // 디버깅용: Gemini 응답에 텍스트가 없을 때 전체 응답 로깅
     console.log('[Gemini API error response]', JSON.stringify(data, null, 2));
-    return res.status(500).json({ error: data.error?.message || JSON.stringify(data) });
+    return res.status(response?.status || 500).json({ error: data?.error?.message || JSON.stringify(data) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
