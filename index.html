@@ -13,12 +13,12 @@
   --gold-light: #E8C97A;
   --gold-dim: rgba(212,175,55,0.15);
   --dark: #0D0D18;                          /* 레거시 (body는 --bg-main 사용) */
-  --dark2: rgba(255,255,255,0.55);          /* 메인 카드 글래스 */
-  --dark3: rgba(255,255,255,0.38);          /* 중첩 박스 글래스 */
+  --dark2: rgba(255,255,255,0.7);           /* 메인 카드 글래스 (phase 3: 0.55→0.7) */
+  --dark3: rgba(255,255,255,0.5);           /* 중첩 서브블록 (phase 3: 0.38→0.5) */
   --dark4: rgba(255,255,255,0.28);          /* 미사용, 일관성 */
   --text: #1a0d2e;                          /* 본문 거의 검정 진보라 */
-  --text-2: #3d2b5a;                        /* 보조 중간 진보라 */
-  --text-3: #5a4a6e;                        /* 라벨/메타, 흐린 용도지만 읽힘 */
+  --text-2: #2a1945;                        /* 보조도 훨씬 진하게 (phase 3) */
+  --text-3: #3d2d5a;                        /* 라벨/메타, 본문 가까운 수준 (phase 3) */
   --border: rgba(107,76,154,0.22);          /* 연보라 테두리 */
   --border-2: rgba(107,76,154,0.1);
   --red: #E87070;
@@ -32,7 +32,7 @@
   --text-sub: #6b5b7a;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg-main);color:var(--text-main);font-family:'Pretendard','Gowun Batang','Noto Serif KR',serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg-main);color:var(--text-main);font-family:'Pretendard','Gowun Batang','Noto Serif KR',serif;font-size:17px;min-height:100vh;overflow-x:hidden;}
 
 /* 배경 별빛 */
 body::before{
@@ -61,20 +61,28 @@ body::before{
   font-size:30px;font-weight:600;color:var(--gold);
   letter-spacing:0.04em;margin:20px 0 6px;
 }
-.page-subtitle{font-size:15px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:32px;}
+.page-subtitle{font-size:16px;color:var(--text-2);letter-spacing:0.04em;font-weight:500;margin-bottom:32px;}
+.section-header{
+  font-size:14px;color:var(--purple-deep);letter-spacing:0.06em;font-weight:700;
+  padding:4px 0 4px 10px;border-left:4px solid var(--pink);margin-bottom:14px;
+}
+.sub-block{
+  background:rgba(255,255,255,0.5);border:1px solid var(--border-2);
+  border-radius:10px;padding:14px 12px;margin-bottom:14px;
+}
 .card{
   background:var(--dark2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   box-shadow:0 2px 12px rgba(107,76,154,0.08);
 }
-.label{font-size:14px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+.label{font-size:15px;color:var(--text-2);letter-spacing:0.02em;font-weight:600;margin-bottom:10px;}
 .input{
   width:100%;background:rgba(255,255,255,0.7);border:1px solid rgba(107,76,154,0.3);
   border-radius:10px;padding:13px 16px;color:var(--text);font-size:16px;
   font-family:'Gowun Batang','Noto Serif KR',serif;outline:none;transition:border-color 0.2s, background 0.2s;
 }
 .input:focus{border:1.5px solid var(--pink);background:rgba(255,255,255,0.85);}
-.input::placeholder{color:var(--text-3);}
+.input::placeholder{color:rgba(26,13,46,0.45);}
 .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
 .primary-btn{
   width:100%;padding:17px;background:linear-gradient(135deg,#ec7fb4 0%,#c85a94 100%);
@@ -102,8 +110,8 @@ body::before{
 /* 탭 선택 */
 .toggle-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .toggle-btn{
-  padding:9px 18px;border-radius:20px;border:1px solid rgba(107,76,154,0.25);
-  background:rgba(255,255,255,0.6);color:var(--text-2);font-size:15px;
+  padding:10px 18px;border-radius:20px;border:1px solid rgba(107,76,154,0.25);
+  background:rgba(255,255,255,0.6);color:var(--text-2);font-size:16px;font-weight:500;
   font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
 }
 .toggle-btn.active,.toggle-btn:hover{border-color:var(--purple-deep);color:var(--purple-deep);background:rgba(107,76,154,0.12);}
@@ -134,7 +142,7 @@ body::before{
   filter:drop-shadow(0 0 12px rgba(236,127,180,0.4));
 }
 .home-logo em{font-style:normal;}
-.home-tagline{font-size:13px;color:var(--text-3);letter-spacing:0.2em;text-transform:uppercase;}
+.home-tagline{font-size:14px;color:var(--text-2);letter-spacing:0.12em;text-transform:uppercase;}
 
 .menu-grid{
   display:grid;grid-template-columns:1fr 1fr 1fr;
@@ -154,7 +162,7 @@ body::before{
 .menu-item:hover::before{opacity:1;}
 .menu-icon{font-size:28px;margin-bottom:10px;}
 .menu-name{font-size:16px;color:var(--text);font-weight:400;letter-spacing:0.03em;margin-bottom:4px;}
-.menu-desc{font-size:13px;color:var(--text-3);letter-spacing:0.02em;line-height:1.6;}
+.menu-desc{font-size:15px;color:var(--text-2);letter-spacing:0.01em;line-height:1.6;}
 .menu-badge{
   display:inline-block;font-size:11px;letter-spacing:0.08em;
   padding:3px 8px;border-radius:10px;margin-top:8px;
@@ -752,19 +760,21 @@ body{padding-bottom:64px;}
     </div>
 
     <div class="card" style="margin-bottom:14px;">
-      <div class="label">생년월일</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button id="qk-cal-solar" class="toggle-btn active" onclick="qkSetCal('solar',this)" style="flex:1;font-size:12px;">양력</button>
-        <button id="qk-cal-lunar" class="toggle-btn" onclick="qkSetCal('lunar',this)" style="flex:1;font-size:12px;">음력</button>
-        <button id="qk-cal-leap"  class="toggle-btn" onclick="qkSetCal('leap',this)"  style="flex:1;font-size:12px;">윤달(음력)</button>
-      </div>
-      <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;">
-        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">년</div>
-          <input class="input" type="number" id="qk-year" min="1900" max="2050" placeholder="예) 1990"></div>
-        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">월</div>
-          <input class="input" type="number" id="qk-month" min="1" max="12" placeholder="1~12"></div>
-        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">일</div>
-          <input class="input" type="number" id="qk-day" min="1" max="31" placeholder="1~31"></div>
+      <div class="sub-block">
+        <div class="label">생년월일</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button id="qk-cal-solar" class="toggle-btn active" onclick="qkSetCal('solar',this)" style="flex:1;font-size:12px;">양력</button>
+          <button id="qk-cal-lunar" class="toggle-btn" onclick="qkSetCal('lunar',this)" style="flex:1;font-size:12px;">음력</button>
+          <button id="qk-cal-leap"  class="toggle-btn" onclick="qkSetCal('leap',this)"  style="flex:1;font-size:12px;">윤달(음력)</button>
+        </div>
+        <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0;">
+          <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">년</div>
+            <input class="input" type="number" id="qk-year" min="1900" max="2050" placeholder="예) 1990"></div>
+          <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">월</div>
+            <input class="input" type="number" id="qk-month" min="1" max="12" placeholder="1~12"></div>
+          <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">일</div>
+            <input class="input" type="number" id="qk-day" min="1" max="31" placeholder="1~31"></div>
+        </div>
       </div>
 
       <div class="label">태어난 시간</div>
@@ -1247,21 +1257,23 @@ body{padding-bottom:64px;}
   <!-- ═══ STEP 1: 기본 정보 ═══ -->
   <div id="mx-step-1" style="animation:mxStepFadeIn 0.35s ease;">
   <div class="card">
-    <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">STEP 1 — 기본 정보</div>
-    <div class="label">생년월일</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button id="mx-cal-solar" class="toggle-btn active" onclick="mxSetCal('solar',this)" style="flex:1;font-size:12px;">양력</button>
-      <button id="mx-cal-lunar" class="toggle-btn" onclick="mxSetCal('lunar',this)" style="flex:1;font-size:12px;">음력</button>
-      <button id="mx-cal-leap" class="toggle-btn" onclick="mxSetCal('leap',this)" style="flex:1;font-size:12px;">윤달(음력)</button>
-    </div>
-    <div id="mx-cal-label" style="font-size:10px;color:var(--text-3);margin-bottom:8px;">양력으로 입력하세요</div>
-    <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px;">
-      <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">년</div>
-        <input class="input" type="number" id="mx-year" value="" min="1900" max="2100"></div>
-      <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">월</div>
-        <input class="input" type="number" id="mx-month" value="" min="1" max="12"></div>
-      <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">일</div>
-        <input class="input" type="number" id="mx-day" value="" min="1" max="31"></div>
+    <div class="section-header">STEP 1 — 기본 정보</div>
+    <div class="sub-block">
+      <div class="label">생년월일</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="mx-cal-solar" class="toggle-btn active" onclick="mxSetCal('solar',this)" style="flex:1;font-size:12px;">양력</button>
+        <button id="mx-cal-lunar" class="toggle-btn" onclick="mxSetCal('lunar',this)" style="flex:1;font-size:12px;">음력</button>
+        <button id="mx-cal-leap" class="toggle-btn" onclick="mxSetCal('leap',this)" style="flex:1;font-size:12px;">윤달(음력)</button>
+      </div>
+      <div id="mx-cal-label" style="font-size:10px;color:var(--text-3);margin-bottom:8px;">양력으로 입력하세요</div>
+      <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0;">
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">년</div>
+          <input class="input" type="number" id="mx-year" value="" min="1900" max="2100"></div>
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">월</div>
+          <input class="input" type="number" id="mx-month" value="" min="1" max="12"></div>
+        <div><div style="font-size:10px;color:var(--text-3);margin-bottom:5px;">일</div>
+          <input class="input" type="number" id="mx-day" value="" min="1" max="31"></div>
+      </div>
     </div>
     <div class="label">생시</div>
     <div style="display:flex;gap:6px;margin-bottom:8px;">
@@ -1270,18 +1282,18 @@ body{padding-bottom:64px;}
       <button class="toggle-btn" id="mx-time-mode-unknown" onclick="mxTimeMode('unknown',this)" style="flex:1;font-size:11px;">모름</button>
     </div>
     <div id="mx-shijin-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px;">
-      <button class="toggle-btn" onclick="mxSelectShijin(0,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">자시<br><span style="font-size:8px;opacity:0.6;">23~01시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(1,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">축시<br><span style="font-size:8px;opacity:0.6;">01~03시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(2,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">인시<br><span style="font-size:8px;opacity:0.6;">03~05시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(3,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">묘시<br><span style="font-size:8px;opacity:0.6;">05~07시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(4,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">진시<br><span style="font-size:8px;opacity:0.6;">07~09시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(5,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">사시<br><span style="font-size:8px;opacity:0.6;">09~11시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(6,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">오시<br><span style="font-size:8px;opacity:0.6;">11~13시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(7,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">미시<br><span style="font-size:8px;opacity:0.6;">13~15시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(8,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">신시<br><span style="font-size:8px;opacity:0.6;">15~17시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(9,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">유시<br><span style="font-size:8px;opacity:0.6;">17~19시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(10,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">술시<br><span style="font-size:8px;opacity:0.6;">19~21시</span></button>
-      <button class="toggle-btn" onclick="mxSelectShijin(11,this)" style="padding:6px 2px;font-size:10px;color:#C8C4BC;line-height:1.4;">해시<br><span style="font-size:8px;opacity:0.6;">21~23시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(0,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">자시<br><span style="font-size:8px;opacity:0.6;">23~01시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(1,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">축시<br><span style="font-size:8px;opacity:0.6;">01~03시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(2,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">인시<br><span style="font-size:8px;opacity:0.6;">03~05시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(3,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">묘시<br><span style="font-size:8px;opacity:0.6;">05~07시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(4,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">진시<br><span style="font-size:8px;opacity:0.6;">07~09시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(5,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">사시<br><span style="font-size:8px;opacity:0.6;">09~11시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(6,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">오시<br><span style="font-size:8px;opacity:0.6;">11~13시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(7,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">미시<br><span style="font-size:8px;opacity:0.6;">13~15시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(8,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">신시<br><span style="font-size:8px;opacity:0.6;">15~17시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(9,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">유시<br><span style="font-size:8px;opacity:0.6;">17~19시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(10,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">술시<br><span style="font-size:8px;opacity:0.6;">19~21시</span></button>
+      <button class="toggle-btn" onclick="mxSelectShijin(11,this)" style="padding:6px 2px;font-size:10px;line-height:1.4;">해시<br><span style="font-size:8px;opacity:0.6;">21~23시</span></button>
     </div>
     <div id="mx-direct-picker" style="display:none;margin-bottom:6px;">
       <div style="display:flex;gap:8px;align-items:center;">
@@ -1307,7 +1319,7 @@ body{padding-bottom:64px;}
   <div id="mx-step-2" style="display:none;animation:mxStepFadeIn 0.35s ease;">
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;">STEP 2 — 술법 선택</div>
+      <div class="section-header">STEP 2 — 술법 선택</div>
       <a onclick="mxGoStep(1)" style="font-size:10.5px;color:var(--text-3);text-decoration:underline;cursor:pointer;letter-spacing:0.03em;">사주 수정</a>
     </div>
 
@@ -1352,7 +1364,7 @@ body{padding-bottom:64px;}
 
   <!-- STEP 3: 분석 주제 + 질문 -->
   <div class="card">
-    <div style="font-size:10px;color:var(--gold);letter-spacing:0.15em;margin-bottom:14px;">분석 주제 및 질문</div>
+    <div class="section-header">STEP 3 — 분석 주제 및 질문</div>
     <div class="label">분석 주제</div>
     <div class="toggle-group" id="mix-topic-group" style="margin-bottom:14px;">
       <button class="toggle-btn active" onclick="mixTopic(this,'연애/관계')">연애</button>
