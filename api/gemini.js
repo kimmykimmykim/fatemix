@@ -78,7 +78,7 @@ export default async function handler(req, res) {
           maxOutputTokens: maxTok,
           temperature: 0.8,
           thinkingConfig: {
-            thinkingBudget: 512
+            thinkingBudget: 2048
           }
         }
       })
