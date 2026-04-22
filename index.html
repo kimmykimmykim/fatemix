@@ -520,6 +520,51 @@ body::before{
 .tab-label{font-size:9px;letter-spacing:0.04em;}
 body{padding-bottom:64px;}
 
+/* ═══════════════════════════════════════════════════════════════
+   Phase 4 — 가독성 강제 (망치 모드)
+   기존 미묘한 조정이 모두 실패해 강제 검정 + 굵기로 통일
+   ═══════════════════════════════════════════════════════════════ */
+/* 모든 텍스트 검정 강제 */
+body, body * {
+  color: #000000 !important;
+}
+/* 예외 1: FATEMIX 로고 그라데이션 (background-clip:text 유지) */
+.home-logo, .home-logo * {
+  color: unset !important;
+}
+/* 예외 2: 활성 탭 핑크 */
+.tab-item.active, .tab-item.active * {
+  color: var(--pink) !important;
+}
+/* 예외 3: 버튼 배경 위 흰 텍스트 */
+.primary-btn, .primary-btn *,
+button[style*="background:#d4af37"],
+button[style*="linear-gradient"] {
+  color: #ffffff !important;
+}
+/* 예외 4: 스플래시 화면 (Begin to Touch 흰 텍스트 유지) */
+#screen-splash, #screen-splash * {
+  color: #ffffff !important;
+}
+/* 예외 5: 인풋 플레이스홀더 */
+::placeholder {
+  color: rgba(0,0,0,0.45) !important;
+}
+/* 라벨/제목 굵기 800 강제 */
+h1, h2, h3,
+.label,
+.page-title,
+.section-header {
+  font-weight: 800 !important;
+}
+/* .label 추가 강화 — 17px, 800, 검정, 자간 제거 */
+.label {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: #000000 !important;
+  letter-spacing: 0 !important;
+}
+
 </style>
 </head>
 <body>
