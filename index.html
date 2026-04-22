@@ -16,9 +16,9 @@
   --dark2: rgba(255,255,255,0.55);          /* 메인 카드 글래스 */
   --dark3: rgba(255,255,255,0.38);          /* 중첩 박스 글래스 */
   --dark4: rgba(255,255,255,0.28);          /* 미사용, 일관성 */
-  --text: #2d1b47;                          /* 본문 다크 */
-  --text-2: #6b5b7a;                        /* 보조 회보라 */
-  --text-3: #9a8fab;                        /* 가장 흐린 회보라 */
+  --text: #1a0d2e;                          /* 본문 거의 검정 진보라 */
+  --text-2: #3d2b5a;                        /* 보조 중간 진보라 */
+  --text-3: #5a4a6e;                        /* 라벨/메타, 흐린 용도지만 읽힘 */
   --border: rgba(107,76,154,0.22);          /* 연보라 테두리 */
   --border-2: rgba(107,76,154,0.1);
   --red: #E87070;
@@ -69,12 +69,12 @@ body::before{
 }
 .label{font-size:14px;color:var(--text-2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
 .input{
-  width:100%;background:#1E1E2E;border:0.5px solid rgba(201,168,76,0.3);
-  border-radius:10px;padding:13px 16px;color:#EDE9DF;font-size:16px;
-  font-family:'Gowun Batang','Noto Serif KR',serif;outline:none;transition:border-color 0.2s;
+  width:100%;background:rgba(255,255,255,0.7);border:1px solid rgba(107,76,154,0.3);
+  border-radius:10px;padding:13px 16px;color:var(--text);font-size:16px;
+  font-family:'Gowun Batang','Noto Serif KR',serif;outline:none;transition:border-color 0.2s, background 0.2s;
 }
-.input:focus{border-color:var(--gold);background:#252535;}
-.input::placeholder{color:#6A6580;}
+.input:focus{border:1.5px solid var(--pink);background:rgba(255,255,255,0.85);}
+.input::placeholder{color:var(--text-3);}
 .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
 .primary-btn{
   width:100%;padding:17px;background:linear-gradient(135deg,#ec7fb4 0%,#c85a94 100%);
@@ -102,11 +102,11 @@ body::before{
 /* 탭 선택 */
 .toggle-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .toggle-btn{
-  padding:9px 18px;border-radius:20px;border:0.5px solid rgba(201,168,76,0.25);
-  background:rgba(255,255,255,0.04);color:#C8C4BC;font-size:15px;
+  padding:9px 18px;border-radius:20px;border:1px solid rgba(107,76,154,0.25);
+  background:rgba(255,255,255,0.6);color:var(--text-2);font-size:15px;
   font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
 }
-.toggle-btn.active,.toggle-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
+.toggle-btn.active,.toggle-btn:hover{border-color:var(--purple-deep);color:var(--purple-deep);background:rgba(107,76,154,0.12);}
 
 /* 성별 버튼 */
 .gender-row{display:flex;gap:8px;}
@@ -115,7 +115,7 @@ body::before{
   background:transparent;color:var(--text-2);font-size:15px;
   font-family:'Gowun Batang','Noto Serif KR',serif;cursor:pointer;transition:all 0.2s;
 }
-.gender-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
+.gender-btn.active{border-color:var(--purple-deep);color:var(--purple-deep);background:rgba(107,76,154,0.12);}
 
 /* 
    홈 화면
@@ -498,16 +498,16 @@ body::before{
 #bottom-tab-bar{
   position:fixed;bottom:0;left:0;right:0;z-index:6000;
   display:flex;justify-content:space-around;align-items:center;
-  background:rgba(10,10,18,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border-top:0.5px solid rgba(201,168,76,0.2);
+  background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--border);
   padding:6px 0 env(safe-area-inset-bottom,8px);
   height:56px;
 }
 .tab-item{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;padding:4px 0;transition:color 0.2s;color:var(--text-3);
+  cursor:pointer;padding:4px 0;transition:color 0.2s;color:var(--text-2);
 }
-.tab-item.active{color:var(--gold);}
+.tab-item.active{color:var(--pink);}
 .tab-icon{font-size:20px;line-height:1;margin-bottom:2px;}
 .tab-label{font-size:9px;letter-spacing:0.04em;}
 body{padding-bottom:64px;}
@@ -723,9 +723,9 @@ body{padding-bottom:64px;}
       <div style="font-size:15px;color:var(--text-2);line-height:1.85;margin-bottom:26px;">
         오늘의 운세를 보려면<br><b style="color:var(--gold);">생년월일을 알려주세요</b>
       </div>
-      <button onclick="go('quick')" style="padding:13px 32px;font-size:14px;border-radius:10px;border:1px solid rgba(201,168,76,0.7);background:rgba(201,168,76,0.12);color:var(--gold);cursor:pointer;letter-spacing:0.05em;font-family:inherit;transition:all 0.2s;min-width:240px;"
-        onmouseover="this.style.background='rgba(201,168,76,0.22)';this.style.borderColor='rgba(201,168,76,0.95)';"
-        onmouseout="this.style.background='rgba(201,168,76,0.12)';this.style.borderColor='rgba(201,168,76,0.7)';">
+      <button onclick="go('quick')" style="padding:13px 32px;font-size:14px;border-radius:10px;border:1px solid var(--gold);background:var(--gold);color:var(--text);cursor:pointer;letter-spacing:0.05em;font-family:inherit;font-weight:600;transition:all 0.2s;min-width:240px;box-shadow:0 2px 10px rgba(212,175,55,0.25);"
+        onmouseover="this.style.background='#c39a28';this.style.borderColor='#c39a28';"
+        onmouseout="this.style.background='var(--gold)';this.style.borderColor='var(--gold)';">
         사주 정보 넣기 →
       </button>
     </div>
@@ -811,8 +811,8 @@ body{padding-bottom:64px;}
         <button class="toggle-btn"        id="qk-marital-divorced" onclick="qkSetMarital('divorced',this)">이혼/별거</button>
       </div>
 
-      <div class="label">이름 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(성명학 풀이용, 선택)</span></div>
-      <input class="input" type="text" id="qk-name" placeholder="비워두셔도 됩니다" style="margin-bottom:14px;">
+      <div class="label">이름 <span style="font-size:11px;color:var(--text-3);font-weight:400;">(성명학 보시려면 필수)</span></div>
+      <input class="input" type="text" id="qk-name" placeholder="성명학 보시려면 이름을 넣어주세요" style="margin-bottom:14px;">
 
       <button class="primary-btn" onclick="qkSubmitSaju()" style="width:100%;">✦ 확인하기</button>
       <div style="font-size:11px;color:var(--text-3);line-height:1.65;text-align:center;margin-top:12px;">
@@ -1297,8 +1297,8 @@ body{padding-bottom:64px;}
       <button class="gender-btn" onclick="mxGender('male',this)">남성</button>
       <button class="gender-btn active" onclick="mxGender('female',this)">여성</button>
     </div>
-    <div class="label">이름 <span style="color:var(--text-3);font-size:11px;">(성명학 분석용 · 선택)</span></div>
-    <input class="input" type="text" id="mx-name" placeholder="이름을 입력하세요">
+    <div class="label">이름 <span style="color:var(--text-3);font-size:11px;">(성명학 보시려면 필수)</span></div>
+    <input class="input" type="text" id="mx-name" placeholder="성명학 보시려면 이름을 넣어주세요">
   </div>
   <button class="primary-btn" onclick="mxGoStep(2)" style="margin-bottom:16px;">다음 →</button>
   </div><!-- /mx-step-1 -->
