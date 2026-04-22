@@ -58,7 +58,7 @@ body::before{
 /* 페이지 타이틀 — 오늘의 운세 본문과 동일 폰트 스택(Gowun Dodum) */
 .page-title{
   font-family:'Cinzel','Gowun Batang',serif;
-  font-size:30px;font-weight:600;color:var(--gold);
+  font-size:30px;font-weight:600;color:var(--text-2);
   letter-spacing:0.04em;margin:20px 0 6px;
 }
 .page-subtitle{font-size:16px;color:var(--text-2);letter-spacing:0.04em;font-weight:500;margin-bottom:32px;}
@@ -75,7 +75,7 @@ body::before{
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   box-shadow:0 2px 12px rgba(107,76,154,0.08);
 }
-.label{font-size:15px;color:var(--text-2);letter-spacing:0.02em;font-weight:600;margin-bottom:10px;}
+.label{font-size:16px;color:var(--text-2);letter-spacing:0;font-weight:700;margin-bottom:10px;}
 .input{
   width:100%;background:rgba(255,255,255,0.7);border:1px solid rgba(107,76,154,0.3);
   border-radius:10px;padding:13px 16px;color:var(--text);font-size:16px;
@@ -183,7 +183,7 @@ body::before{
 .mix-banner:hover{background:linear-gradient(135deg,rgba(255,255,255,0.7) 0%,rgba(236,127,180,0.28) 100%);}
 .mix-banner-icon{font-size:32px;flex-shrink:0;}
 .mix-banner-text h3{font-family:'Cinzel','Gowun Batang',serif;font-size:20px;color:var(--gold);font-weight:600;margin-bottom:4px;}
-.mix-banner-text p{font-size:14px;color:var(--text-2);line-height:1.6;}
+.mix-banner-text p{font-size:15px;color:var(--text-2);line-height:1.6;}
 
 /* 
    사주 화면
@@ -235,7 +235,7 @@ body::before{
 }
 .saved-item:hover{border-color:var(--gold);}
 .saved-name{font-size:15px;color:var(--text);}
-.saved-saju{font-size:12px;color:var(--text-3);margin-top:2px;}
+.saved-saju{font-size:13px;color:var(--text-3);margin-top:2px;}
 .saved-del{font-size:13px;color:var(--text-3);padding:3px 8px;cursor:pointer;}
 .saved-del:hover{color:var(--red);}
 
@@ -257,7 +257,7 @@ body::before{
 .tl-row:last-child{border-bottom:none;}
 .tl-yr{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-light);min-width:52px;}
 .tl-kw{font-size:14px;color:var(--gold);margin-bottom:3px;}
-.tl-desc{font-size:14px;color:var(--text-2);line-height:1.7;}
+.tl-desc{font-size:15px;color:var(--text-2);line-height:1.7;}
 
 /* 
    타로 화면
@@ -468,13 +468,13 @@ body::before{
 .oracle-date{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold);font-weight:400;line-height:1.4;}
 .oracle-label{font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:0.22em;font-family:'Cinzel Decorative',serif;margin-bottom:3px;}
 .oracle-iljin-name{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);line-height:1;}
-.oracle-iljin-sub{font-size:12px;color:var(--text-2);margin-top:4px;}
+.oracle-iljin-sub{font-size:13px;color:var(--text-2);margin-top:4px;}
 .oracle-body{display:flex;gap:16px;align-items:flex-start;}
 .oracle-card-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
-.oracle-card-sub{font-size:10px;color:var(--text-3);letter-spacing:0.06em;text-align:center;line-height:1.4;}
+.oracle-card-sub{font-size:12px;color:var(--text-3);letter-spacing:0.04em;text-align:center;line-height:1.4;}
 .oracle-right{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;}
 .oracle-card-title{font-size:14px;font-weight:600;color:var(--gold-light);}
-.oracle-card-key{font-size:12px;color:var(--text-3);line-height:1.5;margin-top:2px;}
+.oracle-card-key{font-size:13px;color:var(--text-3);line-height:1.5;margin-top:2px;}
 .oracle-fortune-box{
   font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);
   line-height:1.9;padding:11px 14px;
@@ -691,7 +691,7 @@ body{padding-bottom:64px;}
       </div>
 
       <!-- 근거 (어떤 로직으로 나왔는지) -->
-      <div id="tf-basis" style="margin-top:14px;padding:10px 14px 0;font-size:11px;color:var(--text-3);text-align:center;border-top:0.5px dashed rgba(201,168,76,0.22);letter-spacing:0.02em;line-height:1.65;"></div>
+      <div id="tf-basis" style="margin-top:14px;padding:10px 14px 0;font-size:12px;color:var(--text-3);text-align:center;border-top:0.5px dashed rgba(201,168,76,0.22);letter-spacing:0.02em;line-height:1.65;"></div>
 
       <!-- 믹스 분석 바로가기 -->
       <div style="text-align:center;margin-top:16px;padding-bottom:4px;">
@@ -709,7 +709,7 @@ body{padding-bottom:64px;}
     <!-- [B] 생년월일 없을 때: 입력 안내 + CTA (간단확인 탭으로 이동) -->
     <div id="tf-empty" style="display:none;padding:40px 24px 36px;text-align:center;">
       <div class="oracle-label" style="margin-bottom:6px;font-size:13px;letter-spacing:0.2em;">✨ TODAY'S ORACLE ✨</div>
-      <div id="tf-empty-date" style="font-size:13px;color:var(--text-2);letter-spacing:0.04em;margin-bottom:22px;"></div>
+      <div id="tf-empty-date" style="font-size:14px;color:var(--text-2);letter-spacing:0.04em;margin-bottom:22px;"></div>
       <div style="height:0.5px;background:rgba(201,168,76,0.22);max-width:240px;margin:0 auto 26px;"></div>
       <div style="font-size:26px;color:rgba(201,168,76,0.55);margin-bottom:16px;line-height:1;letter-spacing:0.4em;">✦</div>
       <div style="font-size:15px;color:var(--text-2);line-height:1.85;margin-bottom:26px;">
@@ -736,7 +736,7 @@ body{padding-bottom:64px;}
   <!-- [A] 사주 입력 전: 안내 + 입력 폼 -->
   <div id="quick-need-birth" style="display:none;">
     <div class="card" style="margin-bottom:14px;border:0.5px solid rgba(201,168,76,0.45);background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(201,168,76,0.02) 100%);">
-      <div style="font-size:13.5px;color:var(--text-2);line-height:1.85;">
+      <div style="font-size:15px;color:var(--text-2);line-height:1.85;">
         <span style="font-size:16px;">✨</span> <b style="color:var(--gold);">생년월일을 입력</b>하시면<br>
         오늘의 타로 + 내 별자리 + 내 사주 운세를<br>
         한 번에 보여드립니다.
@@ -1844,7 +1844,7 @@ function showPremiumLockModal(){
       <div style="font-size:38px;margin-bottom:12px;">👑</div>
       <div style="font-family:'Cinzel Decorative',serif;font-size:13px;color:rgba(201,168,76,0.85);letter-spacing:0.2em;margin-bottom:8px;">PREMIUM</div>
       <div style="font-size:18px;color:var(--gold);margin-bottom:14px;font-family:'Gowun Batang',serif;">프리미엄 전용 기능</div>
-      <div style="font-size:13px;color:var(--text-2);line-height:1.8;margin-bottom:22px;">
+      <div style="font-size:14px;color:var(--text-2);line-height:1.8;margin-bottom:22px;">
         두 사람의 사주를 깊이 분석하는<br>
         <b style="color:var(--gold);">궁합 기능</b>은 프리미엄 회원만<br>
         이용할 수 있어요.
@@ -2202,7 +2202,7 @@ function _qkRenderTarotPicker(){
     stackHtml += `<div class="qk-tdeck-back" style="position:absolute;left:calc(50% - ${w/2}px - ${ox}px);top:${ox}px;width:${w}px;height:${h}px;border-radius:6px;overflow:hidden;border:1px solid rgba(201,168,76,${0.25+i*0.08});box-shadow:0 2px 8px rgba(0,0,0,0.4);z-index:${i+1};">${backSvg}</div>`;
   }
   el.innerHTML = `
-    <div id="qk-tarot-guide" style="font-size:13px;color:var(--text-2);line-height:1.7;text-align:center;margin-bottom:16px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">
+    <div id="qk-tarot-guide" style="font-size:14px;color:var(--text-2);line-height:1.7;text-align:center;margin-bottom:16px;padding:10px 12px;background:rgba(201,168,76,0.04);border-radius:8px;border-left:2px solid rgba(201,168,76,0.4);">
       오늘의 카드를 <b style="color:var(--gold);">한 장</b> 뽑아보세요
     </div>
     <div id="qk-tarot-stage" style="position:relative;width:100%;height:${h+24}px;margin-bottom:14px;">
@@ -8560,7 +8560,7 @@ function calcSukyao(){
       +'</div>'
       +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:24px;color:var(--gold);margin-bottom:4px;">'+su.name+'</div>'
       +'<div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">'+su.hanja+' · '+su.n+'번째 별자리 · '+su.dir+'방 · '+su.element+'</div>'
-      +'<div style="font-size:13px;color:var(--text-2);line-height:1.7;">'+su.meaning+'</div>'
+      +'<div style="font-size:14px;color:var(--text-2);line-height:1.7;">'+su.meaning+'</div>'
       +'</div>';
   }
 
@@ -11355,7 +11355,7 @@ function renderAsRuleBase(data){
     <div style="font-size:15px;color:var(--text);line-height:2.2;word-break:keep-all;margin-bottom:10px;">"${sunManshin.A}"</div>
     <div style="font-size:14px;color:var(--text-2);line-height:2.1;word-break:keep-all;margin-bottom:10px;">${sunManshin.B}</div>
     <div style="padding:10px 13px;background:rgba(201,168,76,0.08);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:13px;color:var(--gold);line-height:1.9;margin-bottom:10px;">💫 ${sunManshin.C}</div>
-    <div style="font-size:13px;color:var(--text-2);line-height:2.0;word-break:keep-all;margin-bottom:8px;padding-top:8px;border-top:0.5px solid var(--border-2);">${sunT.desc||''}</div>
+    <div style="font-size:14px;color:var(--text-2);line-height:2.0;word-break:keep-all;margin-bottom:8px;padding-top:8px;border-top:0.5px solid var(--border-2);">${sunT.desc||''}</div>
     ${sunT.weak?`<div style="font-size:12px;color:#E87070;padding:6px 10px;background:rgba(232,112,112,0.06);border-radius:7px;border:0.5px solid rgba(232,112,112,0.2);">⚠ 주의: ${sunT.weak}</div>`:''}
   </div>`;
 
