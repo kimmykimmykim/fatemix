@@ -614,48 +614,32 @@ body{padding-bottom:64px;}
 <!-- 스플래시 화면 -->
 <div id="screen-splash" onclick="exitSplash()" style="
   position:fixed;inset:0;z-index:9999;cursor:pointer;
-  background:#f0e6f7;display:flex;align-items:center;justify-content:center;
+  background:#f0e6f7 url('/fate-hero.png') center/cover no-repeat;
   overflow:hidden;
   transition:opacity 0.8s ease;">
-  <!-- 블러 backdrop 레이어 -->
+  <!-- 하단 그라데이션 오버레이 (텍스트 가독성) -->
   <div style="
     position:absolute;inset:0;
-    background:url('/fate-hero.png') center/cover no-repeat;
-    filter:blur(30px) saturate(1.1);
-    transform:scale(1.15);
-    opacity:0.85;
+    background:linear-gradient(to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0) 50%,
+      rgba(0,0,0,0.4) 85%,
+      rgba(0,0,0,0.6) 100%);
     pointer-events:none;"></div>
-  <!-- 중앙 전경 히어로 이미지 -->
-  <img src="/fate-hero.png" alt="FateMix" style="
-    position:relative;z-index:1;
-    max-width:min(420px, 85vw);max-height:80vh;
-    width:auto;height:auto;
-    object-fit:contain;
-    border-radius:20px;
-    box-shadow:0 10px 40px rgba(107,76,154,0.45);
-    display:block;">
+  <!-- Begin to Touch 텍스트 (하단 18%, 깜빡임) -->
   <div style="
-    position:absolute;bottom:60px;left:0;right:0;z-index:2;
-    text-align:center;pointer-events:none;">
-    <div style="
-      display:inline-block;
-      padding:10px 28px;
-      background:rgba(45,27,71,0.55);
-      border:0.5px solid rgba(236,127,180,0.65);
-      border-radius:30px;
-      backdrop-filter:blur(6px);">
-      <div style="
-        font-family:'Cinzel Decorative',serif;font-size:12px;
-        color:rgba(255,255,255,0.95);letter-spacing:0.25em;
-        text-transform:uppercase;
-        animation:pulse-text 2s ease-in-out infinite;">
-        ✦ Touch to Begin ✦
-      </div>
-    </div>
+    position:absolute;bottom:18%;left:0;right:0;
+    text-align:center;pointer-events:none;
+    font-family:'Cormorant Garamond',serif;
+    font-size:22px;font-weight:400;font-style:italic;
+    color:#ffffff;letter-spacing:0.1em;
+    text-shadow:0 2px 8px rgba(0,0,0,0.5);
+    animation:splashShimmer 2.5s ease-in-out infinite;">
+    Begin to Touch
   </div>
 </div>
 <style>
-@keyframes pulse-text{0%,100%{opacity:0.5;}50%{opacity:1;}}
+@keyframes splashShimmer{0%,100%{opacity:0.5;}50%{opacity:1;}}
 </style>
 
 <!-- 
