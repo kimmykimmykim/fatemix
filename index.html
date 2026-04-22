@@ -61,9 +61,9 @@ body::before{
   font-size:30px;font-weight:600;color:var(--text-2);
   letter-spacing:0.04em;margin:20px 0 6px;
 }
-.page-subtitle{font-size:16px;color:var(--text-2);letter-spacing:0.04em;font-weight:500;margin-bottom:32px;}
+.page-subtitle{font-size:17px;color:var(--text-2);letter-spacing:0;font-weight:700;margin-bottom:32px;}
 .section-header{
-  font-size:14px;color:var(--purple-deep);letter-spacing:0.06em;font-weight:700;
+  font-size:17px;color:var(--purple-deep);letter-spacing:0.04em;font-weight:700;
   padding:4px 0 4px 10px;border-left:4px solid var(--pink);margin-bottom:14px;
 }
 .sub-block{
@@ -1925,7 +1925,7 @@ function renderMxCats(){
       style="position:relative;display:flex;flex-direction:column;gap:5px;padding:11px 12px;
       background:var(--dark3);border-radius:10px;cursor:${disabled?'not-allowed':'pointer'};
       border:0.5px solid ${borderColor};
-      opacity:${opacityVal};transition:all 0.2s;min-height:78px;">
+      opacity:${opacityVal};transition:all 0.2s;min-height:95px;">
       ${gLocked?`<div style="position:absolute;top:7px;right:9px;display:flex;align-items:center;gap:4px;">
         <span style="font-size:10px;color:#C9A84C;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.45);border-radius:10px;padding:2px 7px;letter-spacing:0.04em;">👑 프리미엄</span>
         <span style="font-size:13px;">🔒</span>
@@ -1936,10 +1936,10 @@ function renderMxCats(){
       </div>`:''}
       <div style="display:flex;align-items:center;gap:8px;">
         <div style="font-size:16px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text-3)'};flex-shrink:0;">${cat.icon}</div>
-        <div style="font-size:13px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text)'};font-weight:500;">${cat.name}</div>
+        <div style="font-size:17px;color:${isGunghap?'#E87070':sel?'var(--gold)':'var(--text)'};font-weight:700;">${cat.name}</div>
         ${(isGunghap&&!gLocked)?'<div style="margin-left:auto;color:#E87070;font-size:10px;letter-spacing:0.05em;">→</div>':(sel?'<div style="margin-left:auto;color:var(--gold);font-size:12px;">✓</div>':'')}
       </div>
-      ${cat.desc?`<div style="font-size:10.5px;color:var(--text-3);line-height:1.55;letter-spacing:0.01em;">${cat.desc}</div>`:''}
+      ${cat.desc?`<div style="font-size:14px;color:var(--text-3);line-height:1.55;letter-spacing:0.01em;">${cat.desc}</div>`:''}
     </div>`;
   });
   grid.innerHTML=html;
