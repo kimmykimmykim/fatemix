@@ -7066,6 +7066,55 @@ function mixTopic(btn,t){
 
 
 // 각 술수 즉석 계산
+// ──────────────────────────────────────────────────
+// Theory-2.5 회귀 테스트 시나리오 (브라우저 콘솔용)
+// 각 케이스에서 console.log의 match 필드 확인
+//
+// 1) A 사주 조회 → B 생일로 믹스
+//    → saju_source_id=A, mix_input_id=B, match=MISMATCH
+//    → 결과는 B 기준으로만 나와야 함 (사주심화 블록이 B 기반)
+//
+// 2) B 사주 조회 → A 생일로 믹스
+//    → saju_source_id=B, mix_input_id=A, match=MISMATCH
+//    → 결과는 A 기준만 (사주심화 A 기반)
+//
+// 3) 사주 뷰 안 거치고 바로 믹스만
+//    → saju_source_id=none, match=mix-only
+//    → 사주심화 정상 주입
+//
+// 4) 같은 사람 사주→믹스 정상 플로우
+//    → match=match
+//    → 사주심화 정상
+//
+// 5) 한국어 출력 강제 확인: 결과 본문에 외래어 토큰 없는지 확인
+// ──────────────────────────────────────────────────
+function mxBuildMixSaju(y, m, d, shijinIdx, isFemale) {
+  if (y==null || m==null || d==null) return null;
+  const SI_TO_HOUR = [23,1,3,5,7,9,11,13,15,17,19,21];
+  const actualHour = SI_TO_HOUR[shijinIdx] ?? 12;
+  const yg = ((y-4)%10+10)%10, yz = ((y-4)%12+12)%12;
+  const days = Math.floor((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000);
+  const dg = ((days%10)+10)%10, dz = ((days%12)+12)%12;
+  const mp_calc = getMP(y, m, d, yg);
+  const hp_calc = getHP(dg, actualHour);
+  const yp = {g:yg, j:yz};
+  const mp = {g:mp_calc.g, j:mp_calc.j};
+  const dp = {g:dg, j:dz};
+  const hp = {g:hp_calc.g, j:hp_calc.j};
+  const 일간오행 = 천간오행[dg];
+  const oh = {목:0,화:0,토:0,금:0,수:0};
+  [yp,mp,dp,hp].forEach(p => {
+    oh[천간오행[p.g]] = (oh[천간오행[p.g]]||0) + 1;
+    oh[지지오행[p.j]] = (oh[지지오행[p.j]]||0) + 1;
+  });
+  const 신강정보 = calcSingang(yp, mp, dp, hp, 일간오행);
+  const 격국정보 = calcGyeokguk(mp, dp);
+  const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
+  const 일주key = 천간[dg] + 지지[dz];
+  const mix_input_id = `${y}-${m}-${d}-${shijinIdx}-${isFemale?'F':'M'}`;
+  return { yp, mp, dp, hp, 일간오행, oh, 신강정보, 격국정보, 정밀용신, 일주key, mix_input_id };
+}
+
 function mxCalcSaju(y,m,d,h){
   try{
     if(sjData && sjData.y===y && sjData.m===m && sjData.d===d){
@@ -7826,20 +7875,31 @@ async function runMixAiAnalysis(){
     runeTxt=`룬: ${mxDrawnRune.n}(${mxDrawnRune.dir}) — ${mxDrawnRune.m}`;
   }
 
+  // Theory-2.5: 믹스 입력 기준 사주 재계산 (전역 sjData 의존 제거)
+  const mixSaju = mxBuildMixSaju(y, m, d, mxShijinIdx, mxGenderVal==='female');
   let 사주심화 = '';
-  if(typeof sjData !== 'undefined' && sjData && sjData.정밀용신 && sjData.신강정보){
-    const py = sjData.정밀용신;
-    const sg = sjData.신강정보;
-    const lines = ['[사주 심화 분석]',
+  if(mixSaju && mixSaju.정밀용신 && mixSaju.신강정보){
+    const py = mixSaju.정밀용신;
+    const sg = mixSaju.신강정보;
+    const lines = [
+      '[사주 심화 분석]',
       `- 선택 종류: ${py.선택종류||'억부'}`,
       `- 주용신: ${py.주용신||py.용신} (신뢰도 ${py.confidence??'?'}%)`,
       `- 보조용신: ${py.보조용신||py.희신}`,
       `- 기신: ${py.기신}`,
       `- 판정세분: ${sg.판정세분||sg.판정}`,
-      `- 조후우선: ${sg.조후우선 ? '예 · ' + (sg.조후우선사유||'') : '아니오'}`];
+      `- 조후우선: ${sg.조후우선 ? '예 · ' + (sg.조후우선사유||'') : '아니오'}`
+    ];
     if(py.위치메모) lines.push(`- 위치 메모: ${py.위치메모}`);
     if(py.선택근거) lines.push(`- 선택 근거: ${py.선택근거}`);
     사주심화 = '\n\n' + lines.join('\n');
+    // Theory-2.5 추적 로그 (개발자 콘솔 확인용)
+    const saju_source_id = (typeof sjData !== 'undefined' && sjData && sjData.y)
+      ? `${sjData.y}-${sjData.m}-${sjData.d}` : 'none';
+    const match = saju_source_id !== 'none'
+      ? (saju_source_id === `${y}-${m}-${d}` ? 'match' : 'MISMATCH')
+      : 'mix-only';
+    console.log(`[Theory-2.5] mix_input_id=${mixSaju.mix_input_id} saju_source_id=${saju_source_id} match=${match}`);
   }
 
   const dataTxt=Object.entries(dataMap)
