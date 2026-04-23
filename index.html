@@ -7112,7 +7112,53 @@ function mxBuildMixSaju(y, m, d, shijinIdx, isFemale) {
   const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
   const 일주key = 천간[dg] + 지지[dz];
   const mix_input_id = `${y}-${m}-${d}-${shijinIdx}-${isFemale?'F':'M'}`;
-  return { yp, mp, dp, hp, 일간오행, oh, 신강정보, 격국정보, 정밀용신, 일주key, mix_input_id };
+
+  // Phase 1-A: 룰DB 해석 조회
+  const 사주팔자배열 = [yp, mp, dp, hp];
+  const 일간문자 = 천간[dg];
+
+  const 일주해석텍스트 = (typeof 일주해석DB !== 'undefined' ? 일주해석DB[일주key] : '') || '';
+
+  const 격국명 = 격국정보.격 && 격국정보.격 !== '잡격' ? 격국정보.격 : '건록격';
+  const coreKey = `${신강정보.판정}_${격국명}`;
+  const 코어나레이티브 = (typeof SJ_NARRATIVE_CORE !== 'undefined'
+    ? (SJ_NARRATIVE_CORE[coreKey] || SJ_NARRATIVE_CORE[`신강_${격국명}`] || SJ_NARRATIVE_CORE['중화_건록격'])
+    : '') || '';
+
+  let 조후나레이티브 = '';
+  if (typeof SJ_NARRATIVE_JOSANG !== 'undefined' && typeof calc조후 === 'function') {
+    try {
+      const 조후정보 = calc조후(mp, oh, 일간오행);
+      const josangKey = `${조후정보.온도}_${조후정보.계절}_${일간오행}`;
+      조후나레이티브 = SJ_NARRATIVE_JOSANG[josangKey]
+        || Object.entries(SJ_NARRATIVE_JOSANG).find(([k,v]) => k.includes(조후정보.계절) && k.includes(일간오행))?.[1]
+        || '';
+    } catch(e) { 조후나레이티브 = ''; }
+  }
+
+  const 용신나레이티브 = (typeof SJ_NARRATIVE_YONGSHIN !== 'undefined'
+    ? (SJ_NARRATIVE_YONGSHIN[정밀용신?.용신] || '')
+    : '') || '';
+
+  const 도메인해석 = (typeof SJ_DOMAIN_DB !== 'undefined'
+    ? (SJ_DOMAIN_DB[coreKey] || SJ_DOMAIN_DB[`신강_${격국명}`] || SJ_DOMAIN_DB['중화_건록격'] || {})
+    : {}) || {};
+
+  let 합충결과 = {합:[], 충:[], 형:[], 파:[], 해:[]};
+  try {
+    if (typeof calcHapChung === 'function') 합충결과 = calcHapChung(사주팔자배열);
+  } catch(e) {}
+
+  let 신살결과 = [];
+  try {
+    if (typeof calcShinsal === 'function') 신살결과 = calcShinsal(사주팔자배열, 일간문자);
+  } catch(e) {}
+
+  return {
+    yp, mp, dp, hp, 일간오행, oh, 신강정보, 격국정보, 정밀용신, 일주key, mix_input_id,
+    일주해석텍스트, 코어나레이티브, 조후나레이티브, 용신나레이티브, 도메인해석,
+    합충결과, 신살결과
+  };
 }
 
 function mxCalcSaju(y,m,d,h){
@@ -7893,6 +7939,64 @@ async function runMixAiAnalysis(){
     if(py.위치메모) lines.push(`- 위치 메모: ${py.위치메모}`);
     if(py.선택근거) lines.push(`- 선택 근거: ${py.선택근거}`);
     사주심화 = '\n\n' + lines.join('\n');
+
+    // Phase 1-A: 룰DB 해석 주입 (AI 환각 방지)
+    const 룰DB블록 = [];
+
+    if(mixSaju.일주해석텍스트){
+      룰DB블록.push('\n[일주 기질 — 룰DB 기반, 이 내용을 벗어나서 해석하지 말 것]');
+      룰DB블록.push(mixSaju.일주해석텍스트);
+    }
+
+    if(mixSaju.코어나레이티브){
+      룰DB블록.push('\n[격국·신강/약 해석 — 룰DB 기반]');
+      룰DB블록.push(mixSaju.코어나레이티브);
+    }
+
+    if(mixSaju.조후나레이티브){
+      룰DB블록.push('\n[조후 해석 — 룰DB 기반]');
+      룰DB블록.push(mixSaju.조후나레이티브);
+    }
+
+    if(mixSaju.용신나레이티브){
+      룰DB블록.push('\n[용신 해석 — 룰DB 기반]');
+      룰DB블록.push(mixSaju.용신나레이티브);
+    }
+
+    if(mixSaju.도메인해석 && Object.keys(mixSaju.도메인해석).length){
+      룰DB블록.push('\n[주제별 해석 — 룰DB 기반, 출력 시 이 내용을 풀어써라]');
+      if(mixSaju.도메인해석.연애) 룰DB블록.push(`연애/관계: ${mixSaju.도메인해석.연애}`);
+      if(mixSaju.도메인해석.직업) 룰DB블록.push(`직업: ${mixSaju.도메인해석.직업}`);
+      if(mixSaju.도메인해석.재물) 룰DB블록.push(`재물: ${mixSaju.도메인해석.재물}`);
+      if(mixSaju.도메인해석.건강) 룰DB블록.push(`건강: ${mixSaju.도메인해석.건강}`);
+    }
+
+    const 합충항목 = [];
+    if(mixSaju.합충결과){
+      if(mixSaju.합충결과.합?.length) 합충항목.push(`합: ${mixSaju.합충결과.합.join(' / ')}`);
+      if(mixSaju.합충결과.충?.length) 합충항목.push(`충: ${mixSaju.합충결과.충.join(' / ')}`);
+      if(mixSaju.합충결과.형?.length) 합충항목.push(`형: ${mixSaju.합충결과.형.join(' / ')}`);
+      if(mixSaju.합충결과.파?.length) 합충항목.push(`파: ${mixSaju.합충결과.파.join(' / ')}`);
+      if(mixSaju.합충결과.해?.length) 합충항목.push(`해: ${mixSaju.합충결과.해.join(' / ')}`);
+    }
+    if(합충항목.length){
+      룰DB블록.push('\n[합·충·형·파·해 — 계산 결과, 없는 것은 언급 금지]');
+      룰DB블록.push(합충항목.join('\n'));
+    } else {
+      룰DB블록.push('\n[합·충·형·파·해 — 해당 사항 없음. 억지로 언급하지 말 것]');
+    }
+
+    if(mixSaju.신살결과?.length){
+      룰DB블록.push('\n[신살 — 계산 결과, 나오지 않은 신살은 언급 금지]');
+      mixSaju.신살결과.forEach(s => 룰DB블록.push(`${s.신살}: ${s.설명}`));
+    } else {
+      룰DB블록.push('\n[신살 — 해당 사항 없음. 도화/역마/백호 등 억지 언급 금지]');
+    }
+
+    if(룰DB블록.length){
+      사주심화 += '\n' + 룰DB블록.join('\n');
+    }
+
     // Theory-2.5 추적 로그 (개발자 콘솔 확인용)
     const saju_source_id = (typeof sjData !== 'undefined' && sjData && sjData.y)
       ? `${sjData.y}-${sjData.m}-${sjData.d}` : 'none';
