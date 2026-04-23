@@ -7826,11 +7826,28 @@ async function runMixAiAnalysis(){
     runeTxt=`룬: ${mxDrawnRune.n}(${mxDrawnRune.dir}) — ${mxDrawnRune.m}`;
   }
 
+  let 사주심화 = '';
+  if(typeof sjData !== 'undefined' && sjData && sjData.정밀용신 && sjData.신강정보){
+    const py = sjData.정밀용신;
+    const sg = sjData.신강정보;
+    const lines = ['[사주 심화 분석]',
+      `- 선택 종류: ${py.선택종류||'억부'}`,
+      `- 주용신: ${py.주용신||py.용신} (신뢰도 ${py.confidence??'?'}%)`,
+      `- 보조용신: ${py.보조용신||py.희신}`,
+      `- 기신: ${py.기신}`,
+      `- 판정세분: ${sg.판정세분||sg.판정}`,
+      `- 조후우선: ${sg.조후우선 ? '예 · ' + (sg.조후우선사유||'') : '아니오'}`];
+    if(py.위치메모) lines.push(`- 위치 메모: ${py.위치메모}`);
+    if(py.선택근거) lines.push(`- 선택 근거: ${py.선택근거}`);
+    사주심화 = '\n\n' + lines.join('\n');
+  }
+
   const dataTxt=Object.entries(dataMap)
     .filter(([k])=>k!=='타로'&&k!=='룬')
     .map(([k,v])=>'['+k+']\n'+v).join('\n\n')
     +'\n\n[타로]\n'+tarotTxt
-    +'\n\n[룬]\n'+runeTxt;
+    +'\n\n[룬]\n'+runeTxt
+    +사주심화;
 
   // mxSelected 에 'tarot'/'rune' 이 이미 포함되어 있으므로 따로 더하지 않음 (이중 카운트 방지)
   const selCount = mxSelected.length;
