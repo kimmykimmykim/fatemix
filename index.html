@@ -3433,6 +3433,259 @@ function calcYongshin(일간오행,신강판정,oh,격국정보=null){
   return{용신,희신,기신,summary,설명:summary};
 }
 
+// ============================================================
+// Theory-1: 용신 5종 분기 엔진 (전왕/조후/통관/격국/억부)
+// ============================================================
+
+function calcOhaengDistribution(pillars, monthIdx){
+  const total={목:0,화:0,토:0,금:0,수:0};
+  pillars.forEach((p,idx)=>{
+    const mw = idx===monthIdx ? 1.5 : 1.0;
+    total[천간오행[p.g]] += 1.0 * mw;
+    const hidden = 지장간맵[지지[p.j]] || [];
+    const hw = [1.0, 0.5, 0.3];
+    hidden.forEach((stem,hi)=>{
+      const si = 천간.indexOf(stem);
+      if(si<0) return;
+      total[천간오행[si]] += (hw[hi]||0.3) * mw;
+    });
+  });
+  const sum = Object.values(total).reduce((a,b)=>a+b,0) || 1;
+  const pct = {};
+  Object.keys(total).forEach(k => pct[k] = +(total[k]/sum*100).toFixed(1));
+  return pct;
+}
+
+function calcWolRyeong(monthBranchChar, 일간오행){
+  const ws = 왕상표[monthBranchChar] || [];
+  if(ws[0] === 일간오행) return 100;
+  if(ws[1] === 일간오행) return 70;
+  const 월지El = 지지오행[지지.indexOf(monthBranchChar)];
+  if(getDrainElement(일간오행) === 월지El) return 40;
+  if(getControlMeElement(일간오행) === 월지El) return 15;
+  return 25;
+}
+
+function calcTonggeun(targetEl, pillars){
+  let score=0;
+  pillars.forEach((p,idx)=>{
+    const hidden = 지장간맵[지지[p.j]] || [];
+    const baseW = idx===1 ? 1.5 : (idx===2 ? 1.2 : 1.0);
+    hidden.forEach((stem,hi)=>{
+      const si = 천간.indexOf(stem);
+      if(si<0) return;
+      const el = 천간오행[si];
+      const pw = [30, 15, 8][hi] || 5;
+      if(el === targetEl) score += pw * baseW;
+      else if(el === getGenerateElement(targetEl)) score += pw * baseW * 0.5;
+    });
+  });
+  return Math.min(100, Math.round(score));
+}
+
+function calcTuchul(targetEl, pillars){
+  let n=0;
+  pillars.forEach(p=>{ if(천간오행[p.g] === targetEl) n += 1; });
+  return Math.min(100, n * 35);
+}
+
+function calcHanYeol(pillars, monthBranchChar, oh){
+  let t = 0;
+  if(['사','오','미'].includes(monthBranchChar)) t += 30;
+  if(['해','자','축'].includes(monthBranchChar)) t -= 30;
+  pillars.forEach(p=>{
+    const s = 천간[p.g];
+    if(s==='병'||s==='정') t += 10;
+    if(s==='임'||s==='계') t -= 10;
+  });
+  t += ((oh['화']||0) - (oh['수']||0)) * 5;
+  return Math.max(-100, Math.min(100, t));
+}
+
+function calcJoSeup(pillars, oh){
+  let m = 0;
+  pillars.forEach(p=>{
+    const br = 지지[p.j];
+    if(br==='미'||br==='술') m += 15;
+    if(br==='진'||br==='축') m -= 15;
+  });
+  m += ((oh['화']||0) - (oh['수']||0)) * 6;
+  return Math.max(-100, Math.min(100, m));
+}
+
+function detectChungHyeong(pillars){
+  const chung = {'자':'오','축':'미','인':'신','묘':'유','진':'술','사':'해','오':'자','미':'축','신':'인','유':'묘','술':'진','해':'사'};
+  const flags = [];
+  const bs = pillars.map(p=>지지[p.j]);
+  for(let i=0;i<bs.length-1;i++){
+    for(let j=i+1;j<bs.length;j++){
+      if(chung[bs[i]] === bs[j]) flags.push(`${bs[i]}-${bs[j]} 충`);
+    }
+  }
+  return flags;
+}
+
+function scoreJeonWang(dist){
+  const top = Object.entries(dist).sort((a,b)=>b[1]-a[1])[0];
+  const dominantEl = top[0], ratio = top[1];
+  const 반대 = getControlMeElement(dominantEl);
+  const 반대량 = dist[반대] || 0;
+  let score = 0;
+  if(ratio >= 70 && 반대량 < 20) score = 90;
+  else if(ratio >= 60 && 반대량 < 25) score = 65;
+  else if(ratio >= 50) score = 30;
+  return {score, dominantEl, ratio, 반대량};
+}
+
+function scoreJoHu(hanYeol, joSeup){
+  const h = Math.abs(hanYeol), j = Math.abs(joSeup);
+  const urgency = Math.max(h, j);
+  const type = h >= j ? (hanYeol>=0?'열':'한') : (joSeup>=0?'조':'습');
+  const 보완 = { '열':'수', '한':'화', '조':'수', '습':'화' }[type];
+  return {score: urgency, type, 보완};
+}
+
+function scoreTongGwan(dist, pillars){
+  const els = ['목','화','토','금','수'];
+  let mp = {a:null, b:null, val:0};
+  els.forEach(a=>{
+    const b = 극나관계[a];
+    if(!b) return;
+    const v = Math.min(dist[a]||0, dist[b]||0);
+    if(v > mp.val) mp = {a, b, val:v};
+  });
+  let score = mp.val * 2;
+  const ch = detectChungHyeong(pillars);
+  if(ch.length > 0) score += 15;
+  const 통관오행 = mp.a ? 상생관계[mp.b] : null;
+  return {score: Math.min(100, Math.round(score)), 격돌쌍: mp, 통관오행, 충형파: ch};
+}
+
+function scoreGyeokGuk(격국정보, mp){
+  if(!격국정보 || 격국정보.격 === '잡격') return {score: 30, 파격: 0};
+  const hidden = 지장간맵[지지[mp.j]] || [];
+  const 월간Stem = 천간[mp.g];
+  const 투출 = hidden.includes(월간Stem);
+  let score = 투출 ? 70 : 45;
+  let 파격 = 0;
+  if(격국정보.월간십신 && 격국정보.월지십신 && 격국정보.월간십신 !== 격국정보.월지십신){
+    const pair = [격국정보.월간십신, 격국정보.월지십신].sort().join('+');
+    if(pair==='정관+편관' || pair==='정재+편재' || pair==='정인+편인') 파격 += 20;
+  }
+  score -= 파격;
+  return {score: Math.max(0, Math.min(100, score)), 파격};
+}
+
+function scoreEokBu(신강정보){
+  if(!신강정보) return 40;
+  if(신강정보.판정 === '중화') return 40;
+  const net = Math.abs(신강정보.net || 0);
+  return Math.min(100, Math.round(50 + net * 6));
+}
+
+function selectYongshin(scores, helpers){
+  if(scores.전왕.score >= 80){
+    const el = scores.전왕.dominantEl;
+    return {선택종류:'전왕', 주용신:el, 보조용신:getGenerateElement(el), 기신:getControlMeElement(el),
+      선택근거:`전왕 점수 ${scores.전왕.score} (${el} ${scores.전왕.ratio}%, 반대 ${scores.전왕.반대량}%)로 확정 / 조후·억부는 단일 오행 쏠림에 무력`};
+  }
+  if(scores.전왕.score >= 60 && scores.전왕.반대량 < 20){
+    const el = scores.전왕.dominantEl;
+    return {선택종류:'전왕', 주용신:el, 보조용신:getGenerateElement(el), 기신:getControlMeElement(el), _lowConf:true,
+      선택근거:`전왕 후보 ${scores.전왕.score} (${el} ${scores.전왕.ratio}%)로 임계 60 초과하나 확정 미달 / 신뢰도 감산 적용`};
+  }
+  if(scores.조후.score >= 60){
+    const 보 = scores.조후.보완;
+    return {선택종류:'조후', 주용신:보, 보조용신:getGenerateElement(보), 기신:극나관계[보],
+      선택근거:`조후 긴급도 ${scores.조후.score}로 임계값 60 초과(${scores.조후.type}) / 억부 ${scores.억부.score}는 후순위`};
+  }
+  if(scores.통관.score >= 65 && scores.통관.통관오행){
+    const t = scores.통관.통관오행;
+    return {선택종류:'통관', 주용신:t, 보조용신:getGenerateElement(t), 기신:scores.통관.격돌쌍.a,
+      선택근거:`통관 점수 ${scores.통관.score} (${scores.통관.격돌쌍.a}-${scores.통관.격돌쌍.b} 격돌) / 억부 ${scores.억부.score}는 격돌 미해결로 후순위`};
+  }
+  if(scores.격국.score >= 65 && scores.격국.파격 < 20){
+    const 억부 = helpers.억부용신;
+    return {선택종류:'격국', 주용신:억부.용신, 보조용신:억부.희신, 기신:억부.기신,
+      선택근거:`격국 선명도 ${scores.격국.score} (파격 ${scores.격국.파격})로 임계 65 초과 / 억부와 정합되는 ${억부.용신} 채택`};
+  }
+  const 억부 = helpers.억부용신;
+  const skipReason = scores.격국.파격 >= 20
+    ? `격국 파격 ${scores.격국.파격}로 임계 초과`
+    : scores.전왕.score > 0
+      ? `전왕 점수 ${scores.전왕.score}로 미달`
+      : `다른 종류 모두 임계 미달`;
+  return {선택종류:'억부', 주용신:억부.용신, 보조용신:억부.희신, 기신:억부.기신,
+    선택근거:`${skipReason} / 억부 적합도 ${scores.억부.score}로 폴백`};
+}
+
+function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp){
+  const pillars = [yp, mp, dp, hp];
+  const 월지문자 = 지지[mp.j], 일지문자 = 지지[dp.j], 시지문자 = 지지[hp.j];
+  const dist = calcOhaengDistribution(pillars, 1);
+  const 월령 = calcWolRyeong(월지문자, 일간오행);
+  const 통근 = calcTonggeun(일간오행, pillars);
+  const 한열 = calcHanYeol(pillars, 월지문자, oh);
+  const 조습 = calcJoSeup(pillars, oh);
+  const 충형파 = detectChungHyeong(pillars);
+  const scores = {
+    전왕: scoreJeonWang(dist),
+    조후: scoreJoHu(한열, 조습),
+    통관: scoreTongGwan(dist, pillars),
+    격국: scoreGyeokGuk(격국정보, mp),
+    억부: {score: scoreEokBu(신강정보)}
+  };
+  const 억부용신 = calcYongshin(일간오행, 신강정보.판정, oh, 격국정보);
+  const sel = selectYongshin(scores, {억부용신});
+  const 투출 = calcTuchul(sel.주용신, pillars);
+  const 선택점수 = scores[sel.선택종류].score;
+  const flags = [];
+  if(sel.선택종류 !== '조후' && scores.조후.score >= 60 && scores.조후.보완 !== sel.주용신){
+    flags.push('조후-억부 충돌');
+  }
+  if(sel.선택종류 === '격국' && scores.격국.파격 > 20){
+    flags.push('격국-용신 파격');
+  }
+  if(scores.전왕.score >= 60 && scores.전왕.score < 80){
+    flags.push('전왕 후보 미확정');
+  }
+  let confidence = Math.round(
+    선택점수 * 0.6
+    + 월령 * 0.2
+    + Math.min(100, (통근 + 투출) / 2) * 0.2
+    - flags.length * 10
+  );
+  if(sel._lowConf) confidence = Math.max(0, confidence - 15);
+  confidence = Math.max(0, Math.min(100, confidence));
+  const 위치메모Arr = [];
+  if(지지오행[지지.indexOf(일지문자)] === sel.주용신) 위치메모Arr.push('배우자궁에 용신');
+  if(지지오행[지지.indexOf(시지문자)] === sel.주용신) 위치메모Arr.push('말년 용신');
+  if(지지오행[지지.indexOf(일지문자)] === sel.기신) 위치메모Arr.push('배우자궁 난제');
+  if(지지오행[지지.indexOf(시지문자)] === sel.기신) 위치메모Arr.push('결실 방해');
+  const 위치메모 = 위치메모Arr.length ? 위치메모Arr.join(', ') : null;
+  let 보조용신 = sel.보조용신;
+  if(보조용신 === sel.주용신){
+    const 후보 = ['목','화','토','금','수'].filter(e=>e!==sel.주용신 && e!==sel.기신);
+    보조용신 = 후보[0] || 보조용신;
+  }
+  const summary = `${sel.선택종류} 기준으로 ${sel.주용신}을 주용신, ${보조용신}을 보조용신으로 잡습니다. (신뢰도 ${confidence}%)`;
+  return {
+    용신: sel.주용신, 희신: 보조용신, 기신: sel.기신, summary, 설명: summary,
+    선택종류: sel.선택종류, 주용신: sel.주용신, 보조용신, confidence,
+    conflict_flags: flags, 위치메모, 선택근거: sel.선택근거,
+    점수상세: {전왕: scores.전왕.score, 조후: scores.조후.score, 통관: scores.통관.score, 격국: scores.격국.score, 억부: scores.억부.score},
+    분포: dist, 한열점수: 한열, 조습점수: 조습, 통근, 월령, 투출, 충형파
+  };
+}
+
+// 샘플 검증 (브라우저 콘솔용, 프로덕션 실행 안 됨):
+// 여름 극열: buildYongshinResult('수', {판정:'신약',net:-3}, {목:1,화:4,토:2,금:0,수:1}, {격:'편재격'}, {g:9,j:1}, {g:2,j:6}, {g:9,j:3}, {g:3,j:5})
+//   → 선택종류='조후', 주용신='수' 기대
+// 겨울 극한: buildYongshinResult('화', {판정:'신약',net:-3}, {목:1,화:1,토:1,금:1,수:4}, {격:'정관격'}, {g:0,j:0}, {g:8,j:0}, {g:2,j:6}, {g:5,j:11})
+//   → 선택종류='조후', 주용신='화' 기대
+// 목 전왕: buildYongshinResult('목', {판정:'신강',net:6}, {목:6,화:0,토:0,금:0,수:2}, {격:'비견격'}, {g:0,j:2}, {g:1,j:3}, {g:0,j:2}, {g:1,j:11})
+//   → 선택종류='전왕', 주용신='목' 기대
+
 function getSajuCoreSummary(data){
   if(!data) return '';
   const{dp,mp,일간오행,신강정보,격국정보,정밀용신,조후정보}=data;
@@ -3441,7 +3694,17 @@ function getSajuCoreSummary(data){
   return [
     `${일간문자}(${일간오행||''}) 일간이 ${월지문자}월에 태어나 ${신강정보.판정} 쪽으로 기울었습니다.`,
     `핵심 격은 ${격국정보.격}으로, ${격국정보.설명||''}`,
-    `용신은 ${정밀용신.용신}, 희신은 ${정밀용신.희신}, 기신은 ${정밀용신.기신}으로 잡습니다.`,
+    [
+      '[용신 분석]',
+      `- 선택 종류: ${정밀용신.선택종류||'억부'}`,
+      `- 주용신: ${정밀용신.주용신||정밀용신.용신} (신뢰도 ${정밀용신.confidence??'?'}%)`,
+      `- 보조용신: ${정밀용신.보조용신||정밀용신.희신}`,
+      `- 기신: ${정밀용신.기신}`,
+      ...(정밀용신.위치메모 ? [`- 위치 메모: ${정밀용신.위치메모}`] : []),
+      `- 충돌 플래그: ${(정밀용신.conflict_flags||[]).length ? 정밀용신.conflict_flags.join(', ') : '없음'}`,
+      ...(정밀용신.선택근거 ? [`- 선택 근거: ${정밀용신.선택근거}`] : []),
+      `- 해설: ${정밀용신.summary||정밀용신.설명||''}`
+    ].join('\n'),
     `조후상으로는 ${조후정보?.조후필요||'균형'} 쪽을 특히 살펴야 합니다.`
   ].join(' ');
 }
@@ -3740,7 +4003,7 @@ function calcSaju(){
   const 일간오행 = 천간오행[dp.g];
   const 신강정보 = calcSingang(yp, mp, dp, hp, 일간오행);
   const 격국정보 = calcGyeokguk(mp, dp);
-  const 정밀용신 = calcYongshin(일간오행, 신강정보.판정, oh, 격국정보);
+  const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
   const 조후정보 = calc조후(mp, oh, 일간오행);
   const 일주key = 천간[dp.g]+지지[dp.j];
   const 일주텍스트 = 일주해석DB[일주key] || '';
