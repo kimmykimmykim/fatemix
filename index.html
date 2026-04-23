@@ -3362,20 +3362,66 @@ function calcSingang(yp,mp,dp,hp,일간오행){
   const root=calcRootScore(일간오행,dp,pillars);
   const supportTotal=visible.support+hidden.support+root;
   const drainTotal=visible.drain+hidden.drain;
-  const net=+(supportTotal-drainTotal).toFixed(2);
-  let 판정='중화';
-  if(net>=2.8)판정='신강';
-  else if(net<=-2.8)판정='신약';
+  const baseNet = supportTotal - drainTotal;
   const 득령=(왕상표[월지문자]||[]).includes(일간오행);
   const 득지=check득지(일간오행,지지[dp.j]);
   const 득세점수=Math.max(0,Math.min(30,Math.round((visible.support+hidden.support)*4)));
+  let 보정 = 0;
+  if (득령) 보정 += 1.5;
+  if (득지) 보정 += 1.0;
+  보정 += (득세점수 - 15) * 0.05;
+  보정 = Math.max(-2.5, Math.min(2.5, 보정));
+  const net = +((baseNet + 보정).toFixed(2));
+  let 판정세분='중화';
+  if(net >= 6) 판정세분='극신강';
+  else if(net >= 2.8) 판정세분='신강';
+  else if(net <= -6) 판정세분='극신약';
+  else if(net <= -2.8) 판정세분='신약';
+  let 판정='중화';
+  if(판정세분==='극신강'||판정세분==='신강') 판정='신강';
+  else if(판정세분==='극신약'||판정세분==='신약') 판정='신약';
+  let 조후우선 = false, 조후우선사유 = '';
+  const 극열월 = ['사','오','미'], 극한월 = ['해','자','축'];
+  const dist = {목:0, 화:0, 토:0, 금:0, 수:0};
+  pillars.forEach(p => {
+    dist[천간오행[p.g]] += 1;
+    dist[지지오행[p.j]] += 1;
+  });
+  if(극열월.includes(월지문자) && dist.수 < 2.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 출생 + 수 기운 ${dist.수} (<2.0) — 수(水) 보완 긴급`;
+  } else if(극한월.includes(월지문자) && dist.화 < 2.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 출생 + 화 기운 ${dist.화} (<2.0) — 화(火) 보완 긴급`;
+  }
+  else if(극열월.includes(월지문자) && (일간오행==='화'||일간오행==='토') && dist.수 < 3.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 극열 + ${일간오행} 일간 — 수 보완 필요`;
+  } else if(극한월.includes(월지문자) && (일간오행==='수'||일간오행==='금') && dist.화 < 3.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 극한 + ${일간오행} 일간 — 화 보완 필요`;
+  }
   const 총점=Math.max(0,Math.min(100,Math.round(50+net*8)));
   let comment='';
   if(판정==='신강')comment=`${일간오행} 기운의 자립성이 강합니다. 비겁·인성의 도움과 뿌리가 살아 있어 자기주도성이 강한 편입니다.`;
   else if(판정==='신약')comment=`${일간오행} 기운이 환경 압박을 더 크게 받습니다. 재성·관성·식상의 소모보다 인성·비겁 보강이 우선입니다.`;
   else comment=`${일간오행} 기운이 과강하지도 과약하지도 않은 편입니다. 운에서 어떤 오행이 들어오느냐에 따라 체감 편차가 큽니다.`;
-  return{판정,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,root:+root.toFixed(2),comment};
+  const 근거조각 = [
+    `net ${net}`,
+    득령 ? '득령✓' : '득령✗',
+    득지 ? '득지✓' : '득지✗',
+    `득세 ${득세점수}/30`,
+    조후우선 ? `조후우선(${조후우선사유})` : null
+  ].filter(Boolean).join(' · ');
+  comment += ` [근거: ${근거조각}]`;
+  return{판정,판정세분,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,보정:+보정.toFixed(2),root:+root.toFixed(2),조후우선,조후우선사유,comment};
 }
+
+// 샘플 판정 예상 (브라우저 콘솔 검증용):
+// net +7, 득령✓, 득지✓ → 판정:'신강', 판정세분:'극신강'
+// net -7, 득령✗, 득지✗, 월지=오, 일간=화 → 판정:'신약', 판정세분:'극신약', 조후우선:true(보완 수)
+// net +1.5, 득령✗, 득지✓ → 판정:'중화', 판정세분:'중화'
+// net -3, 득령✗, 월지=자, 일간=수 → 판정:'신약', 판정세분:'신약', 조후우선:true(보완 화)
 
 function calcTenGod(dayEl,dayYY,targetEl,targetYY){
   const 생나=getGenerateElement(dayEl),내가생=getDrainElement(dayEl),내가극=getWealthElement(dayEl),나를극=getControlMeElement(dayEl);
@@ -3537,12 +3583,17 @@ function scoreJeonWang(dist){
   return {score, dominantEl, ratio, 반대량};
 }
 
-function scoreJoHu(hanYeol, joSeup){
+function scoreJoHu(hanYeol, joSeup, 신강정보=null){
   const h = Math.abs(hanYeol), j = Math.abs(joSeup);
-  const urgency = Math.max(h, j);
+  let urgency = Math.max(h, j);
   const type = h >= j ? (hanYeol>=0?'열':'한') : (joSeup>=0?'조':'습');
   const 보완 = { '열':'수', '한':'화', '조':'수', '습':'화' }[type];
-  return {score: urgency, type, 보완};
+  let 조후우선부스트 = false;
+  if(신강정보?.조후우선){
+    urgency = Math.min(100, urgency + 20);
+    조후우선부스트 = true;
+  }
+  return {score: urgency, type, 보완, 조후우선부스트};
 }
 
 function scoreTongGwan(dist, pillars){
@@ -3596,8 +3647,9 @@ function selectYongshin(scores, helpers){
   }
   if(scores.조후.score >= 60){
     const 보 = scores.조후.보완;
+    const boost = scores.조후.조후우선부스트 ? ` (조후우선 +20 가중 적용)` : '';
     return {선택종류:'조후', 주용신:보, 보조용신:getGenerateElement(보), 기신:극나관계[보],
-      선택근거:`조후 긴급도 ${scores.조후.score}로 임계값 60 초과(${scores.조후.type}) / 억부 ${scores.억부.score}는 후순위`};
+      선택근거:`조후 긴급도 ${scores.조후.score}${boost}로 임계값 60 초과(${scores.조후.type}) / 억부 ${scores.억부.score}는 후순위`};
   }
   if(scores.통관.score >= 65 && scores.통관.통관오행){
     const t = scores.통관.통관오행;
@@ -3630,7 +3682,7 @@ function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, m
   const 충형파 = detectChungHyeong(pillars);
   const scores = {
     전왕: scoreJeonWang(dist),
-    조후: scoreJoHu(한열, 조습),
+    조후: scoreJoHu(한열, 조습, 신강정보),
     통관: scoreTongGwan(dist, pillars),
     격국: scoreGyeokGuk(격국정보, mp),
     억부: {score: scoreEokBu(신강정보)}
