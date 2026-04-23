@@ -3362,20 +3362,66 @@ function calcSingang(yp,mp,dp,hp,일간오행){
   const root=calcRootScore(일간오행,dp,pillars);
   const supportTotal=visible.support+hidden.support+root;
   const drainTotal=visible.drain+hidden.drain;
-  const net=+(supportTotal-drainTotal).toFixed(2);
-  let 판정='중화';
-  if(net>=2.8)판정='신강';
-  else if(net<=-2.8)판정='신약';
+  const baseNet = supportTotal - drainTotal;
   const 득령=(왕상표[월지문자]||[]).includes(일간오행);
   const 득지=check득지(일간오행,지지[dp.j]);
   const 득세점수=Math.max(0,Math.min(30,Math.round((visible.support+hidden.support)*4)));
+  let 보정 = 0;
+  if (득령) 보정 += 1.5;
+  if (득지) 보정 += 1.0;
+  보정 += (득세점수 - 15) * 0.05;
+  보정 = Math.max(-2.5, Math.min(2.5, 보정));
+  const net = +((baseNet + 보정).toFixed(2));
+  let 판정세분='중화';
+  if(net >= 6) 판정세분='극신강';
+  else if(net >= 2.8) 판정세분='신강';
+  else if(net <= -6) 판정세분='극신약';
+  else if(net <= -2.8) 판정세분='신약';
+  let 판정='중화';
+  if(판정세분==='극신강'||판정세분==='신강') 판정='신강';
+  else if(판정세분==='극신약'||판정세분==='신약') 판정='신약';
+  let 조후우선 = false, 조후우선사유 = '';
+  const 극열월 = ['사','오','미'], 극한월 = ['해','자','축'];
+  const dist = {목:0, 화:0, 토:0, 금:0, 수:0};
+  pillars.forEach(p => {
+    dist[천간오행[p.g]] += 1;
+    dist[지지오행[p.j]] += 1;
+  });
+  if(극열월.includes(월지문자) && dist.수 < 2.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 출생 + 수 기운 ${dist.수} (<2.0) — 수(水) 보완 긴급`;
+  } else if(극한월.includes(월지문자) && dist.화 < 2.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 출생 + 화 기운 ${dist.화} (<2.0) — 화(火) 보완 긴급`;
+  }
+  else if(극열월.includes(월지문자) && (일간오행==='화'||일간오행==='토') && dist.수 < 3.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 극열 + ${일간오행} 일간 — 수 보완 필요`;
+  } else if(극한월.includes(월지문자) && (일간오행==='수'||일간오행==='금') && dist.화 < 3.0){
+    조후우선 = true;
+    조후우선사유 = `${월지문자}월 극한 + ${일간오행} 일간 — 화 보완 필요`;
+  }
   const 총점=Math.max(0,Math.min(100,Math.round(50+net*8)));
   let comment='';
   if(판정==='신강')comment=`${일간오행} 기운의 자립성이 강합니다. 비겁·인성의 도움과 뿌리가 살아 있어 자기주도성이 강한 편입니다.`;
   else if(판정==='신약')comment=`${일간오행} 기운이 환경 압박을 더 크게 받습니다. 재성·관성·식상의 소모보다 인성·비겁 보강이 우선입니다.`;
   else comment=`${일간오행} 기운이 과강하지도 과약하지도 않은 편입니다. 운에서 어떤 오행이 들어오느냐에 따라 체감 편차가 큽니다.`;
-  return{판정,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,root:+root.toFixed(2),comment};
+  const 근거조각 = [
+    `net ${net}`,
+    득령 ? '득령✓' : '득령✗',
+    득지 ? '득지✓' : '득지✗',
+    `득세 ${득세점수}/30`,
+    조후우선 ? `조후우선(${조후우선사유})` : null
+  ].filter(Boolean).join(' · ');
+  comment += ` [근거: ${근거조각}]`;
+  return{판정,판정세분,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,보정:+보정.toFixed(2),root:+root.toFixed(2),조후우선,조후우선사유,comment};
 }
+
+// 샘플 판정 예상 (브라우저 콘솔 검증용):
+// net +7, 득령✓, 득지✓ → 판정:'신강', 판정세분:'극신강'
+// net -7, 득령✗, 득지✗, 월지=오, 일간=화 → 판정:'신약', 판정세분:'극신약', 조후우선:true(보완 수)
+// net +1.5, 득령✗, 득지✓ → 판정:'중화', 판정세분:'중화'
+// net -3, 득령✗, 월지=자, 일간=수 → 판정:'신약', 판정세분:'신약', 조후우선:true(보완 화)
 
 function calcTenGod(dayEl,dayYY,targetEl,targetYY){
   const 생나=getGenerateElement(dayEl),내가생=getDrainElement(dayEl),내가극=getWealthElement(dayEl),나를극=getControlMeElement(dayEl);
@@ -3433,6 +3479,265 @@ function calcYongshin(일간오행,신강판정,oh,격국정보=null){
   return{용신,희신,기신,summary,설명:summary};
 }
 
+// ============================================================
+// Theory-1: 용신 5종 분기 엔진 (전왕/조후/통관/격국/억부)
+// ============================================================
+
+function calcOhaengDistribution(pillars, monthIdx){
+  const total={목:0,화:0,토:0,금:0,수:0};
+  pillars.forEach((p,idx)=>{
+    const mw = idx===monthIdx ? 1.5 : 1.0;
+    total[천간오행[p.g]] += 1.0 * mw;
+    const hidden = 지장간맵[지지[p.j]] || [];
+    const hw = [1.0, 0.5, 0.3];
+    hidden.forEach((stem,hi)=>{
+      const si = 천간.indexOf(stem);
+      if(si<0) return;
+      total[천간오행[si]] += (hw[hi]||0.3) * mw;
+    });
+  });
+  const sum = Object.values(total).reduce((a,b)=>a+b,0) || 1;
+  const pct = {};
+  Object.keys(total).forEach(k => pct[k] = +(total[k]/sum*100).toFixed(1));
+  return pct;
+}
+
+function calcWolRyeong(monthBranchChar, 일간오행){
+  const ws = 왕상표[monthBranchChar] || [];
+  if(ws[0] === 일간오행) return 100;
+  if(ws[1] === 일간오행) return 70;
+  const 월지El = 지지오행[지지.indexOf(monthBranchChar)];
+  if(getDrainElement(일간오행) === 월지El) return 40;
+  if(getControlMeElement(일간오행) === 월지El) return 15;
+  return 25;
+}
+
+function calcTonggeun(targetEl, pillars){
+  let score=0;
+  pillars.forEach((p,idx)=>{
+    const hidden = 지장간맵[지지[p.j]] || [];
+    const baseW = idx===1 ? 1.5 : (idx===2 ? 1.2 : 1.0);
+    hidden.forEach((stem,hi)=>{
+      const si = 천간.indexOf(stem);
+      if(si<0) return;
+      const el = 천간오행[si];
+      const pw = [30, 15, 8][hi] || 5;
+      if(el === targetEl) score += pw * baseW;
+      else if(el === getGenerateElement(targetEl)) score += pw * baseW * 0.5;
+    });
+  });
+  return Math.min(100, Math.round(score));
+}
+
+function calcTuchul(targetEl, pillars){
+  let n=0;
+  pillars.forEach(p=>{ if(천간오행[p.g] === targetEl) n += 1; });
+  return Math.min(100, n * 35);
+}
+
+function calcHanYeol(pillars, monthBranchChar, oh){
+  let t = 0;
+  if(['사','오','미'].includes(monthBranchChar)) t += 30;
+  if(['해','자','축'].includes(monthBranchChar)) t -= 30;
+  pillars.forEach(p=>{
+    const s = 천간[p.g];
+    if(s==='병'||s==='정') t += 10;
+    if(s==='임'||s==='계') t -= 10;
+  });
+  t += ((oh['화']||0) - (oh['수']||0)) * 5;
+  return Math.max(-100, Math.min(100, t));
+}
+
+function calcJoSeup(pillars, oh){
+  let m = 0;
+  pillars.forEach(p=>{
+    const br = 지지[p.j];
+    if(br==='미'||br==='술') m += 15;
+    if(br==='진'||br==='축') m -= 15;
+  });
+  m += ((oh['화']||0) - (oh['수']||0)) * 6;
+  return Math.max(-100, Math.min(100, m));
+}
+
+function detectChungHyeong(pillars){
+  const chung = {'자':'오','축':'미','인':'신','묘':'유','진':'술','사':'해','오':'자','미':'축','신':'인','유':'묘','술':'진','해':'사'};
+  const flags = [];
+  const bs = pillars.map(p=>지지[p.j]);
+  for(let i=0;i<bs.length-1;i++){
+    for(let j=i+1;j<bs.length;j++){
+      if(chung[bs[i]] === bs[j]) flags.push(`${bs[i]}-${bs[j]} 충`);
+    }
+  }
+  return flags;
+}
+
+function scoreJeonWang(dist){
+  const top = Object.entries(dist).sort((a,b)=>b[1]-a[1])[0];
+  const dominantEl = top[0], ratio = top[1];
+  const 반대 = getControlMeElement(dominantEl);
+  const 반대량 = dist[반대] || 0;
+  let score = 0;
+  if(ratio >= 70 && 반대량 < 20) score = 90;
+  else if(ratio >= 60 && 반대량 < 25) score = 65;
+  else if(ratio >= 50) score = 30;
+  return {score, dominantEl, ratio, 반대량};
+}
+
+function scoreJoHu(hanYeol, joSeup, 신강정보=null){
+  const h = Math.abs(hanYeol), j = Math.abs(joSeup);
+  let urgency = Math.max(h, j);
+  const type = h >= j ? (hanYeol>=0?'열':'한') : (joSeup>=0?'조':'습');
+  const 보완 = { '열':'수', '한':'화', '조':'수', '습':'화' }[type];
+  let 조후우선부스트 = false;
+  if(신강정보?.조후우선){
+    urgency = Math.min(100, urgency + 20);
+    조후우선부스트 = true;
+  }
+  return {score: urgency, type, 보완, 조후우선부스트};
+}
+
+function scoreTongGwan(dist, pillars){
+  const els = ['목','화','토','금','수'];
+  let mp = {a:null, b:null, val:0};
+  els.forEach(a=>{
+    const b = 극나관계[a];
+    if(!b) return;
+    const v = Math.min(dist[a]||0, dist[b]||0);
+    if(v > mp.val) mp = {a, b, val:v};
+  });
+  let score = mp.val * 2;
+  const ch = detectChungHyeong(pillars);
+  if(ch.length > 0) score += 15;
+  const 통관오행 = mp.a ? 상생관계[mp.b] : null;
+  return {score: Math.min(100, Math.round(score)), 격돌쌍: mp, 통관오행, 충형파: ch};
+}
+
+function scoreGyeokGuk(격국정보, mp){
+  if(!격국정보 || 격국정보.격 === '잡격') return {score: 30, 파격: 0};
+  const hidden = 지장간맵[지지[mp.j]] || [];
+  const 월간Stem = 천간[mp.g];
+  const 투출 = hidden.includes(월간Stem);
+  let score = 투출 ? 70 : 45;
+  let 파격 = 0;
+  if(격국정보.월간십신 && 격국정보.월지십신 && 격국정보.월간십신 !== 격국정보.월지십신){
+    const pair = [격국정보.월간십신, 격국정보.월지십신].sort().join('+');
+    if(pair==='정관+편관' || pair==='정재+편재' || pair==='정인+편인') 파격 += 20;
+  }
+  score -= 파격;
+  return {score: Math.max(0, Math.min(100, score)), 파격};
+}
+
+function scoreEokBu(신강정보){
+  if(!신강정보) return 40;
+  if(신강정보.판정 === '중화') return 40;
+  const net = Math.abs(신강정보.net || 0);
+  return Math.min(100, Math.round(50 + net * 6));
+}
+
+function selectYongshin(scores, helpers){
+  if(scores.전왕.score >= 80){
+    const el = scores.전왕.dominantEl;
+    return {선택종류:'전왕', 주용신:el, 보조용신:getGenerateElement(el), 기신:getControlMeElement(el),
+      선택근거:`전왕 점수 ${scores.전왕.score} (${el} ${scores.전왕.ratio}%, 반대 ${scores.전왕.반대량}%)로 확정 / 조후·억부는 단일 오행 쏠림에 무력`};
+  }
+  if(scores.전왕.score >= 60 && scores.전왕.반대량 < 20){
+    const el = scores.전왕.dominantEl;
+    return {선택종류:'전왕', 주용신:el, 보조용신:getGenerateElement(el), 기신:getControlMeElement(el), _lowConf:true,
+      선택근거:`전왕 후보 ${scores.전왕.score} (${el} ${scores.전왕.ratio}%)로 임계 60 초과하나 확정 미달 / 신뢰도 감산 적용`};
+  }
+  if(scores.조후.score >= 60){
+    const 보 = scores.조후.보완;
+    const boost = scores.조후.조후우선부스트 ? ` (조후우선 +20 가중 적용)` : '';
+    return {선택종류:'조후', 주용신:보, 보조용신:getGenerateElement(보), 기신:극나관계[보],
+      선택근거:`조후 긴급도 ${scores.조후.score}${boost}로 임계값 60 초과(${scores.조후.type}) / 억부 ${scores.억부.score}는 후순위`};
+  }
+  if(scores.통관.score >= 65 && scores.통관.통관오행){
+    const t = scores.통관.통관오행;
+    return {선택종류:'통관', 주용신:t, 보조용신:getGenerateElement(t), 기신:scores.통관.격돌쌍.a,
+      선택근거:`통관 점수 ${scores.통관.score} (${scores.통관.격돌쌍.a}-${scores.통관.격돌쌍.b} 격돌) / 억부 ${scores.억부.score}는 격돌 미해결로 후순위`};
+  }
+  if(scores.격국.score >= 65 && scores.격국.파격 < 20){
+    const 억부 = helpers.억부용신;
+    return {선택종류:'격국', 주용신:억부.용신, 보조용신:억부.희신, 기신:억부.기신,
+      선택근거:`격국 선명도 ${scores.격국.score} (파격 ${scores.격국.파격})로 임계 65 초과 / 억부와 정합되는 ${억부.용신} 채택`};
+  }
+  const 억부 = helpers.억부용신;
+  const skipReason = scores.격국.파격 >= 20
+    ? `격국 파격 ${scores.격국.파격}로 임계 초과`
+    : scores.전왕.score > 0
+      ? `전왕 점수 ${scores.전왕.score}로 미달`
+      : `다른 종류 모두 임계 미달`;
+  return {선택종류:'억부', 주용신:억부.용신, 보조용신:억부.희신, 기신:억부.기신,
+    선택근거:`${skipReason} / 억부 적합도 ${scores.억부.score}로 폴백`};
+}
+
+function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp){
+  const pillars = [yp, mp, dp, hp];
+  const 월지문자 = 지지[mp.j], 일지문자 = 지지[dp.j], 시지문자 = 지지[hp.j];
+  const dist = calcOhaengDistribution(pillars, 1);
+  const 월령 = calcWolRyeong(월지문자, 일간오행);
+  const 통근 = calcTonggeun(일간오행, pillars);
+  const 한열 = calcHanYeol(pillars, 월지문자, oh);
+  const 조습 = calcJoSeup(pillars, oh);
+  const 충형파 = detectChungHyeong(pillars);
+  const scores = {
+    전왕: scoreJeonWang(dist),
+    조후: scoreJoHu(한열, 조습, 신강정보),
+    통관: scoreTongGwan(dist, pillars),
+    격국: scoreGyeokGuk(격국정보, mp),
+    억부: {score: scoreEokBu(신강정보)}
+  };
+  const 억부용신 = calcYongshin(일간오행, 신강정보.판정, oh, 격국정보);
+  const sel = selectYongshin(scores, {억부용신});
+  const 투출 = calcTuchul(sel.주용신, pillars);
+  const 선택점수 = scores[sel.선택종류].score;
+  const flags = [];
+  if(sel.선택종류 !== '조후' && scores.조후.score >= 60 && scores.조후.보완 !== sel.주용신){
+    flags.push('조후-억부 충돌');
+  }
+  if(sel.선택종류 === '격국' && scores.격국.파격 > 20){
+    flags.push('격국-용신 파격');
+  }
+  if(scores.전왕.score >= 60 && scores.전왕.score < 80){
+    flags.push('전왕 후보 미확정');
+  }
+  let confidence = Math.round(
+    선택점수 * 0.6
+    + 월령 * 0.2
+    + Math.min(100, (통근 + 투출) / 2) * 0.2
+    - flags.length * 10
+  );
+  if(sel._lowConf) confidence = Math.max(0, confidence - 15);
+  confidence = Math.max(0, Math.min(100, confidence));
+  const 위치메모Arr = [];
+  if(지지오행[지지.indexOf(일지문자)] === sel.주용신) 위치메모Arr.push('배우자궁에 용신');
+  if(지지오행[지지.indexOf(시지문자)] === sel.주용신) 위치메모Arr.push('말년 용신');
+  if(지지오행[지지.indexOf(일지문자)] === sel.기신) 위치메모Arr.push('배우자궁 난제');
+  if(지지오행[지지.indexOf(시지문자)] === sel.기신) 위치메모Arr.push('결실 방해');
+  const 위치메모 = 위치메모Arr.length ? 위치메모Arr.join(', ') : null;
+  let 보조용신 = sel.보조용신;
+  if(보조용신 === sel.주용신){
+    const 후보 = ['목','화','토','금','수'].filter(e=>e!==sel.주용신 && e!==sel.기신);
+    보조용신 = 후보[0] || 보조용신;
+  }
+  const summary = `${sel.선택종류} 기준으로 ${sel.주용신}을 주용신, ${보조용신}을 보조용신으로 잡습니다. (신뢰도 ${confidence}%)`;
+  return {
+    용신: sel.주용신, 희신: 보조용신, 기신: sel.기신, summary, 설명: summary,
+    선택종류: sel.선택종류, 주용신: sel.주용신, 보조용신, confidence,
+    conflict_flags: flags, 위치메모, 선택근거: sel.선택근거,
+    점수상세: {전왕: scores.전왕.score, 조후: scores.조후.score, 통관: scores.통관.score, 격국: scores.격국.score, 억부: scores.억부.score},
+    분포: dist, 한열점수: 한열, 조습점수: 조습, 통근, 월령, 투출, 충형파
+  };
+}
+
+// 샘플 검증 (브라우저 콘솔용, 프로덕션 실행 안 됨):
+// 여름 극열: buildYongshinResult('수', {판정:'신약',net:-3}, {목:1,화:4,토:2,금:0,수:1}, {격:'편재격'}, {g:9,j:1}, {g:2,j:6}, {g:9,j:3}, {g:3,j:5})
+//   → 선택종류='조후', 주용신='수' 기대
+// 겨울 극한: buildYongshinResult('화', {판정:'신약',net:-3}, {목:1,화:1,토:1,금:1,수:4}, {격:'정관격'}, {g:0,j:0}, {g:8,j:0}, {g:2,j:6}, {g:5,j:11})
+//   → 선택종류='조후', 주용신='화' 기대
+// 목 전왕: buildYongshinResult('목', {판정:'신강',net:6}, {목:6,화:0,토:0,금:0,수:2}, {격:'비견격'}, {g:0,j:2}, {g:1,j:3}, {g:0,j:2}, {g:1,j:11})
+//   → 선택종류='전왕', 주용신='목' 기대
+
 function getSajuCoreSummary(data){
   if(!data) return '';
   const{dp,mp,일간오행,신강정보,격국정보,정밀용신,조후정보}=data;
@@ -3441,7 +3746,17 @@ function getSajuCoreSummary(data){
   return [
     `${일간문자}(${일간오행||''}) 일간이 ${월지문자}월에 태어나 ${신강정보.판정} 쪽으로 기울었습니다.`,
     `핵심 격은 ${격국정보.격}으로, ${격국정보.설명||''}`,
-    `용신은 ${정밀용신.용신}, 희신은 ${정밀용신.희신}, 기신은 ${정밀용신.기신}으로 잡습니다.`,
+    [
+      '[용신 분석]',
+      `- 선택 종류: ${정밀용신.선택종류||'억부'}`,
+      `- 주용신: ${정밀용신.주용신||정밀용신.용신} (신뢰도 ${정밀용신.confidence??'?'}%)`,
+      `- 보조용신: ${정밀용신.보조용신||정밀용신.희신}`,
+      `- 기신: ${정밀용신.기신}`,
+      ...(정밀용신.위치메모 ? [`- 위치 메모: ${정밀용신.위치메모}`] : []),
+      `- 충돌 플래그: ${(정밀용신.conflict_flags||[]).length ? 정밀용신.conflict_flags.join(', ') : '없음'}`,
+      ...(정밀용신.선택근거 ? [`- 선택 근거: ${정밀용신.선택근거}`] : []),
+      `- 해설: ${정밀용신.summary||정밀용신.설명||''}`
+    ].join('\n'),
     `조후상으로는 ${조후정보?.조후필요||'균형'} 쪽을 특히 살펴야 합니다.`
   ].join(' ');
 }
@@ -3740,7 +4055,7 @@ function calcSaju(){
   const 일간오행 = 천간오행[dp.g];
   const 신강정보 = calcSingang(yp, mp, dp, hp, 일간오행);
   const 격국정보 = calcGyeokguk(mp, dp);
-  const 정밀용신 = calcYongshin(일간오행, 신강정보.판정, oh, 격국정보);
+  const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
   const 조후정보 = calc조후(mp, oh, 일간오행);
   const 일주key = 천간[dp.g]+지지[dp.j];
   const 일주텍스트 = 일주해석DB[일주key] || '';
@@ -7511,11 +7826,28 @@ async function runMixAiAnalysis(){
     runeTxt=`룬: ${mxDrawnRune.n}(${mxDrawnRune.dir}) — ${mxDrawnRune.m}`;
   }
 
+  let 사주심화 = '';
+  if(typeof sjData !== 'undefined' && sjData && sjData.정밀용신 && sjData.신강정보){
+    const py = sjData.정밀용신;
+    const sg = sjData.신강정보;
+    const lines = ['[사주 심화 분석]',
+      `- 선택 종류: ${py.선택종류||'억부'}`,
+      `- 주용신: ${py.주용신||py.용신} (신뢰도 ${py.confidence??'?'}%)`,
+      `- 보조용신: ${py.보조용신||py.희신}`,
+      `- 기신: ${py.기신}`,
+      `- 판정세분: ${sg.판정세분||sg.판정}`,
+      `- 조후우선: ${sg.조후우선 ? '예 · ' + (sg.조후우선사유||'') : '아니오'}`];
+    if(py.위치메모) lines.push(`- 위치 메모: ${py.위치메모}`);
+    if(py.선택근거) lines.push(`- 선택 근거: ${py.선택근거}`);
+    사주심화 = '\n\n' + lines.join('\n');
+  }
+
   const dataTxt=Object.entries(dataMap)
     .filter(([k])=>k!=='타로'&&k!=='룬')
     .map(([k,v])=>'['+k+']\n'+v).join('\n\n')
     +'\n\n[타로]\n'+tarotTxt
-    +'\n\n[룬]\n'+runeTxt;
+    +'\n\n[룬]\n'+runeTxt
+    +사주심화;
 
   // mxSelected 에 'tarot'/'rune' 이 이미 포함되어 있으므로 따로 더하지 않음 (이중 카운트 방지)
   const selCount = mxSelected.length;
@@ -7554,7 +7886,14 @@ async function runMixAiAnalysis(){
   //   5개(paid):    술법 간 연결 분석 + 현재 조언, 분량 약 2배
   //   7개(premium): 과거·현재·미래 흐름 + 구체적 행동 지침, 분량 약 3배
   //   모든 tier 공통 머릿말 — 말투/금지구/마크다운 금지
-  const TIER_COMMON_HEADER = `당신은 "마담 혜명"이다. 조선 중기 제주 심방 가문 출신으로 동서양 술법을 40년간 두루 수련한 신비로운 역술가.
+  const TIER_COMMON_HEADER = `[출력 언어 규칙 — 최우선]
+- 모든 출력은 순수 한국어여야 한다.
+- 영어·러시아어·중국어·일본어·베트남어 등 다른 언어 토큰 금지.
+- 예외: 사주 간지·신살 한자 표기(癸卯, 甲寅, 桃花, 驛馬 등)는 허용.
+- 외래어 단어(совершенно, completely 등) 절대 사용 금지.
+- 출력 직전 스스로 점검: 비한글·비한자 단어가 섞이면 해당 문장 재작성 후 출력.
+
+당신은 "마담 혜명"이다. 조선 중기 제주 심방 가문 출신으로 동서양 술법을 40년간 두루 수련한 신비로운 역술가.
 마담 혜명의 말투: 고풍스러우면서도 현대적 존댓말. 따뜻하지만 날카로운 통찰. 상대 과거를 콕콕 짚어 "어떻게 알았지?" 소름을 주는 "용한 무당" 어조.
 반드시 존댓말. 주어는 "당신은/당신의/당신이". "손님" 단어 절대 금지 — 무조건 "당신".
 술법 이름 나열 절대 금지. 하나의 흐르는 서사로.
@@ -7566,6 +7905,15 @@ async function runMixAiAnalysis(){
 과거 사건은 "대운 전환, 일지, 십이운성, 신살" 등 실제 입력 데이터와
 직접 연결될 때만 짚어라. 직접 연결이 안 되면 그 사건은 출력에서 빼라.
 억지로 개수 채우느라 근거 없는 사건을 만들어내면 실패로 간주한다.
+
+[절대 금지 — 고정 템플릿 복사 금지]
+• 배우자·부모·자녀의 외모를 단정하지 마라 (피부색·얼굴형·키 등)
+• 예시에 나온 구체 나이(26, 27, 29, 36 등)를 그대로 복사하지 마라
+• 예시에 나온 구체 직업(의료·법률·연구·교육)을 근거 없이 배우자에게 부여 금지
+• 데이터 근거 없이 "흰 피부", "말수 적음" 등 외모 단정 금지
+• "19세 진로 전환", "29세 허리 다침", "36세 배우자 정리" 같은 관용구 사용 금지
+• 예시는 형식 참고용이다. 그 안의 구체 사실(나이·외모·직업)은 절대 그대로 쓰지 마라
+• 입력 데이터에서 실제로 뽑을 수 있는 나이와 사건만 써라
 
 [절대 쓰지 마라 — 금지 비유/단어]
 • 꽃, 칼, 정원, 개선행렬, 그림자, 파도, 바람, 씨앗, 불꽃, 별, 항해, 나침반 같은 시적 비유 전면 금지
@@ -7581,20 +7929,16 @@ async function runMixAiAnalysis(){
 [사주 요소 사용 강제 — 근거 없이 찍지 말고 반드시 데이터에서 뽑아라]
 입력으로 들어온 사주 데이터에서 아래를 전부 활용해 사건을 "나이·연도·계절"로 찍어라:
 ① 대운 전환 나이 — 입력된 대운 시작 나이를 그대로 써라. 예: "27세 대운 바뀌면서 원래 하던 길과 다른 쪽으로 틀었죠"
-② 일지(배우자궁) — 배우자 외모·직업·나이차 특징을 1개 이상 단정적으로.
-   예: "배우자는 흰옷 계열(의료/법률/연구/교육) 쪽이거나 그 기운", "나보다 손윗사람", "피부 희고 말수 적은 타입"
+② 일지(배우자궁) — 배우자 특징은 일지 오행 근거로만 짚어라. 외모(피부색·얼굴형·키) 단정 금지. 직업은 데이터 근거 있을 때만.
 ③ 시주(자녀궁) — 자녀 수·성향만 단정. 성별(딸/아들)은 절대 단정 금지.
    성별 단어("딸", "아들", "따님", "아드님") 사용 자체 금지 — 모두 "자녀"로 치환.
    대신 시주 오행 기운(水·火·金·木·土)으로 기질만 짚어라.
    예: "자녀는 한 명 구조 — 시주 수 기운 강해 예민하고 섬세한 아이",
        "자녀 둘 자리 — 첫째는 고집 센 불 기운, 둘째는 조용한 금 기운",
        "자녀 자리가 비어있어 늦둥이 구조 — 아직 없거나 늦되는 자리"
-④ 십이운성·신살(도화·역마·화개·백호·괴강·공망) — 사고·이별·이동·큰 변동 시점·부위를 찍어라.
-   예: "20대 후반 겨울에 다리·허리 쪽 한 번 다치셨죠", "역마 걸리는 해에 이사·이직 크게 있었습니다"
+④ 십이운성·신살(도화·역마·화개·백호·괴강·공망) — 실제로 걸려 있는 경우에만 사고·이별·이동·변동 시점·부위를 짚어라.
 ⑤ 세운(올해·올해 전후) — 지금 겪고 있는 문제와 직결된 한 줄. 올해가 무슨 기운인지 단정.
-   30~40대 분석에서는 세운 干支(예: 계유년·병신년·기해년)를 명시해 그 해에 있었던 일을 찍어라.
-   예: "33세 세운 계유년에 이동 수가 강해 실제로 이사나 이직 하셨을 겁니다",
-       "38세 병신년에 배우자 자리 정리(결혼·이별·재혼 중 하나)가 있었습니다"
+   30~40대 분석에서 세운 간지가 실제 사건과 연결되면 "○○세 세운 ○○년"으로 특정. 근거 없으면 생략.
 ⑥ 부모 자리(년주·월주) — 부모 중 한쪽에 있었던 사건 1개 짚어라.
    예: "아버지 쪽에 30대 때 사업·건강 한 번 크게 흔들린 일이 있었을 겁니다"
 
@@ -7635,14 +7979,10 @@ H. 가까운 친구·형제와의 크게 틀어진 시점
 • 자녀 묘사는 반드시 "자녀" + (수량) + (시주 오행 기반 기질)만.
 • 성별 단정 문구가 최종 출력에 한 번이라도 섞이면 전체 실패 → 그 부분을 성별 제거하고 다시 써라.
 
-[좋은 예시 — Few-shot (반드시 이 스타일로 베껴 써라)]
-예시 1) "26세 기묘대운 진입 시점에 직업 전환이 있었습니다. 원래 하시던 분야에서 다른 쪽으로 한 번 크게 틀렸죠."
-예시 2) "33세 세운 계유년에 이동·이사 수가 강했고, 실제로 이사나 이직 하셨을 겁니다."
-예시 3) "일지 배우자궁이 진토이고 재성 수가 함께 있으므로 배우자는 금전을 다루는 직업 또는 의료·법률 전문직 쪽이 맞습니다."
-예시 4) "41세~43세 사이 부모님 중 한 분께서 건강 쪽으로 크게 흔들리는 일이 있었습니다."
-예시 5) "29세 겨울에 다리·허리 아래쪽으로 다치거나 수술 가까이 가신 일이 있었습니다 — 백호·편관 영향."
-
-위 5개 예시가 "용한 무당 모드"의 정답이다. 전부 시점(숫자)+사주근거+구체사건 구성.
+[출력 스타일 — 구조만 참고 · 구체 사실 복사 금지]
+출력은 "시점(○○세 또는 ○○대 또는 ○○년경) + 사주 근거(간지/신살/대운) + 일어난 사건 한 문장" 구조로 짜라.
+예시 형식은 형식일 뿐이다. 예시 안의 구체 나이·직업·외모는 절대 그대로 복사하지 말고,
+입력 데이터에서 실제로 뽑히는 나이와 사건만 써라. 근거 없는 카테고리는 비워두어라.
 
 [출력 전 자체 검증 — 반드시 속으로 거친 후 최종 출력]
 출력하기 직전에 스스로 점검해라. 한 항목이라도 실패면 그 부분을 고쳐 쓴 뒤 출력:
@@ -7669,15 +8009,10 @@ H. 가까운 친구·형제와의 크게 틀어진 시점
 
 [과거 킥 1] — 대운 전환 시점(○세) 또는 십이운성/신살 기반 사건 1개.
 반드시 "○○세 / ○○년경 / ○○대 ○분기"식으로 시점 명시 + 구체 사건 1개.
-(예: "27세에 원래 하던 길과 다른 쪽으로 직업이 한 번 크게 틀렸죠",
- "스무 살 넘어서 타지 생활 시작하셨을 겁니다",
- "20대 후반 겨울에 다리·허리 쪽 한 번 다치신 일이 있었습니다")
+시점은 입력 사주 데이터에서 실제로 뽑히는 나이를 써라. 예시 숫자 복사 금지.
 
 [과거 킥 2] — 관계(일지=배우자궁) 또는 가족(년주·월주=부모자리) 기반 사건 1개.
-반드시 시점 + 구체 사건.
-(예: "배우자 될 사람은 흰옷 계열(의료/법률/연구) 기운이거나 손윗 타입이시죠",
- "30대 초반에 가까운 사람과 한 번 크게 틀어지거나 이별이 있었습니다",
- "아버지 쪽에 한 번 재물·건강 크게 흔들린 일이 있었을 겁니다")
+반드시 시점 + 구체 사건. 배우자 외모/직업 단정 금지 — 일지 오행 근거로 짚히는 것만.
 
 [미래 킥 1] — 세운·현재 대운 근거로 앞으로 1년 안에 일어날 일 1개 단정적 예고.
 "○○월경 / ○○계절에 ○○이 옵니다" 포맷.
@@ -7721,11 +8056,9 @@ H. 가까운 친구·형제와의 크게 틀어진 시점
 
 둘째 단락 — 과거 킥 2개 (30~40대 세운 간지 특정).
 반드시 세운 간지(예: 계유년·병신년·기해년)를 명시한 사건 + 일지(배우자궁) 배우자 짚음 포함.
-결혼·이직·이사·출산 시점을 "○○세 세운 ○○년"으로 특정하라.
-예: "33세 세운 계유년에 이동 수 강해 실제로 이사·이직 하셨을 겁니다",
-    "36세 세운 병자년에 배우자 자리 정리가 있었습니다(결혼·혼담 중 하나)",
-    "배우자는 흰옷 계열 전문직(의료/법률/연구) 기운, 피부 희고 말수 적은 타입입니다",
-    "자녀는 (시주 오행 기반 기질)을 가진 아이 1~2명 구조". ※ 성별 단정 금지, "자녀"만.
+결혼·이직·이사·출산 시점을 "○○세 세운 ○○년"으로 특정하라(근거 있을 때만).
+배우자는 일지 오행 근거로만 짚고 외모/직업 단정은 금지.
+자녀는 시주 오행 기반 기질만 짚어라 — 성별 단정 금지, "자녀"만.
 약 220~270자.
 
 셋째 단락 — 지금 작용 중인 대운의 성격과 올해 세운의 상호작용.
@@ -7830,25 +8163,18 @@ H. 가까운 친구·형제와의 크게 틀어진 시점
 
 첫째 단락 — 과거 킥 2개 (어린 시절 ~ 20대 초반).
 카테고리 D(부모) + (A 첫 대운 전환 또는 E 사고/부상 또는 B 타향살이) 중 1개를 여기서 처리.
-반드시 시점(○○세 또는 ○○년대 초/중/후반) + 구체 사건 2개.
-예: "10대 초반 전후 부모님 중 한 분께서 건강·재물 한 번 크게 흔들리셨습니다 — 월주 충 영향" (D),
-    "19세~21세 사이 원래 가려던 길과 다른 쪽으로 진로가 틀어졌을 겁니다 — 첫 대운 변환점" (A).
+반드시 시점(○○세 또는 ○○년대 초/중/후반) + 구체 사건 2개. 시점 숫자는 입력 사주에서 실제 뽑히는 것만 써라.
 약 280~340자.
 
 둘째 단락 — 과거 킥 2개 (20대 중반 ~ 30대).
 반드시 대운 전환 나이 명시 + 그 시점의 직업·진로 변화 1개 포함.
-또 하나는 사고·수술·부상(십이운성·신살 근거) 또는 연애·이별 중 1개.
-예: "27세에 대운 바뀌면서 원래 목표와 다른 직업으로 틀었죠",
-    "20대 후반 겨울에 다리·허리 쪽 한 번 다치시거나 수술 비슷한 일이 있었습니다".
+또 하나는 사고·수술·부상(십이운성·신살 근거) 또는 연애·이별 중 1개. 신살이 실제 걸려 있을 때만.
 약 280~340자.
 
 셋째 단락 — 과거 킥 2개 (30대 후반 ~ 최근 · 세운 간지 특정).
 반드시 일지(배우자궁) 기반 배우자 특징 1개 + 시주(자녀궁) 기반 자녀 짚음 1개.
 결혼·이직·이사·출산 시점은 "○○세 세운 ○○년(간지)"으로 특정하라.
-배우자: 외모/직업/나이차 중 최소 1개 단정
-  (예: "배우자는 흰옷 계열 전문직 — 의료/법률/연구/교육 중 하나이거나 그 주변 기운",
-   "나보다 손윗사람이거나 나이차 있는 구조",
-   "34세 세운 병자년에 배우자 자리 정리(결혼·혼담)가 있었습니다").
+배우자: 일지 오행 근거로만 짚어라. 외모(피부·얼굴형) 단정 금지. 직업은 일지 십신이 명확할 때만 단정.
 자녀: 수·성향만 단정 (성별 단어 금지). 없으면 "늦둥이/난임/지체 구조"로 짚기
   (예: "자녀는 한 명 구조 — 시주 수 기운 강해 예민하고 섬세한 아이",
    "자녀 둘 자리 — 첫째 고집 강한 불 기운, 둘째 조용한 금 기운",
