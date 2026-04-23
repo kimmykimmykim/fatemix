@@ -1338,6 +1338,12 @@ h1, h2, h3,
       <button class="gender-btn" onclick="mxGender('male',this)">남성</button>
       <button class="gender-btn active" onclick="mxGender('female',this)">여성</button>
     </div>
+    <div class="label">결혼 상태</div>
+    <div class="gender-row" style="margin-bottom:14px;">
+      <button class="gender-btn active" id="mx-marital-single" onclick="mxMarital('single',this)">미혼</button>
+      <button class="gender-btn" id="mx-marital-married" onclick="mxMarital('married',this)">기혼</button>
+      <button class="gender-btn" id="mx-marital-divorced" onclick="mxMarital('divorced',this)">이혼/별거</button>
+    </div>
     <div class="label">이름 <span style="color:var(--text-3);font-size:11px;">(성명학 보시려면 필수)</span></div>
     <input class="input" type="text" id="mx-name" placeholder="성명학 보시려면 이름을 넣어주세요">
   </div>
@@ -1566,6 +1572,7 @@ h1, h2, h3,
 // 믹스 전역 변수 — 최상단 선언 필수
 let mixTopicVal='연애/관계';
 let mxShijinIdx=11, mxGenderVal='female';
+let mxMaritalVal = 'single';
 let mxCalType='solar';
 let mxSelected=[]; // 선택된 술법 id 배열
 let MX_MAX=3; // 선택 가능 최대 술법 수
@@ -3077,6 +3084,50 @@ function calcShinsal(사주팔자, 일간문자) {
   const 백호있음 = 백호대살목록.some(bh => 모든간지.includes(bh));
   if (백호있음) {
     결과.push({ 신살: '백호대살', 설명: '강렬한 삶의 굴곡. 외과·군·경찰 등 날선 직업 인연. 건강·사고 주의. 강인한 생명력.' });
+  }
+
+  // 양인살 (일간별 양인 지지 매핑)
+  const 양인표 = {
+    '갑':'묘', '을':'진', '병':'오', '정':'미',
+    '무':'오', '기':'미', '경':'유', '신':'술',
+    '임':'자', '계':'축'
+  };
+  const 양인지 = 양인표[일간문자];
+  if(양인지 && 모든지지.includes(양인지)){
+    결과.push({ 신살: '양인살', 설명: '강한 의지와 극단적 추진력. 결단력 있고 한번 정하면 밀어붙임. 욕심·투쟁·건강 위기 주의.' });
+  }
+
+  // 공망살 (일주 갑자순 기준)
+  const 공망표 = {
+    '갑자':['술','해'], '을축':['술','해'], '병인':['술','해'], '정묘':['술','해'], '무진':['술','해'],
+    '기사':['술','해'], '경오':['술','해'], '신미':['술','해'], '임신':['술','해'], '계유':['술','해'],
+    '갑술':['신','유'], '을해':['신','유'], '병자':['신','유'], '정축':['신','유'], '무인':['신','유'],
+    '기묘':['신','유'], '경진':['신','유'], '신사':['신','유'], '임오':['신','유'], '계미':['신','유'],
+    '갑신':['오','미'], '을유':['오','미'], '병술':['오','미'], '정해':['오','미'], '무자':['오','미'],
+    '기축':['오','미'], '경인':['오','미'], '신묘':['오','미'], '임진':['오','미'], '계사':['오','미'],
+    '갑오':['진','사'], '을미':['진','사'], '병신':['진','사'], '정유':['진','사'], '무술':['진','사'],
+    '기해':['진','사'], '경자':['진','사'], '신축':['진','사'], '임인':['진','사'], '계묘':['진','사'],
+    '갑진':['인','묘'], '을사':['인','묘'], '병오':['인','묘'], '정미':['인','묘'], '무신':['인','묘'],
+    '기유':['인','묘'], '경술':['인','묘'], '신해':['인','묘'], '임자':['인','묘'], '계축':['인','묘'],
+    '갑인':['자','축'], '을묘':['자','축'], '병진':['자','축'], '정사':['자','축'], '무오':['자','축'],
+    '기미':['자','축'], '경신':['자','축'], '신유':['자','축'], '임술':['자','축'], '계해':['자','축']
+  };
+  const 일주간지 = 천간[사주팔자[2].g] + 지지[사주팔자[2].j];
+  const 공망목록 = 공망표[일주간지] || [];
+  const 공망걸림 = 공망목록.filter(g => 모든지지.includes(g));
+  if(공망걸림.length > 0){
+    결과.push({ 신살: '공망살', 설명: `${공망걸림.join('·')} 공망. 해당 자리의 기운이 비어있어 그 육친·재물·관계에서 허함을 느끼기 쉬움. 정신적·예술적 영역에서 오히려 발휘.` });
+  }
+
+  // 원진살 (상호 꺼리는 지지 쌍)
+  const 원진쌍 = [
+    ['자','미'], ['축','오'], ['인','유'], ['묘','신'], ['진','해'], ['사','술']
+  ];
+  for(const [a, b] of 원진쌍){
+    if(모든지지.includes(a) && 모든지지.includes(b)){
+      결과.push({ 신살: '원진살', 설명: `${a}${b} 원진. 서로 꺼리면서도 엮이는 관계. 가까운 사람과의 미묘한 갈등·오해·답답함. 인간관계에 예민해지는 지점.` });
+      break;
+    }
   }
 
   return 결과;
@@ -7058,6 +7109,12 @@ function mxGender(g,btn){
   btn.classList.add('active');
 }
 
+function mxMarital(val, btn){
+  mxMaritalVal = val;
+  document.querySelectorAll('#mx-marital-single,#mx-marital-married,#mx-marital-divorced').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function mixTopic(btn,t){
   mixTopicVal=t;
   document.querySelectorAll('#mix-topic-group .toggle-btn').forEach(b=>b.classList.remove('active'));
@@ -7088,7 +7145,7 @@ function mixTopic(btn,t){
 //
 // 5) 한국어 출력 강제 확인: 결과 본문에 외래어 토큰 없는지 확인
 // ──────────────────────────────────────────────────
-function mxBuildMixSaju(y, m, d, shijinIdx, isFemale) {
+function mxBuildMixSaju(y, m, d, shijinIdx, isFemale, marital = 'single') {
   if (y==null || m==null || d==null) return null;
   const SI_TO_HOUR = [23,1,3,5,7,9,11,13,15,17,19,21];
   const actualHour = SI_TO_HOUR[shijinIdx] ?? 12;
@@ -7140,9 +7197,21 @@ function mxBuildMixSaju(y, m, d, shijinIdx, isFemale) {
     ? (SJ_NARRATIVE_YONGSHIN[정밀용신?.용신] || '')
     : '') || '';
 
-  const 도메인해석 = (typeof SJ_DOMAIN_DB !== 'undefined'
+  const 원본도메인 = (typeof SJ_DOMAIN_DB !== 'undefined'
     ? (SJ_DOMAIN_DB[coreKey] || SJ_DOMAIN_DB[`신강_${격국명}`] || SJ_DOMAIN_DB['중화_건록격'] || {})
     : {}) || {};
+
+  // marital 기반 연애 텍스트 치환 (기혼자에게 새 인연 제안 금지)
+  let 연애텍스트 = 원본도메인?.연애 || '';
+  if(marital === 'married'){
+    연애텍스트 = 원본도메인?.부부
+      || (원본도메인?.연애 || '').replace(/새로운 인연|소개팅|이성을 만|새 인연|새로운 만남|새 파트너|이성의 시선/g, '배우자와의 관계')
+      || '';
+  } else if(marital === 'divorced'){
+    연애텍스트 = (원본도메인?.연애 || '') + ' 지금은 감정을 회복하고 스스로를 재정비하는 시기입니다.';
+  }
+
+  const 도메인해석 = { ...원본도메인, 연애: 연애텍스트 };
 
   let 합충결과 = {합:[], 충:[], 형:[], 파:[], 해:[]};
   try {
@@ -7922,7 +7991,7 @@ async function runMixAiAnalysis(){
   }
 
   // Theory-2.5: 믹스 입력 기준 사주 재계산 (전역 sjData 의존 제거)
-  const mixSaju = mxBuildMixSaju(y, m, d, mxShijinIdx, mxGenderVal==='female');
+  const mixSaju = mxBuildMixSaju(y, m, d, mxShijinIdx, mxGenderVal==='female', mxMaritalVal || 'single');
   let 사주심화 = '';
   if(mixSaju && mixSaju.정밀용신 && mixSaju.신강정보){
     const py = mixSaju.정밀용신;
