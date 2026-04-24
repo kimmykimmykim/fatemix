@@ -8748,6 +8748,9 @@ function _mixDedupeSentences(text){
   const 섹션매치 = text.match(/\[[가-힣·\s]+\][\s\S]*?(?=\n\[[가-힣·\s]+\]|$)/g);
   if(!섹션매치) return { text, 제거로그 };
 
+  // 13-dedupe-global: 섹션 간 중복도 감지하도록 함수 전역으로 이동
+  const 이미본키워드셋 = [];
+
   const 처리된섹션 = 섹션매치.map(섹션 => {
     const 태그매치 = 섹션.match(/^\[[가-힣·\s]+\]/);
     const 태그 = 태그매치 ? 태그매치[0] : '';
@@ -8770,7 +8773,6 @@ function _mixDedupeSentences(text){
     };
 
     const 유지된문장 = [];
-    const 이미본키워드셋 = [];
 
     문장들.forEach(문장 => {
       const 현재키워드 = 키워드추출(문장);
