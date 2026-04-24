@@ -8441,6 +8441,86 @@ function _mixReportContradictions(contras, meta) {
   card.insertBefore(warn, card.firstChild);
 }
 
+// ============================================================
+// 패치 11: 기혼/이혼 사용자 금지 표현 후처리 필터
+// ============================================================
+
+const _MARITAL_FORBIDDEN_PATTERNS_MARRIED = [
+  // 배우자 인연 시기 관련
+  /배우자\s*인연[은이가]?\s*[^.!?\n]*(?:들어|찾아|나타|만나|옵니|가장\s*강|가장\s*뚜렷|가장\s*열)/g,
+  /[^.!?\n]*\d+대\s*(?:초중반|초반|중반|후반|무렵)[^.!?\n]*(?:배우자|인연)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*(?:앞으로|향후|앞으론)[^.!?\n]*(?:배우자|인연)[^.!?\n]*(?:찾아|들어|나타|맞이|만나|자리)[^.!?\n]*[.!?\n]/g,
+
+  // 새 인연 뉘앙스
+  /[^.!?\n]*새(?:로운)?\s*인연[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*새(?:로운)?\s*만남[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*(?:소개팅|이성의\s*시선)[^.!?\n]*[.!?\n]/g,
+
+  // 맞는 배우자 특징 (미래형·조건형)
+  /[^.!?\n]*(?:당신과\s*)?(?:잘\s*맞는|맞을|어울리는)\s*배우자[^.!?\n]*(?:특징|사람|유형|타입)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*(?:배우자|인연)[은이가]?\s*다음과\s*같은\s*특징[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*당신[과의]*\s*인연[이은을]?\s*(?:될|만날)\s*배우자[^.!?\n]*[.!?\n]/g,
+
+  // 배우자 등장·도래
+  /[^.!?\n]*배우자[가는이]?\s*(?:다가|찾아|나타|도래|들어|만나)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*(?:좋은|귀한|진정한)\s*(?:사람|인연)[이가]?\s*(?:곁|옆)[^.!?\n]*(?:다가|자리|스며|들어)[^.!?\n]*[.!?\n]/g,
+
+  // 띠별 궁합 조언
+  /[^.!?\n]*[가-힣]+띠(?:와의|와)?\s*(?:관계|인연|궁합|갈등)[^.!?\n]*(?:피해|조심|신중|주의|만나면\s*안)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*만나면\s*안\s*되는[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*피해야\s*할\s*(?:유형|이성|타입|사람)[^.!?\n]*[.!?\n]/g,
+];
+
+const _MARITAL_FORBIDDEN_PATTERNS_DIVORCED = [
+  /[^.!?\n]*(?:곧|가까운\s*시일|머지않아)[^.!?\n]*(?:새\s*인연|재혼|새로운\s*사랑)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*\d+대\s*(?:초중반|초반|중반|후반|무렵)[^.!?\n]*(?:인연|배우자|재혼)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*피해야\s*할\s*(?:유형|이성|타입|사람)[^.!?\n]*[.!?\n]/g,
+  /[^.!?\n]*[가-힣]+띠(?:와의|와)?\s*(?:관계|궁합)[^.!?\n]*[.!?\n]/g,
+];
+
+function _mixFilterMaritalViolations(text, marital){
+  if(marital !== 'married' && marital !== 'divorced') return { text, 제거카운트: 0, 제거문장: [] };
+
+  const patterns = marital === 'married'
+    ? _MARITAL_FORBIDDEN_PATTERNS_MARRIED
+    : _MARITAL_FORBIDDEN_PATTERNS_DIVORCED;
+
+  let filtered = text;
+  const 제거문장 = [];
+
+  patterns.forEach(pattern => {
+    const matches = filtered.match(pattern);
+    if(matches){
+      matches.forEach(m => 제거문장.push(m.trim()));
+      filtered = filtered.replace(pattern, '');
+    }
+  });
+
+  // 연속 공백/빈 줄 정리
+  filtered = filtered.replace(/\n{3,}/g, '\n\n').replace(/  +/g, ' ');
+
+  // 섹션이 통째로 비어버렸는지 체크
+  const 섹션태그 = ['[궁합분석]', '[연애·관계운]', '[본문]'];
+  섹션태그.forEach(tag => {
+    const tagIdx = filtered.indexOf(tag);
+    if(tagIdx < 0) return;
+    const nextTagIdx = filtered.indexOf('[', tagIdx + tag.length);
+    const 섹션내용 = nextTagIdx > 0
+      ? filtered.substring(tagIdx + tag.length, nextTagIdx).trim()
+      : filtered.substring(tagIdx + tag.length).trim();
+
+    if(섹션내용.length < 50){
+      const 대체 = marital === 'married'
+        ? '\n현재 배우자와의 관계는 지금까지 쌓아온 시간만큼 단단해지는 흐름입니다. 서로의 결을 이해하고 일상 속 작은 대화를 늘려가는 것이 관계를 더 깊게 만드는 길입니다.\n'
+        : '\n지금은 새로운 관계보다 자신을 돌보고 내면을 정비하는 시기입니다. 과거를 충분히 정리한 뒤에야 건강한 관계가 자연스럽게 열립니다.\n';
+
+      filtered = filtered.substring(0, tagIdx + tag.length) + 대체 + filtered.substring(nextTagIdx > 0 ? nextTagIdx : filtered.length);
+    }
+  });
+
+  return { text: filtered, 제거카운트: 제거문장.length, 제거문장 };
+}
+
 // 개발자 콘솔 테스트 API — window._mixTestContradiction('...샘플 텍스트...') 로 수동 검증
 if (typeof window !== 'undefined') {
   window._mixTestContradiction = function(sampleText) {
@@ -9368,7 +9448,18 @@ H. 형제·친구 관계 패턴
     // 믹스 5개/7개는 "과거 킥" 개수가 많아 토큰이 짧으면 뒷부분이 잘려나감.
     // 3개=8000 / 5개=16000 / 7개=24000 (7개는 6개 신규 섹션 추가로 분량 대폭 확장).
     const maxTok = tier==='free' ? 8000 : tier==='paid' ? 16000 : 24000;
-    const text=await callGemini(sys,user,maxTok);
+    let text=await callGemini(sys,user,maxTok);
+
+    // 패치 11: 기혼/이혼 사용자 금지 표현 후처리 필터
+    try {
+      const 필터결과 = _mixFilterMaritalViolations(text, _currentMarital);
+      if(필터결과.제거카운트 > 0){
+        console.warn(`[MIX AI · ${_currentMarital}] 🛡️ 금지 표현 ${필터결과.제거카운트}건 제거됨:`);
+        필터결과.제거문장.forEach((s, i) => console.warn(`  ${i+1}. ${s.slice(0, 80)}...`));
+        text = 필터결과.text;
+      }
+    } catch(e) { console.warn('[MIX AI] marital filter error:', e); }
+
     // 🔍 SYNTHESIS_RULE 자동 검증 — 모순 감지 시 콘솔 경고 + 결과 카드 상단 배너
     try { _mixReportContradictions(_mixDetectContradictions(text), { tier }); } catch(e) { console.warn('[MIX AI] validator error:', e); }
     const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
