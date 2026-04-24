@@ -3426,6 +3426,97 @@ function calcRootScore(dayEl,dp,pillars){
   return root;
 }
 
+// ============================================================
+// 패치 6: 월령 등급 · 통근 · 투출 · 기세 판정 보조 함수
+// ============================================================
+
+// 월령 5단계 등급 (왕/상/휴/수/사) — 전통 사주학 기준
+function calc월령등급(일간오행, 월지문자){
+  const ws = 왕상표[월지문자] || [];
+  const 월지El = 지지오행[지지.indexOf(월지문자)];
+
+  if(ws[0] === 일간오행) return { 등급: '왕', 점수: 100, 설명: '일간이 월령을 얻어 매우 강함' };
+  if(ws[1] === 일간오행) return { 등급: '상', 점수: 75, 설명: '월령이 일간을 생조하여 강함' };
+
+  const drainEl = getDrainElement(일간오행);
+  const controlMeEl = getControlMeElement(일간오행);
+  const wealthEl = getWealthElement(일간오행);
+
+  if(월지El === drainEl) return { 등급: '휴', 점수: 35, 설명: '월령에 기운이 설기되어 쇠함' };
+  if(월지El === controlMeEl) return { 등급: '수', 점수: 15, 설명: '월령에 극을 받아 매우 약함' };
+  if(월지El === wealthEl) return { 등급: '사', 점수: 25, 설명: '월령을 극하느라 기운이 소모됨' };
+
+  return { 등급: '평', 점수: 50, 설명: '월령 관계가 중립적' };
+}
+
+// 통근(通根) 강도 — 일간 오행이 지지 4개에서 얼마나 뿌리내렸는지
+function calc통근강도(일간오행, pillars){
+  let 점수 = 0;
+  const 지지가중치 = [15, 30, 25, 20]; // 년지·월지·일지·시지 중요도
+
+  pillars.forEach((p, idx) => {
+    const 지지문자 = 지지[p.j];
+    const hidden = 지장간맵[지지문자] || [];
+    const 본기 = hidden[0];
+    if(!본기) return;
+
+    const 본기El = 천간오행[천간.indexOf(본기)];
+
+    // 본기가 일간과 동일 오행 — 완전 통근
+    if(본기El === 일간오행){
+      점수 += 지지가중치[idx];
+    } else if(본기El === getGenerateElement(일간오행)){
+      // 본기가 일간을 생하는 오행 — 부분 통근 (인성 뿌리)
+      점수 += 지지가중치[idx] * 0.5;
+    }
+
+    // 중기·여기 통근 (가중치 감쇠)
+    for(let i = 1; i < hidden.length; i++){
+      const el = 천간오행[천간.indexOf(hidden[i])];
+      if(el === 일간오행){
+        점수 += 지지가중치[idx] * (0.4 - (i - 1) * 0.15);
+      }
+    }
+  });
+
+  return Math.min(100, Math.round(점수));
+}
+
+// 투출(透出) 강도 — 일간 오행이 천간에 얼마나 드러나 있는지
+function calc투출강도(일간오행, pillars){
+  let 점수 = 0;
+  const 천간가중치 = [10, 30, 0, 20]; // 년간·월간·(일간 자신)·시간
+
+  pillars.forEach((p, idx) => {
+    if(idx === 2) return; // 일간 자신은 제외
+    const 천간El = 천간오행[p.g];
+
+    if(천간El === 일간오행){
+      점수 += 천간가중치[idx];
+    } else if(천간El === getGenerateElement(일간오행)){
+      // 천간에 일간을 생하는 오행이 있어도 약한 지원 (인성 투출)
+      점수 += 천간가중치[idx] * 0.5;
+    }
+  });
+
+  return Math.min(100, 점수);
+}
+
+// 기세 판정 — 진강/허강/진약/저력약/중화
+function calc기세판정(판정, 통근강도, 투출강도){
+  if(판정 === '신강'){
+    if(통근강도 >= 40 && 투출강도 >= 30) return { 기세: '진강', 설명: '뿌리가 단단하고 천간에도 드러나 실질적으로 강함' };
+    if(통근강도 < 20) return { 기세: '허강', 설명: '겉으로는 강해 보이나 뿌리가 약해 운에 흔들리기 쉬움' };
+    return { 기세: '보통강', 설명: '평범하게 강한 기세' };
+  }
+  if(판정 === '신약'){
+    if(통근강도 >= 30) return { 기세: '저력약', 설명: '겉은 약해 보이나 뿌리가 있어 저력을 가진 구조' };
+    if(통근강도 < 10 && 투출강도 < 10) return { 기세: '진약', 설명: '뿌리도 드러남도 약해 실질적으로 약함' };
+    return { 기세: '보통약', 설명: '평범하게 약한 기세' };
+  }
+  return { 기세: '중화', 설명: '강약이 뚜렷하지 않은 중립적 기세' };
+}
+
 function calcSingang(yp,mp,dp,hp,일간오행){
   const pillars=[yp,mp,dp,hp];
   const 월지문자=지지[mp.j];
@@ -3486,7 +3577,30 @@ function calcSingang(yp,mp,dp,hp,일간오행){
     조후우선 ? `조후우선(${조후우선사유})` : null
   ].filter(Boolean).join(' · ');
   comment += ` [근거: ${근거조각}]`;
-  return{판정,판정세분,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,보정:+보정.toFixed(2),root:+root.toFixed(2),조후우선,조후우선사유,comment};
+
+  // 패치 6: 기세 증강 정보 계산 (하위 호환 유지 — 기존 필드는 손대지 않음)
+  const 월령등급 = calc월령등급(일간오행, 월지문자);
+  const 통근강도 = calc통근강도(일간오행, pillars);
+  const 투출강도 = calc투출강도(일간오행, pillars);
+  const 기세 = calc기세판정(판정, 통근강도, 투출강도);
+
+  return{
+    판정,판정세분,총점,득령,득지,득세점수,
+    월지:월지문자,season:visible.season,
+    supportTotal:+supportTotal.toFixed(2),
+    drainTotal:+drainTotal.toFixed(2),
+    net,보정:+보정.toFixed(2),root:+root.toFixed(2),
+    조후우선,조후우선사유,comment,
+    기세정보: {
+      월령등급: 월령등급.등급,
+      월령점수: 월령등급.점수,
+      월령설명: 월령등급.설명,
+      통근강도: 통근강도,
+      투출강도: 투출강도,
+      기세판정: 기세.기세,
+      기세설명: 기세.설명
+    }
+  };
 }
 
 // 샘플 판정 예상 (브라우저 콘솔 검증용):
@@ -8029,6 +8143,18 @@ async function runMixAiAnalysis(){
     if(py.위치메모) lines.push(`- 위치 메모: ${py.위치메모}`);
     if(py.선택근거) lines.push(`- 선택 근거: ${py.선택근거}`);
     사주심화 = '\n\n' + lines.join('\n');
+
+    // 패치 6: 기세 증강 정보 주입 (월령등급/통근/투출/기세판정)
+    if(sg.기세정보){
+      const 기세 = sg.기세정보;
+      사주심화 += '\n\n[기세 분석 — 월령/통근/투출 종합]';
+      사주심화 += `\n- 월령등급: ${기세.월령등급} (${기세.월령설명})`;
+      사주심화 += `\n- 통근강도: ${기세.통근강도}/100`;
+      사주심화 += `\n- 투출강도: ${기세.투출강도}/100`;
+      사주심화 += `\n- 기세판정: ${기세.기세판정} — ${기세.기세설명}`;
+      사주심화 += '\n- 해석 가이드: 기세 판정은 "단순 신강/신약"을 넘어서는 실질 기운을 나타냄.';
+      사주심화 += '\n  "진강"은 뚫고 나가는 힘, "허강"은 꺾이기 쉬운 기세, "저력약"은 버티는 힘, "진약"은 의지해야 할 구조.';
+    }
 
     // Phase 1-A: 룰DB 해석 주입 (AI 환각 방지)
     const 룰DB블록 = [];
