@@ -3619,9 +3619,123 @@ function calcTenGod(dayEl,dayYY,targetEl,targetYY){
   return '기타';
 }
 
-function calcGyeokguk(mp,dp){
+// ============================================================
+// 패치 7: 자평진전식 격국 판정 보조 함수
+// ============================================================
+
+// 월지 지장간이 천간에 투출됐는지 체크 → 투출된 십신 리스트 반환
+function calc월지투출(pillars, 월지문자, 일간El, 일간YY){
+  const 월지Hidden = 지장간맵[월지문자] || [];
+  const 투출목록 = [];
+
+  const 천간위치명 = ['년간', '월간', '일간', '시간'];
+  const 가중치표 = [0.7, 1.0, 0, 0.8]; // 월간 투출이 가장 강
+
+  pillars.forEach((p, idx) => {
+    if(idx === 2) return; // 일간 자신 제외
+    const 천간문자 = 천간[p.g];
+
+    월지Hidden.forEach((지장간, hi) => {
+      if(천간문자 === 지장간){
+        const targetEl = 천간오행[p.g];
+        const targetYY = 천간음양[p.g];
+        const 십신 = calcTenGod(일간El, 일간YY, targetEl, targetYY);
+        // 본기 투출이 제일 강함, 중기는 0.7, 여기는 0.4
+        const 지장간가중 = hi === 0 ? 1.0 : hi === 1 ? 0.7 : 0.4;
+        투출목록.push({
+          지장간: 지장간,
+          천간위치: 천간위치명[idx],
+          십신: 십신,
+          가중치: 가중치표[idx] * 지장간가중
+        });
+      }
+    });
+  });
+
+  투출목록.sort((a, b) => b.가중치 - a.가중치);
+  return 투출목록;
+}
+
+// 월지가 일간의 비견/겁재일 때 특수격(건록/양인) 판정
+function calc특수격(일간문자, 일간El, 일간YY, 월지문자){
+  const 월지El = 지지오행[지지.indexOf(월지문자)];
+
+  if(월지El !== 일간El) return null;
+
+  const 월지본기 = (지장간맵[월지문자] || [])[0];
+  if(!월지본기) return null;
+  const 본기YY = 천간음양[천간.indexOf(월지본기)];
+
+  if(본기YY === 일간YY){
+    return {
+      격: '건록격',
+      설명: '월지가 일간의 녹지(祿地). 자립심과 자기 주도력이 강하며, 형제·동료·경쟁자와의 관계가 인생의 중요한 변수가 되는 구조입니다.',
+      특수: true
+    };
+  }
+
+  return {
+    격: '양인격',
+    설명: '월지가 일간의 양인(羊刃). 강한 추진력과 결단력이 돋보이며, 극단적 상황에서 진가를 발휘하는 구조입니다. 다만 고집·충돌·자기 소모 관리가 관건입니다.',
+    특수: true
+  };
+}
+
+// 격국 최종 결정 — 자평진전식 투출 우선
+function determineGyeokguk(일간문자, 일간El, 일간YY, mp, dp, pillars){
+  const 월지문자 = 지지[mp.j];
+
+  // 1순위: 월지가 일간과 같은 오행이면 건록격/양인격 (특수격)
+  const 특수 = calc특수격(일간문자, 일간El, 일간YY, 월지문자);
+  if(특수) return 특수;
+
+  // 2순위: 월지 지장간이 천간에 투출되어 있으면 투출 십신이 격국
+  const 투출목록 = calc월지투출(pillars, 월지문자, 일간El, 일간YY);
+  const 유효격 = ['정관','편관','정재','편재','식신','상관','정인','편인'];
+
+  for(const 투출 of 투출목록){
+    if(유효격.includes(투출.십신)){
+      const 격이름 = 투출.십신 + '격';
+      return {
+        격: 격이름,
+        설명: `월지 지장간 ${투출.지장간}이 ${투출.천간위치}에 투출되어 ${격이름} 성립.`,
+        투출근거: 투출,
+        특수: false
+      };
+    }
+  }
+
+  // 3순위: 투출이 없으면 월지 본기 십신이 격국 (자평진전 원칙)
+  const 월지Hidden = 지장간맵[월지문자] || [];
+  const 본기 = 월지Hidden[0];
+  if(본기){
+    const 본기El = 천간오행[천간.indexOf(본기)];
+    const 본기YY = 천간음양[천간.indexOf(본기)];
+    const 본기십신 = calcTenGod(일간El, 일간YY, 본기El, 본기YY);
+    if(유효격.includes(본기십신)){
+      return {
+        격: 본기십신 + '격',
+        설명: `월지 본기 ${본기}(${본기십신})가 격국의 중심. 투출은 없으나 지장간 본기로 성립.`,
+        투출근거: null,
+        특수: false
+      };
+    }
+  }
+
+  // 4순위: 그 외 모두 실패 시 잡격
+  return {
+    격: '잡격',
+    설명: '격국이 뚜렷이 성립하지 않아 특정 격에 얽매이지 않는 유연한 구조로 해석.',
+    투출근거: null,
+    특수: false
+  };
+}
+
+function calcGyeokguk(mp,dp,yp,hp){
+  // yp, hp는 옵셔널 — 투출 체크용. 없으면 기존 로직만 동작 (하위 호환)
   const 월간El=천간오행[mp.g],월간YY=천간음양[mp.g];
   const 일간El=천간오행[dp.g],일간YY=천간음양[dp.g];
+  const 일간문자=천간[dp.g];
   const 월지문자=지지[mp.j];
   const 월지Hidden=지장간맵[월지문자]||[];
   const monthStemGod=calcTenGod(일간El,일간YY,월간El,월간YY);
@@ -3634,7 +3748,28 @@ function calcGyeokguk(mp,dp){
   const 격이름맵={비견:'비견격',겁재:'겁재격',식신:'식신격',상관:'상관격',정재:'정재격',편재:'편재격',정관:'정관격',편관:'편관격',정인:'정인격',편인:'편인격'};
   const 설명맵={비견격:'자기 확신과 독립성이 강한 구조입니다.',겁재격:'돌파력은 좋지만 경쟁과 소모 관리가 중요합니다.',식신격:'표현력, 생산성, 생활력으로 풀어가는 구조입니다.',상관격:'창의와 언변은 강하나 규범 충돌을 주의해야 합니다.',정재격:'현실 감각, 꾸준함, 관리 능력으로 성과를 만드는 구조입니다.',편재격:'사업감각, 대인 확장, 기회 포착이 강한 구조입니다.',정관격:'질서, 책임, 사회적 위치를 중시하는 구조입니다.',편관격:'압박을 뚫고 성취하는 구조로 강한 추진력이 있습니다.',정인격:'배움, 문서, 자격, 보호를 통해 안정화되는 구조입니다.',편인격:'직관, 기획, 특수 감각은 좋지만 기복 관리가 중요합니다.'};
   const 격=(격이름맵[주격]||'잡격');
-  return{격,주십신:주격,월간십신:monthStemGod,월지십신:monthBranchGod,설명:설명맵[격]||'월령 중심 구조를 따릅니다.',월지:월지문자};
+
+  // 패치 7: 자평진전식 심화 격국 판정 (yp·hp 있을 때만)
+  let 격국정밀 = null;
+  if(yp && hp){
+    const pillars = [yp, mp, dp, hp];
+    const 심화 = determineGyeokguk(일간문자, 일간El, 일간YY, mp, dp, pillars);
+    const 투출목록 = calc월지투출(pillars, 월지문자, 일간El, 일간YY);
+    격국정밀 = {
+      격_정밀: 심화.격,
+      설명_정밀: 심화.설명,
+      특수격여부: 심화.특수,
+      투출근거: 심화.투출근거 || null,
+      전체투출목록: 투출목록
+    };
+  }
+
+  return{
+    격, 주십신: 주격, 월간십신: monthStemGod, 월지십신: monthBranchGod,
+    설명: 설명맵[격]||'월령 중심 구조를 따릅니다.',
+    월지: 월지문자,
+    격국정밀
+  };
 }
 
 function calcYongshin(일간오행,신강판정,oh,격국정보=null){
@@ -4240,7 +4375,7 @@ function calcSaju(){
   //  신강화 엔진 (v9) 
   const 일간오행 = 천간오행[dp.g];
   const 신강정보 = calcSingang(yp, mp, dp, hp, 일간오행);
-  const 격국정보 = calcGyeokguk(mp, dp);
+  const 격국정보 = calcGyeokguk(mp, dp, yp, hp);
   const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
   const 조후정보 = calc조후(mp, oh, 일간오행);
   const 일주key = 천간[dp.g]+지지[dp.j];
@@ -7300,7 +7435,7 @@ function mxBuildMixSaju(y, m, d, shijinIdx, isFemale, marital = 'single') {
     oh[지지오행[p.j]] = (oh[지지오행[p.j]]||0) + 1;
   });
   const 신강정보 = calcSingang(yp, mp, dp, hp, 일간오행);
-  const 격국정보 = calcGyeokguk(mp, dp);
+  const 격국정보 = calcGyeokguk(mp, dp, yp, hp);
   const 정밀용신 = buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp);
   const 일주key = 천간[dg] + 지지[dz];
   const mix_input_id = `${y}-${m}-${d}-${shijinIdx}-${isFemale?'F':'M'}`;
@@ -8154,6 +8289,21 @@ async function runMixAiAnalysis(){
       사주심화 += `\n- 기세판정: ${기세.기세판정} — ${기세.기세설명}`;
       사주심화 += '\n- 해석 가이드: 기세 판정은 "단순 신강/신약"을 넘어서는 실질 기운을 나타냄.';
       사주심화 += '\n  "진강"은 뚫고 나가는 힘, "허강"은 꺾이기 쉬운 기세, "저력약"은 버티는 힘, "진약"은 의지해야 할 구조.';
+    }
+
+    // 패치 7: 격국 정밀 분석 주입 (자평진전식 투출 우선)
+    if(mixSaju.격국정보 && mixSaju.격국정보.격국정밀){
+      const 정밀 = mixSaju.격국정보.격국정밀;
+      사주심화 += '\n\n[격국 정밀 분석 — 자평진전식]';
+      사주심화 += `\n- 정밀 격국: ${정밀.격_정밀}`;
+      사주심화 += `\n- 판정 근거: ${정밀.설명_정밀}`;
+      if(정밀.특수격여부){
+        사주심화 += '\n- 특수격(건록/양인) — 일간이 월지에 뿌리내린 구조';
+      } else if(정밀.투출근거){
+        사주심화 += `\n- 투출 근거: 월지 지장간 ${정밀.투출근거.지장간}이 ${정밀.투출근거.천간위치}에 투출`;
+      }
+      사주심화 += '\n- 해석 가이드: 정밀 격국은 자평진전식 투출 우선 원리 기반.';
+      사주심화 += '\n  투출된 격은 강하게 작동하고, 투출 없는 본기 격은 잠재성 위주 해석.';
     }
 
     // Phase 1-A: 룰DB 해석 주입 (AI 환각 방지)
