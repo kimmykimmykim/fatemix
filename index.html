@@ -8672,6 +8672,141 @@ function _mixFilterFakeShinsal(text, 지지목록){
   return { text: filtered, 제거 };
 }
 
+// ============================================================
+// 패치 13-A: 섹션별 허용 토픽 화이트리스트 (섹션 오염 방지)
+// ============================================================
+
+const _SECTION_FORBIDDEN_KEYWORDS = {
+  '[직업운]': ['배우자', '인연', '궁합', '결혼', '연애', '반려', '짝', '이성'],
+  '[재물운]': ['배우자', '인연', '궁합', '결혼', '연애', '반려'],
+  '[건강운]': ['배우자', '인연', '궁합', '결혼', '연애'],
+  '[대운 흐름]': [],
+  '[성향분석]': [],
+  '[개운법]': ['배우자 인연', '결혼 시기', '새 인연'],
+};
+
+function _mixFilterSectionPollution(text){
+  let filtered = text;
+  const 제거로그 = [];
+
+  Object.keys(_SECTION_FORBIDDEN_KEYWORDS).forEach(섹션태그 => {
+    const 금지어들 = _SECTION_FORBIDDEN_KEYWORDS[섹션태그];
+    if(금지어들.length === 0) return;
+
+    const 시작idx = filtered.indexOf(섹션태그);
+    if(시작idx < 0) return;
+
+    const 검색시작 = 시작idx + 섹션태그.length;
+    let 종료idx = filtered.length;
+    const 다음태그매치 = filtered.substring(검색시작).match(/\n\[[가-힣·\s]+\]/);
+    if(다음태그매치){
+      종료idx = 검색시작 + 다음태그매치.index;
+    }
+
+    const 섹션본문 = filtered.substring(검색시작, 종료idx);
+    let 정제본문 = 섹션본문;
+
+    금지어들.forEach(금지어 => {
+      const 문장패턴 = new RegExp(
+        `[^.!?\\n]*${금지어}[^.!?\\n]*[.!?\\n]`,
+        'g'
+      );
+      const 매치 = 정제본문.match(문장패턴);
+      if(매치){
+        매치.forEach(문장 => {
+          제거로그.push(`${섹션태그} 섹션에서 "${금지어}" 포함 문장 제거: ${문장.trim().slice(0, 60)}...`);
+        });
+        정제본문 = 정제본문.replace(문장패턴, '');
+      }
+    });
+
+    정제본문 = 정제본문.replace(/\n{3,}/g, '\n\n').trim();
+    if(정제본문.length < 30){
+      const 대체맵 = {
+        '[직업운]': '\n이 영역은 사주 구조상 큰 변곡점 없이 꾸준한 흐름이 이어지는 시기입니다.\n',
+        '[재물운]': '\n재물 흐름은 현재 구조가 유지되는 시기입니다.\n',
+        '[건강운]': '\n건강은 큰 변동 없이 현재 상태가 유지됩니다.\n',
+      };
+      정제본문 = 대체맵[섹션태그] || '\n현재 흐름이 유지되는 시기입니다.\n';
+    } else {
+      정제본문 = '\n' + 정제본문 + '\n';
+    }
+
+    filtered = filtered.substring(0, 검색시작) + 정제본문 + filtered.substring(종료idx);
+  });
+
+  return { text: filtered, 제거로그 };
+}
+
+// ============================================================
+// 패치 13-B: 중복 의미 문장 제거 (semantic dedupe, 자카드 유사도)
+// ============================================================
+
+function _mixDedupeSentences(text){
+  const 제거로그 = [];
+
+  const 섹션매치 = text.match(/\[[가-힣·\s]+\][\s\S]*?(?=\n\[[가-힣·\s]+\]|$)/g);
+  if(!섹션매치) return { text, 제거로그 };
+
+  const 처리된섹션 = 섹션매치.map(섹션 => {
+    const 태그매치 = 섹션.match(/^\[[가-힣·\s]+\]/);
+    const 태그 = 태그매치 ? 태그매치[0] : '';
+    const 본문 = 섹션.substring(태그.length);
+
+    const 문장들 = 본문.split(/(?<=[.!?])\s+|\n/).filter(s => s.trim().length > 0);
+
+    const 키워드추출 = (문장) => {
+      const 주요키워드 = [
+        '배우자','인연','궁합','결혼','연애','반려',
+        '재물','돈','수입','지출','투자',
+        '건강','질병','체력',
+        '직업','직장','사업','커리어','진로',
+        '대운','세운',
+        '50대','60대','40대','30대','20대',
+        '초반','중반','후반','중후반','초중반',
+        '자녀','자식','부모','형제',
+      ];
+      return new Set(주요키워드.filter(k => 문장.includes(k)));
+    };
+
+    const 유지된문장 = [];
+    const 이미본키워드셋 = [];
+
+    문장들.forEach(문장 => {
+      const 현재키워드 = 키워드추출(문장);
+      if(현재키워드.size < 2){
+        유지된문장.push(문장);
+        return;
+      }
+
+      let 중복인가 = false;
+      for(const 기존셋 of 이미본키워드셋){
+        const 교집합 = [...현재키워드].filter(k => 기존셋.has(k));
+        const 합집합크기 = new Set([...현재키워드, ...기존셋]).size;
+        const 자카드유사도 = 교집합.length / 합집합크기;
+
+        if(자카드유사도 >= 0.6){
+          중복인가 = true;
+          제거로그.push(`중복 문장 제거 (유사도 ${자카드유사도.toFixed(2)}): ${문장.trim().slice(0, 60)}...`);
+          break;
+        }
+      }
+
+      if(!중복인가){
+        유지된문장.push(문장);
+        이미본키워드셋.push(현재키워드);
+      }
+    });
+
+    return 태그 + '\n' + 유지된문장.join(' ') + '\n';
+  });
+
+  return {
+    text: 처리된섹션.join('\n'),
+    제거로그
+  };
+}
+
 // AI 믹스 분석 — 선택된 술법 + 타로/룬
 // ── 믹스 분석 별 로딩 화면 ──
 function _showMixStarLoading(){
@@ -9095,6 +9230,32 @@ AI는 절대 일반론으로 흘러가서는 안 된다. 질문에 직접 답하
 신살 관련 내용이 부족하면 생략해도 된다. 억지로 채우지 마라.
 `;
 
+  const SECTION_BOUNDARY_RULE = `★★★ 섹션 경계 절대 준수 ★★★
+
+각 섹션은 지정된 토픽만 다룬다. 섹션 경계를 넘어 다른 토픽을 섞는 것은 실패.
+
+[직업운] = 직업·커리어·적성·수입구조만
+  🚫 배우자·인연·결혼·연애 관련 서술 절대 금지
+  🚫 "인연이 찾아온다", "좋은 짝", "궁합" 등 일체 언급 금지
+
+[재물운] = 재물·수입·지출·투자·자산만
+  🚫 배우자·인연·결혼·연애 서술 금지
+
+[연애·관계운] = 배우자·부부·연애만
+  (기혼 사용자면 현재 배우자 관계만, 새 인연 금지)
+
+[건강운] = 체질·건강·질병·주의사항만
+  🚫 배우자·인연·연애 서술 금지
+
+[대운 흐름] = 10년 단위 삶의 전반 흐름
+[성향분석] = 성격·기질·적성
+[개운법] = 색상·방향·행동 (예언 금지)
+
+⚠️ 중복 서술 금지:
+같은 주제(예: 배우자 인연 시기)를 여러 섹션에 반복하지 마라.
+[연애·관계운]과 [궁합분석]에서 같은 내용 반복 금지 — 각 섹션은 고유 관점만.
+`;
+
   // ── tier별 차별화된 sys 프롬프트 ──
   //   3개(free):    짧고 강렬한 맛보기 + 호기심 유발 한 줄
   //   5개(paid):    술법 간 연결 분석 + 현재 조언, 분량 약 2배
@@ -9292,7 +9453,7 @@ H. 형제·친구 관계 패턴
 `;
   }
 
-  const sys = tier==='free' ? AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + TIER_COMMON_HEADER + `
+  const sys = tier==='free' ? AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + SECTION_BOUNDARY_RULE + TIER_COMMON_HEADER + `
 ★ 3개 술법 · 맛보기 · 질문 우선 + 구조 해석 ★
 
 반드시 아래 태그 순서대로:
@@ -9321,7 +9482,7 @@ H. 형제·친구 관계 패턴
 같은 식으로 유료 티어 유도 (노골적 광고 금지, 여운으로).
 `
 
-  : tier==='paid' ? AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + TIER_COMMON_HEADER + `
+  : tier==='paid' ? AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + SECTION_BOUNDARY_RULE + TIER_COMMON_HEADER + `
 ★ 5개 술법 · 본격판 · 영역별 과거/현재/미래 구조 ★
 
 ★★★ 출력 전 필수 체크 (3가지) ★★★
@@ -9441,7 +9602,7 @@ H. 형제·친구 관계 패턴
 - 추측 어투(아마도/테지요/~보이는데) 금지
 `
 
-  : AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + TIER_COMMON_HEADER + `
+  : AI_ROLE_REDEFINITION + '\n' + MARITAL_RULES + '\n' + SYNTHESIS_RULE + QUESTION_PRIORITY_RULE + SHINSAL_HALLUCINATION_RULE + SECTION_BOUNDARY_RULE + TIER_COMMON_HEADER + `
 ★ 7개 술법 · 최고 등급 · 영역별 과거/현재/미래 심화 + 전용 6섹션 ★
 
 ★★★ 출력 전 필수 체크 (3가지) ★★★
@@ -9664,6 +9825,26 @@ H. 형제·친구 관계 패턴
         console.warn(`[MIX AI · ${_currentMarital}] 🛡️ 금지 표현 ${필터결과.제거카운트}건 제거됨:`);
         필터결과.제거문장.forEach((s, i) => console.warn(`  ${i+1}. ${s.slice(0, 80)}...`));
         text = 필터결과.text;
+      }
+
+      // 패치 13-A: 5층 방어 — 섹션 오염 필터
+      if(typeof _mixFilterSectionPollution === 'function'){
+        const 섹션필터 = _mixFilterSectionPollution(text);
+        if(섹션필터.제거로그.length > 0){
+          console.warn(`[MIX AI] 🚧 섹션 오염 ${섹션필터.제거로그.length}건 제거됨:`);
+          섹션필터.제거로그.forEach((s, i) => console.warn(`  ${i+1}. ${s}`));
+          text = 섹션필터.text;
+        }
+      }
+
+      // 패치 13-B: 6층 방어 — 중복 문장 제거
+      if(typeof _mixDedupeSentences === 'function'){
+        const 중복필터 = _mixDedupeSentences(text);
+        if(중복필터.제거로그.length > 0){
+          console.warn(`[MIX AI] 🔁 중복 문장 ${중복필터.제거로그.length}건 제거됨:`);
+          중복필터.제거로그.forEach((s, i) => console.warn(`  ${i+1}. ${s}`));
+          text = 중복필터.text;
+        }
       }
     } catch(e) { console.warn('[MIX AI] 후처리 파이프라인 오류:', e); }
 
