@@ -4119,6 +4119,141 @@ function selectYongshin(scores, helpers){
     선택근거:`${skipReason} / 억부 적합도 ${scores.억부.score}로 폴백`};
 }
 
+// ============================================================
+// 패치 9: 판정권 계층 기반 용신 선정 V2
+// 세경님 원칙: 격국 → 조후 → 억부(기세 반영) → 통관 순
+// ============================================================
+
+function selectYongshinV2(scores, helpers, context){
+  const 격국정밀 = context?.격국정밀;
+  const 조후통합 = context?.조후통합;
+  const 기세정보 = context?.기세정보;
+  const 충돌플래그 = [];
+
+  // [전제] 전왕 특수 케이스 (90+ 확정) — 임계 기존 80 → 90 상향
+  if(scores.전왕.score >= 90){
+    const el = scores.전왕.dominantEl;
+    return {
+      선택종류: '전왕',
+      주용신: el,
+      보조용신: getGenerateElement(el),
+      기신: getControlMeElement(el),
+      선택근거: `전왕 ${scores.전왕.score} (${el} ${scores.전왕.ratio}%, 반대 ${scores.전왕.반대량}%) — 단일 오행 압도적 쏠림으로 전왕 확정`,
+      충돌플래그
+    };
+  }
+
+  // [1순위] 격국 — 정밀 격국이 잡격이 아니면 우선
+  if(격국정밀 && 격국정밀.격_정밀 && 격국정밀.격_정밀 !== '잡격'){
+    const 파격 = scores.격국.파격 || 0;
+
+    if(파격 < 20){
+      const 억부 = helpers.억부용신;
+
+      if(조후통합 && 조후통합.긴급도.판정 === '치명' && 조후통합.보완오행.주 !== 억부.용신){
+        충돌플래그.push(`조후-격국 충돌: 조후는 ${조후통합.보완오행.주}, 격국-억부는 ${억부.용신}`);
+      }
+
+      return {
+        선택종류: '격국',
+        주용신: 억부.용신,
+        보조용신: 억부.희신,
+        기신: 억부.기신,
+        선택근거: `격국 ${격국정밀.격_정밀} 성립 (${격국정밀.특수격여부 ? '특수격' : '투출/본기'}) · 파격 ${파격} — 격국과 정합되는 ${억부.용신} 채택`,
+        충돌플래그
+      };
+    } else {
+      충돌플래그.push(`격국 파격 ${파격}로 격국 임계 미달 — 다음 단계로`);
+    }
+  }
+
+  // [2순위] 조후 — 통합 조후 긴급도 50+(긴급/치명)이면 조후용신
+  if(조후통합 && 조후통합.긴급도.점수 >= 50 && 조후통합.보완오행.주){
+    const 보 = 조후통합.보완오행.주;
+    const 보조 = 조후통합.보완오행.보조 || getGenerateElement(보);
+
+    return {
+      선택종류: '조후',
+      주용신: 보,
+      보조용신: 보조,
+      기신: getControlMeElement(보) || 극나관계[보],
+      선택근거: `조후 ${조후통합.긴급도.판정}(${조후통합.긴급도.점수}점) — 한난 ${조후통합.한난.판정}, 조습 ${조후통합.조습.판정} → 보완 ${보}`,
+      충돌플래그
+    };
+  }
+
+  // 기존 조후 점수도 한 번 체크 (하위 호환)
+  if(scores.조후.score >= 60){
+    const 보 = scores.조후.보완;
+    return {
+      선택종류: '조후',
+      주용신: 보,
+      보조용신: getGenerateElement(보),
+      기신: 극나관계[보],
+      선택근거: `조후 긴급도 ${scores.조후.score} (${scores.조후.type}) — 보완 ${보}`,
+      충돌플래그
+    };
+  }
+
+  // [3순위] 억부 — 기세 반영
+  const 억부 = helpers.억부용신;
+
+  if(기세정보){
+    const 기세 = 기세정보.기세판정;
+    let 기세보정근거 = '';
+
+    if(기세 === '진강'){
+      기세보정근거 = '진강(뿌리+투출 단단) — 설기·제어 용신 강력 추천';
+    } else if(기세 === '허강'){
+      기세보정근거 = '허강(뿌리 약함) — 설기보다 생조 우선 고려';
+      const 인성 = getGenerateElement(신강정보_일간오행(context));
+      if(인성) 억부.희신 = 인성;
+    } else if(기세 === '저력약'){
+      기세보정근거 = '저력약(뿌리 있음) — 비겁·인성 보강 효과적';
+    } else if(기세 === '진약'){
+      기세보정근거 = '진약(무근무투) — 인성·비겁 강력 보강 필수';
+    } else if(기세 === '보통강' || 기세 === '보통강'){
+      기세보정근거 = `${기세} — 표준 억부 적용`;
+    }
+
+    return {
+      선택종류: '억부',
+      주용신: 억부.용신,
+      보조용신: 억부.희신,
+      기신: 억부.기신,
+      선택근거: `억부 ${scores.억부.score} (${기세정보.기세판정}) — ${기세보정근거}`,
+      충돌플래그
+    };
+  }
+
+  // 기세 정보 없을 때 폴백
+  if(scores.통관.score >= 65 && scores.통관.통관오행){
+    const t = scores.통관.통관오행;
+    return {
+      선택종류: '통관',
+      주용신: t,
+      보조용신: getGenerateElement(t),
+      기신: scores.통관.격돌쌍?.a || getControlMeElement(t),
+      선택근거: `통관 ${scores.통관.score} — 격돌 해소 우선`,
+      충돌플래그
+    };
+  }
+
+  return {
+    선택종류: '억부',
+    주용신: 억부.용신,
+    보조용신: 억부.희신,
+    기신: 억부.기신,
+    선택근거: `억부 폴백 — 모든 상위 임계 미달`,
+    충돌플래그
+  };
+}
+
+// 보조: context에서 일간오행 꺼내는 유틸
+function 신강정보_일간오행(context){
+  return context?.일간오행 || null;
+}
+
 function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, mp, dp, hp){
   const pillars = [yp, mp, dp, hp];
   const 월지문자 = 지지[mp.j], 일지문자 = 지지[dp.j], 시지문자 = 지지[hp.j];
@@ -4136,7 +4271,25 @@ function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, m
     억부: {score: scoreEokBu(신강정보)}
   };
   const 억부용신 = calcYongshin(일간오행, 신강정보.판정, oh, 격국정보);
-  const sel = selectYongshin(scores, {억부용신});
+
+  // 패치 9: V2 선정 엔진 우선 사용, 실패 시 V1 폴백
+  let sel;
+  try {
+    const 조후통합 = typeof calcJoHuUnified === 'function'
+      ? calcJoHuUnified(pillars, mp, 일간오행, oh)
+      : null;
+
+    sel = selectYongshinV2(scores, {억부용신}, {
+      격국정밀: 격국정보?.격국정밀 || null,
+      조후통합: 조후통합,
+      기세정보: 신강정보?.기세정보 || null,
+      일간오행: 일간오행
+    });
+  } catch(e) {
+    console.warn('[selectYongshinV2] 에러 → V1 폴백:', e);
+    sel = selectYongshin(scores, {억부용신});
+  }
+
   const 투출 = calcTuchul(sel.주용신, pillars);
   const 선택점수 = scores[sel.선택종류].score;
   const flags = [];
@@ -4172,7 +4325,7 @@ function buildYongshinResult(일간오행, 신강정보, oh, 격국정보, yp, m
   return {
     용신: sel.주용신, 희신: 보조용신, 기신: sel.기신, summary, 설명: summary,
     선택종류: sel.선택종류, 주용신: sel.주용신, 보조용신, confidence,
-    conflict_flags: flags, 위치메모, 선택근거: sel.선택근거,
+    conflict_flags: flags, 충돌플래그: sel.충돌플래그 || [], 위치메모, 선택근거: sel.선택근거,
     점수상세: {전왕: scores.전왕.score, 조후: scores.조후.score, 통관: scores.통관.score, 격국: scores.격국.score, 억부: scores.억부.score},
     분포: dist, 한열점수: 한열, 조습점수: 조습, 통근, 월령, 투출, 충형파
   };
@@ -8449,6 +8602,20 @@ async function runMixAiAnalysis(){
       }
       사주심화 += '\n- 해석 가이드: 조후는 억부와 독립된 축. 긴급도 "긴급/치명"이면 조후 보완이 용신 후보.';
       사주심화 += '\n  "정상/보완"이면 억부(일간 강약) 중심으로 용신 판단.';
+    }
+
+    // 패치 9: 용신 판정권 추적 정보 주입 (격국→조후→억부→통관 순)
+    if(mixSaju.정밀용신){
+      const py = mixSaju.정밀용신;
+      사주심화 += '\n\n[용신 판정권 — 세경님 원칙 기반]';
+      사주심화 += `\n- 선택 종류: ${py.선택종류}`;
+      사주심화 += `\n- 주용신: ${py.주용신} (신뢰도 ${py.confidence}%)`;
+      사주심화 += `\n- 선택 근거: ${py.선택근거 || py.summary}`;
+      if(py.충돌플래그 && py.충돌플래그.length){
+        사주심화 += `\n- 충돌 플래그: ${py.충돌플래그.join(' / ')}`;
+        사주심화 += '\n  (충돌이 있으면 용신을 단정적으로 쓰지 말고 "경향"으로 서술)';
+      }
+      사주심화 += '\n- 해석 가이드: 판정권 순서는 격국→조후→억부→통관. 상위 단계에서 확정된 용신이 있으면 하위는 참고만.';
     }
 
     // Phase 1-A: 룰DB 해석 주입 (AI 환각 방지)
