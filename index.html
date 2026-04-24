@@ -8552,6 +8552,48 @@ function _mixFilterMaritalViolations(text, marital){
   return { text: filtered, 제거카운트: 제거문장.length, 제거문장 };
 }
 
+// ============================================================
+// 패치 15-A: 배우자 특징 "첫째/둘째/셋째" 나열 블록 제거
+// ============================================================
+function _mixFilterFeatureListings(text, marital){
+  if(marital !== 'married' && marital !== 'divorced') {
+    return { text, 제거카운트: 0, 제거블록: [] };
+  }
+
+  // 트리거: "배우자/인연/짝/반려" + "특징/모습/성격/유형/다음과 같은/이런/이러한"
+  const 트리거패턴 = /[^.!?\n]*(?:배우자|인연|짝|반려|좋은\s*사람|만날\s*사람)[^.!?\n]*(?:특징|모습|성격|유형|다음과\s*같은|이런|이러한)[^.!?\n]*[.!?\n]/g;
+
+  const 제거블록 = [];
+  let filtered = text;
+
+  // 트리거 문장 위치 수집
+  const 트리거매치들 = [];
+  let m;
+  while((m = 트리거패턴.exec(text)) !== null){
+    트리거매치들.push({ start: m.index, end: m.index + m[0].length });
+  }
+
+  if(트리거매치들.length === 0) return { text, 제거카운트: 0, 제거블록: [] };
+
+  // 역순 처리로 인덱스 보존
+  트리거매치들.reverse().forEach(트리거 => {
+    const 이후텍스트 = filtered.substring(트리거.end);
+    const 나열패턴 = /^(\s*(?:첫째|둘째|셋째|넷째|다섯째|첫 번째|두 번째|세 번째)[,.]?\s*[^.!?\n]*[.!?\n]\s*){1,5}/;
+    const 나열매치 = 이후텍스트.match(나열패턴);
+
+    if(나열매치){
+      const 블록시작 = 트리거.start;
+      const 블록끝 = 트리거.end + 나열매치[0].length;
+      제거블록.push(filtered.substring(블록시작, 블록끝).trim().slice(0, 100) + '...');
+      filtered = filtered.substring(0, 블록시작) + filtered.substring(블록끝);
+    }
+  });
+
+  filtered = filtered.replace(/\n{3,}/g, '\n\n');
+
+  return { text: filtered, 제거카운트: 제거블록.length, 제거블록 };
+}
+
 // 개발자 콘솔 테스트 API — window._mixTestContradiction('...샘플 텍스트...') 로 수동 검증
 if (typeof window !== 'undefined') {
   window._mixTestContradiction = function(sampleText) {
@@ -8670,6 +8712,42 @@ function _mixFilterFakeShinsal(text, 지지목록){
   filtered = filtered.replace(/\n{3,}/g, '\n\n');
 
   return { text: filtered, 제거 };
+}
+
+// ============================================================
+// 패치 15-B: 일지 오독 방지 — AI가 잘못된 일지 글자 단정 시 삭제
+// ============================================================
+function _mixFilterIlJiMismatch(text, 실제일지){
+  if(!실제일지) return { text, 제거카운트: 0, 제거문장: [] };
+
+  const 제거문장 = [];
+  let filtered = text;
+
+  const 지지오행맵 = {자:'수',축:'토',인:'목',묘:'목',진:'토',사:'화',오:'화',미:'토',신:'금',유:'금',술:'토',해:'수'};
+
+  const 모든지지 = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+  const 오독지지 = 모든지지.filter(지 => 지 !== 실제일지);
+
+  오독지지.forEach(잘못된지지 => {
+    const 잘못된오행 = 지지오행맵[잘못된지지];
+    // 패턴 1: "일지가/는 ○○(○○)" 명시적 단정
+    const pat1 = new RegExp(`[^.!?\\n]*일지[가는이를]?\\s*${잘못된지지}[수목화토금]?\\s*[(（]?${잘못된오행}?[)）]?[^.!?\\n]*[.!?\\n]`, 'g');
+    // 패턴 2: "배우자(궁) 자리 ○○" 단정
+    const pat2 = new RegExp(`[^.!?\\n]*배우자(?:궁|\\s*자리)[이가는을를]?\\s*[^.!?\\n]*${잘못된지지}${잘못된오행}[^.!?\\n]*[.!?\\n]`, 'g');
+
+    [pat1, pat2].forEach(pat => {
+      const matches = filtered.match(pat);
+      if(matches){
+        matches.forEach(m => {
+          제거문장.push(`[일지 오독: "${잘못된지지}${잘못된오행}" 언급, 실제 일지는 "${실제일지}"] ${m.trim().slice(0, 80)}...`);
+        });
+        filtered = filtered.replace(pat, '');
+      }
+    });
+  });
+
+  filtered = filtered.replace(/\n{3,}/g, '\n\n');
+  return { text: filtered, 제거카운트: 제거문장.length, 제거문장 };
 }
 
 // ============================================================
@@ -9925,12 +10003,32 @@ L5. 신살·상징 (보조 근거)
         }
       }
 
+      // 패치 15-B: 3.5층 — 일지 오독 방지
+      if(지지목록 && 지지목록[2] && typeof _mixFilterIlJiMismatch === 'function'){
+        const 일지필터 = _mixFilterIlJiMismatch(text, 지지목록[2]);
+        if(일지필터.제거카운트 > 0){
+          console.warn(`[MIX AI] 🎯 일지 오독 ${일지필터.제거카운트}건 제거됨 (실제 일지: ${지지목록[2]}):`);
+          일지필터.제거문장.forEach((s, i) => console.warn(`  ${i+1}. ${s}`));
+          text = 일지필터.text;
+        }
+      }
+
       // 4층 방어: 기혼/이혼 문장 필터 (패치 11 확장판)
       const 필터결과 = _mixFilterMaritalViolations(text, _currentMarital);
       if(필터결과.제거카운트 > 0){
         console.warn(`[MIX AI · ${_currentMarital}] 🛡️ 금지 표현 ${필터결과.제거카운트}건 제거됨:`);
         필터결과.제거문장.forEach((s, i) => console.warn(`  ${i+1}. ${s.slice(0, 80)}...`));
         text = 필터결과.text;
+      }
+
+      // 패치 15-A: 4.5층 — 배우자 특징 "첫째/둘째/셋째" 나열 블록 제거
+      if(typeof _mixFilterFeatureListings === 'function'){
+        const 블록필터 = _mixFilterFeatureListings(text, _currentMarital);
+        if(블록필터.제거카운트 > 0){
+          console.warn(`[MIX AI · ${_currentMarital}] 🎯 배우자 특징 나열 ${블록필터.제거카운트}블록 제거됨:`);
+          블록필터.제거블록.forEach((b, i) => console.warn(`  ${i+1}. ${b}`));
+          text = 블록필터.text;
+        }
       }
 
       // 패치 13-A: 5층 방어 — 섹션 오염 필터
