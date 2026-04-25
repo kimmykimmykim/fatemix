@@ -3059,6 +3059,12 @@ const 문창귀인표 = {
   '임': '인', '계': '묘'
 };
 
+// calcShinsal 결과와 1:1 동기화 필수. 추가 시 calcShinsal 로직도 함께 수정할 것.
+const ALLOWED_SHINSAL = Object.freeze([
+  '도화살', '역마살', '화개살', '천을귀인', '문창귀인',
+  '백호대살', '양인살', '공망살', '원진살'
+]);
+
 function calcShinsal(사주팔자, 일간문자) {
   const 모든지지 = 사주팔자.map(p => 지지[p.j]);
   const 연지 = 지지[사주팔자[0].j]; // 첫번째가 연주
