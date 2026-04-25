@@ -3273,12 +3273,18 @@ const 해표 = [['자','미'],['축','오'],['인','사'],['묘','진'],['유','
 function calcHapChung(사주팔자) {
   const 천간목록 = 사주팔자.map(p => 천간[p.g]);
   const 지지목록 = 사주팔자.map(p => 지지[p.j]);
-  const 결과 = { 합: [], 충: [], 형: [], 파: [], 해: [] };
+  // 기존 string[] 필드(합/충/형/파/해)는 그대로 유지 — UI/프롬프트 호환성 보장.
+  // *_meta 는 디버깅·검증기용 추가 정보. 외부 호출부는 사용하지 않아도 무방.
+  const 결과 = {
+    합: [], 충: [], 형: [], 파: [], 해: [],
+    합_meta: [], 충_meta: [], 형_meta: [], 파_meta: [], 해_meta: []
+  };
 
   // 천간합
   for (const [합이름, [g1, g2]] of Object.entries(천간합표)) {
     if (천간목록.includes(g1) && 천간목록.includes(g2)) {
       결과.합.push(`천간합: ${g1}${g2}합 → ${천간합결과[합이름]}`);
+      결과.합_meta.push({ 이름: `${g1}${g2}합`, 근거천간: [g1, g2], ruleType: '천간합' });
     }
   }
 
@@ -3286,6 +3292,7 @@ function calcHapChung(사주팔자) {
   for (const [j1, j2] of 충표) {
     if (지지목록.includes(j1) && 지지목록.includes(j2)) {
       결과.충.push(`${j1}${j2}충 — 갑작스러운 변화, 이동, 갈등, 건강 이상 주의`);
+      결과.충_meta.push({ 이름: `${j1}${j2}충`, 근거지지: [j1, j2], ruleType: '지지충' });
     }
   }
 
@@ -3294,6 +3301,7 @@ function calcHapChung(사주팔자) {
     const 있는것 = 삼합.filter(j => 지지목록.includes(j));
     if (있는것.length >= 2) {
       결과.합.push(`지지삼합(${있는것.length}개): ${이름} → ${오행} 강화`);
+      결과.합_meta.push({ 이름, 근거지지: 있는것, ruleType: '지지삼합' });
     }
   }
 
@@ -3302,6 +3310,7 @@ function calcHapChung(사주팔자) {
     if (지지목록.includes(j1) && 지지목록.includes(j2)) {
       const 키 = [j1,j2].sort().join('');
       결과.합.push(`지지육합: ${j1}${j2}합 → ${육합결과[키]||'오행 변화'}`);
+      결과.합_meta.push({ 이름: `${j1}${j2}합`, 근거지지: [j1, j2], ruleType: '육합' });
     }
   }
 
@@ -3311,13 +3320,17 @@ function calcHapChung(사주팔자) {
     // 기존 .filter(...).length 방식은 같은 지지가 1개만 있어도 length 2가 되는 버그가 있었다.
     if (형.length === 2 && 형[0] === 형[1]) {
       const cnt = 지지목록.filter(j => j === 형[0]).length;
-      if (cnt >= 2) 결과.형.push(`${이름}: ${의미}`);
+      if (cnt >= 2) {
+        결과.형.push(`${이름}: ${의미}`);
+        결과.형_meta.push({ 이름, 근거지지: [형[0], 형[0]], ruleType: '자형' });
+      }
       continue;
     }
     // 상형(2지지 다른 값) / 삼형(3지지): 매칭 지지 2개 이상이면 성립(반형 포함).
     const 있는것 = 형.filter(j => 지지목록.includes(j));
     if (있는것.length >= 2) {
       결과.형.push(`${이름}: ${의미}`);
+      결과.형_meta.push({ 이름, 근거지지: 있는것, ruleType: 형.length === 3 ? '삼형' : '상형' });
     }
   }
 
@@ -3325,6 +3338,7 @@ function calcHapChung(사주팔자) {
   for (const [j1, j2] of 파표) {
     if (지지목록.includes(j1) && 지지목록.includes(j2)) {
       결과.파.push(`${j1}${j2}파 — 계획 방해, 인연 파손`);
+      결과.파_meta.push({ 이름: `${j1}${j2}파`, 근거지지: [j1, j2], ruleType: '파' });
     }
   }
 
@@ -3332,6 +3346,7 @@ function calcHapChung(사주팔자) {
   for (const [j1, j2] of 해표) {
     if (지지목록.includes(j1) && 지지목록.includes(j2)) {
       결과.해.push(`${j1}${j2}해 — 숨은 방해, 모함, 배신 주의`);
+      결과.해_meta.push({ 이름: `${j1}${j2}해`, 근거지지: [j1, j2], ruleType: '해' });
     }
   }
 
