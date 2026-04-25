@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
   try {
     const { sys, userMsg, maxTok = 1200 } = req.body;
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
     const fetchOptions = {
       method: 'POST',
       headers: {
@@ -76,10 +76,7 @@ export default async function handler(req, res) {
         ],
         generationConfig: {
           maxOutputTokens: maxTok,
-          temperature: 0.8,
-          thinkingConfig: {
-            thinkingBudget: 512
-          }
+          temperature: 0.8
         }
       })
     };
