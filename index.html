@@ -3065,6 +3065,7 @@ const ALLOWED_SHINSAL = Object.freeze([
   '백호대살', '양인살', '공망살', '원진살'
 ]);
 const ALLOWED_SHINSAL_TEXT = ALLOWED_SHINSAL.join(', ');
+const EMPTY_SHINSAL_GUIDE = '이 사주에는 주요 신살이 발현되지 않았습니다. 신살에 의존하지 말고 사주 본질(격국·용신·오행 균형)로 해석하세요.';
 
 function calcShinsal(사주팔자, 일간문자) {
   const 모든지지 = 사주팔자.map(p => 지지[p.j]);
@@ -5212,9 +5213,9 @@ async function analyzeSaju(){
 
   // 신살
   const 신살목록 = calcShinsal(사주팔자배열, 일간문자);
-  const 신살텍스트 = 신살목록.length > 0
-    ? 신살목록.map(s => `${s.신살}: ${s.설명}`).join('\n')
-    : '특별한 신살 없음';
+  const 신살텍스트 = 신살목록.length === 0
+    ? EMPTY_SHINSAL_GUIDE
+    : 신살목록.map(s => `${s.신살}: ${s.설명}`).join('\n');
 
   // 합충형파해
   const 합충데이터 = calcHapChung(사주팔자배열);
@@ -8170,6 +8171,7 @@ async function runMixAiAnalysis(){
       mixSaju.신살결과.forEach(s => 룰DB블록.push(`${s.신살}: ${s.설명}`));
     } else {
       룰DB블록.push(`\n[신살 — 해당 사항 없음. 허용 신살(${ALLOWED_SHINSAL_TEXT}) 중 어느 것도 억지 언급 금지. 목록 외 신살명은 절대 사용 금지.]`);
+      룰DB블록.push(EMPTY_SHINSAL_GUIDE);
     }
 
     if(룰DB블록.length){
