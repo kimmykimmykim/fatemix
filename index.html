@@ -1762,9 +1762,27 @@ function _autoFillMixFromSaju(){
   var gender=d.gender;
   if(gender){
     mxGenderVal=gender;
-    document.querySelectorAll('#screen-mix .gender-btn').forEach(function(b,i){
+    document.querySelectorAll('#screen-mix [onclick^="mxGender"]').forEach(function(b,i){
       b.classList.toggle('active',(gender==='male'&&i===0)||(gender==='female'&&i===1));
     });
+  }
+
+  // 결혼 상태 (생년월일과 동일한 우선순위로 조회: sjData → fm_saju_last → fm_saju[0])
+  var maritalSrc=null;
+  if(typeof sjData!=='undefined'&&sjData&&sjData.marital) maritalSrc=sjData.marital;
+  else if(last&&last.marital) maritalSrc=last.marital;
+  else{
+    try{
+      var _list=JSON.parse(localStorage.getItem('fm_saju')||'[]');
+      if(_list.length>0&&_list[0]&&_list[0].data&&_list[0].data.marital) maritalSrc=_list[0].data.marital;
+    }catch(e){}
+  }
+  if(maritalSrc==='single'||maritalSrc==='married'||maritalSrc==='divorced'){
+    mxMaritalVal=maritalSrc;
+    document.querySelectorAll('#mx-marital-single,#mx-marital-married,#mx-marital-divorced').forEach(function(b){b.classList.remove('active');});
+    var _mBtn=document.getElementById('mx-marital-'+maritalSrc);
+    if(_mBtn) _mBtn.classList.add('active');
+    console.log('[Mix Auto-fill] marital synced:', mxMaritalVal);
   }
 }
 
@@ -13178,10 +13196,37 @@ function goMixFromFortune() {
     const gender = (typeof sjGenderVal !== 'undefined') ? sjGenderVal : null;
     if (gender) {
       mxGenderVal = gender;
-      document.querySelectorAll('#screen-mix .gender-btn').forEach((b, i) => {
+      document.querySelectorAll('#screen-mix [onclick^="mxGender"]').forEach((b, i) => {
         b.classList.toggle('active', (gender === 'male' && i === 0) || (gender === 'female' && i === 1));
       });
     }
+  }
+
+  // 결혼 상태 (생년월일과 동일한 우선순위로 조회: sjData → fm_saju_last → fm_saju[0])
+  let maritalSrc = null;
+  if (typeof sjData !== 'undefined' && sjData && sjData.marital) {
+    maritalSrc = sjData.marital;
+  } else {
+    try {
+      const rawLast = localStorage.getItem('fm_saju_last');
+      if (rawLast) {
+        const last = JSON.parse(rawLast);
+        if (last && last.marital) maritalSrc = last.marital;
+      }
+    } catch (e) {}
+    if (!maritalSrc) {
+      try {
+        const list = JSON.parse(localStorage.getItem('fm_saju') || '[]');
+        if (list.length > 0 && list[0] && list[0].data && list[0].data.marital) maritalSrc = list[0].data.marital;
+      } catch (e) {}
+    }
+  }
+  if (maritalSrc === 'single' || maritalSrc === 'married' || maritalSrc === 'divorced') {
+    mxMaritalVal = maritalSrc;
+    document.querySelectorAll('#mx-marital-single,#mx-marital-married,#mx-marital-divorced').forEach(b => b.classList.remove('active'));
+    const mBtn = document.getElementById('mx-marital-' + maritalSrc);
+    if (mBtn) mBtn.classList.add('active');
+    console.log('[Mix Auto-fill] marital synced:', mxMaritalVal);
   }
   go('mix');
   // 데이터 이미 채워졌으므로 바로 STEP 2로
