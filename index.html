@@ -5153,305 +5153,6 @@ async function sjDownload(){
   document.body.removeChild(card);
 }
 
-// AI 사주 분석
-async function analyzeSaju(){
-  if(!sjData)return;
-  const {yp,mp,dp,hp,oh,ys,du,cdu,su,age,cy,일간오행,신강정보,격국정보,정밀용신,조후정보,일주key}=sjData;
-  const btn=document.getElementById('sj-btn');
-  btn.disabled=true;btn.textContent='분석 중...';
-  document.getElementById('sj-reading').style.display='none';
-
-  const ohTxt=Object.entries(oh).map(([k,v])=>`${k}:${v}개`).join(', ');
-  const suTxt=su.map(s=>`${s.year}년:${천간[s.g]}${지지[s.j]}(${천간오행[s.g]}/${지지오행[s.j]})`).join(', ');
-  const zero=Object.entries(oh).filter(([k,v])=>v===0).map(([k])=>k).join('/');
-
-  // 대운-용신 충돌/조화 분석
-  const duOhaeng = 천간오행[cdu.g] || 지지오행[cdu.j];
-  const 용신오행 = 정밀용신.용신;
-  const 기신오행 = 정밀용신.기신;
-  const 희신오행 = 정밀용신.희신;
-  const 대운관계 = 용신오행&&duOhaeng===용신오행 ? '★용신대운(최고의 전환점)' :
-                   희신오행&&duOhaeng===희신오행 ? '◎희신대운(상승기)' :
-                   기신오행&&duOhaeng===기신오행 ? '▲기신대운(버텨야할시기)' : '중간대운';
-
-  // 격국 특성 텍스트
-  const 격국특성DB = {
-    '식신격':{성격:'창의력과 표현력이 뛰어난 예술가형. 복스러운 기운이 있음.',직업:'요리·예술·창작·교육·서비스·방송',주의:'게으름, 재능을 묻어두는 것 주의'},
-    '상관격':{성격:'언변이 뛰어나고 재기발랄. 기존 질서에 도전하는 혁신적 성향.',직업:'연예·언론·법조·컨설팅·스타트업',주의:'윗사람 충돌 잦음. 언행 조절 필요'},
-    '편재격':{성격:'활동적이고 재물욕이 강함. 큰 그림을 그리며 투자 사업 감각 있음.',직업:'무역·투자·부동산·영업',주의:'크게 벌기도 크게 잃기도 함. 투기 금물'},
-    '정재격':{성격:'성실하고 꼼꼼한 재물관리형. 안정적으로 쌓아가는 능력.',직업:'금융·회계·공무원·관리직',주의:'보수성이 강해 기회를 놓칠 수 있음'},
-    '편관격':{성격:'카리스마와 추진력이 강한 장군형. 어려운 상황에서도 굴하지 않음.',직업:'군인·경찰·CEO 등 강한 실행력 분야',주의:'공격성과 급한 성격이 화를 부를 수 있음'},
-    '칠살격':{성격:'강렬하고 파워풀. 극단적 상황에서 오히려 빛을 발하는 타입.',직업:'의사·수술·군경·위기관리',주의:'건강과 사고 주의. 극단적 선택 피해야'},
-    '정관격':{성격:'원칙적이고 책임감 강한 리더형. 명예를 중시함.',직업:'공무원·법조·교사·관리직',주의:'지나친 원칙주의로 융통성 부족'},
-    '편인격':{성격:'독창적 생각, 영적 감수성 높음. 남이 못 보는 것을 보는 통찰력.',직업:'종교·철학·역술·예술·심리상담',주의:'현실감 부족, 고집 셀 수 있음'},
-    '정인격':{성격:'지식과 학문을 사랑하는 학자형. 포용력이 강함.',직업:'교육·학문·출판·복지·의료',주의:'의존성, 현실 적응력 부족'},
-  };
-  const 격특성 = 격국특성DB[격국정보.격] || {성격:'복합적 기질',직업:'다방면',주의:'집중력 필요'};
-  const 일주텍스트원본 = 일주해석DB[일주key] || '';
-  const 핵심요약 = sjData ? getSajuCoreSummary(sjData) : '';
-
-  //  새 이론 계산 
-  const 사주팔자배열 = [yp, mp, dp, hp];
-  const 일간문자 = 천간[dp.g];
-  const 일간음양 = 천간음양[dp.g];
-  const 월지문자 = 지지[mp.j];
-  const 시간문자 = 천간[hp.g];
-
-  // 물상론
-  const 물상데이터 = getMulsang(일간문자, 시간문자, 월지문자, 격국정보.격);
-
-  // 십이운성 (일주, 월주, 시주)
-  const 일간오행문자 = 천간오행[dp.g];
-  const 일주운성 = calc십이운성(일간오행문자, 지지[dp.j]);
-  const 월주운성 = calc십이운성(일간오행문자, 지지[mp.j]);
-  const 시주운성 = calc십이운성(일간오행문자, 지지[hp.j]);
-  const 운성텍스트 = [
-    일주운성 ? `일지(${지지[dp.j]}) ${일주운성}: ${십이운성해석[일주운성]||''}` : '',
-    월주운성 ? `월지(${지지[mp.j]}) ${월주운성}: ${십이운성해석[월주운성]||''}` : '',
-    시주운성 ? `시지(${지지[hp.j]}) ${시주운성}: ${십이운성해석[시주운성]||''}` : ''
-  ].filter(Boolean).join('\n');
-
-  // 신살
-  const 신살목록 = calcShinsal(사주팔자배열, 일간문자);
-  const 신살텍스트 = 신살목록.length === 0
-    ? EMPTY_SHINSAL_GUIDE
-    : 신살목록.map(s => `${s.신살}: ${s.설명}`).join('\n');
-
-  // 합충형파해
-  const 합충데이터 = calcHapChung(사주팔자배열);
-  const 합텍스트 = 합충데이터.합.length > 0 ? 합충데이터.합.join(', ') : '없음';
-  const 충텍스트 = 합충데이터.충.length > 0 ? 합충데이터.충.join(', ') : '없음';
-  const 형텍스트 = 합충데이터.형.length > 0 ? 합충데이터.형.join(', ') : '없음';
-  const 파해텍스트 = [...합충데이터.파, ...합충데이터.해].length > 0
-    ? [...합충데이터.파, ...합충데이터.해].join(', ') : '없음';
-
-  // 십신 분석 (각 기둥의 천간)
-  const 십신분석 = [yp, mp, hp].map(p => {
-    const 대상오행 = 천간오행[p.g];
-    const 대상음양 = 천간음양[p.g];
-    const 십신 = calc십신(일간오행문자, 대상오행, 일간음양, 대상음양);
-    const 육친 = get육친(십신, sjGenderVal);
-    const 물상 = 십신물상[십신] || '';
-    return `${천간[p.g]}(${십신}·${육친}): ${물상}`;
-  }).join('\n');
-
-  // 나이 컨텍스트
-  const 나이컨텍스트 = getAgeContext(age);
-
-  const data=`[핵심 명리 요약]
-${핵심요약}
-
-[사주팔자 원국]
-년주:${천간[yp.g]}${지지[yp.j]} / 월주:${천간[mp.g]}${지지[mp.j]} / 일주:${천간[dp.g]}${지지[dp.j]} / 시주:${천간[hp.g]}${지지[hp.j]}
-오행분포: ${ohTxt} (없는오행: ${zero||'없음'})
-신강약: ${신강정보.판정} ${신강정보.총점}점 (득령:${신강정보.득령?'○':'✗'} 득지:${신강정보.득지?'○':'✗'} 득세:${신강정보.득세점수}점)
-격국: ${격국정보.격} / 용신:${정밀용신.용신} / 희신:${정밀용신.희신} / 기신:${정밀용신.기신}
-조후: ${조후정보.물상} / ${조후정보.조후필요||'조후균형'}
-
-[일주 고유 기질]
-${일간문자}${지지[dp.j]}일주: ${일주텍스트원본}
-
-[물상론 — 직업·사건·인물 이미지]
-일간(${일간문자}) 물상: ${물상데이터.일간물상}
-시간(${시간문자}) 물상: ${물상데이터.시간물상}
-월지(${월지문자}) 물상: ${물상데이터.월지물상}
-
-[십신·육친 분석]
-${십신분석}
-
-[십이운성]
-${운성텍스트}
-
-[신살]
-${신살텍스트}
-
-[합충형파해]
-합: ${합텍스트}
-충: ${충텍스트}
-형: ${형텍스트}
-파·해: ${파해텍스트}
-
-[격국이 말하는 이 사람의 본질]
-성격기질: ${격특성.성격}
-천직(직업운): ${격특성.직업}
-이 사람의 약점: ${격특성.주의}
-
-[대운·세운 현황]
-현재대운: ${천간[cdu.g]}${지지[cdu.j]} (${cdu.age}세~${cdu.age+9}세) → ${대운관계}
-대운오행(${duOhaeng})이 용신(${용신오행})과의 관계: ${대운관계}
-세운흐름: ${suTxt}
-
-[성별/나이/결혼여부]
-${sjGenderVal==='female'?'여성(곤명)':'남성(건명)'} / 현재 ${age}세 / ${sjData?.marital==='married'?'기혼':sjData?.marital==='divorced'?'이혼·별거':'미혼'}
-${sjData?.marital==='married'?'★ 기혼자입니다. 연애운은 새 인연이 아닌 배우자와의 관계, 부부운, 가정운으로 해석하세요. 절대 새로운 이성 만남을 권유하지 마세요.':sjData?.marital==='divorced'?'★ 이혼·별거 상태입니다. 연애운은 재혼/새 출발 가능성과 감정 회복 방향으로 해석하세요.':''}
-${나이컨텍스트.ageNote}`;
-
-  const maritalNote = sjData?.marital==='married'
-    ? '★ 기혼자. 연애=배우자/부부관계로만. 새 이성만남 절대금지.'
-    : sjData?.marital==='divorced' ? '★ 이혼/별거. 연애=감정회복/재출발 방향으로.' : '';
-
-  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 수만 명 팔자 봤다. 신비롭고 고풍스러우면서도 현대적 존댓말.
-
-금지: 고어체("그대의","~하오니"), 봄비/대나무 같은 시적비유, 공허한위로, 뭉뚱그린말, 데이터나열
-${나이컨텍스트.forbid.length>0?'절대금지주제: '+나이컨텍스트.forbid.join(', '):''}
-${maritalNote}
-집중: ${나이컨텍스트.focus.join(', ')}
-
-핵심: 물상론(경금=칼/수술, 임수=유통/무역, 병화=무대/방송, 계수=감성/예술/치유, 을목=미용/예술/문서, 정화=정밀기술/요리/세공) + 심리패턴(반복상처구조) + 타이밍(지금${age}세가 어느지점)
-
-★★★ 직업/성공전략 필수 규칙 ★★★
-- 격국 이름만 보고 직업을 뽑지 마라. 반드시 일간 물상 + 일주 기질 + 격국을 함께 봐라
-- 정재격이라도 계수일간이면 금융/회계가 아니라 감성/예술/서비스 방향이다
-- 일간 물상이 직업의 핵심이다. 예: 계수→감성치유/상담/예술, 임수→유통/무역/스포츠, 경금→수술/금속/군경, 병화→방송/무대/마케팅
-- 현대 직업으로: 공무원/회사원 말고 프리랜서/크리에이터/전문직/플랫폼/스타트업으로 번역
-
-"이거 내 얘기다" 소름 돋는 구체성. 친한 선배가 직설적으로 말해주듯.
-
-반드시 아래 형식 그대로. 태그명 정확히:
-
-[타고난나] 이 사람의 본질을 꿰뚫는 선언 1문장. 일주+격국+물상으로 타고난 기질과 재능 2문장. 반복되는 심리패턴과 상처구조 2문장. 총5문장.
-
-[실행력] 편관/칠살/추진력 관련. 이 사람이 어떻게 밀어붙이는지, 언제 강하고 언제 무너지는지. 3문장.
-
-[움직이는나] 식신/상관 기반. 이 사람이 실제로 어떻게 행동하고 표현하는지. 일상에서 보이는 패턴. 3문장.
-
-[성공전략] 격국 기반 현실 성공 전략. 어떤 환경에서 빛나는지. 피해야 할 함정. 3문장.
-
-[현실의나] 재성 기반. 돈이 어떤 방식으로 들어오는지 장면으로(앉아서 기다리는돈/사람만나는돈/기술팔기). 재물 패턴. 3문장.
-
-[세상속의나] 관성 기반. 사회/조직에서 어떤 존재인지. 어떻게 인정받는지. 3문장.
-
-[관계의법칙] 육친/인간관계. 반복되는 관계 패턴. ${maritalNote?'부부관계 포함':'연애패턴 포함'}. 귀인은 어떤 사람인지. 3문장.
-
-[숨겨진나] 편인/정인 기반. 겉으로 안 보이는 내면. 혼자일때의 모습. 숨겨진 재능. 3문장.
-
-[운명의본궤점] 대운·세운·합충 근거. 지금이 인생에서 어느 지점인지. 앞으로 3~5년 구체적 타이밍. 3문장.
-
-[이상VS행동] 꿈꾸는것과 실제행동의 괴리. 이 사람만의 모순. 어떻게 다리 놓을지. 3문장.
-
-[사회VS가정] 밖에서의 나와 집에서의 나의 차이. 어느쪽에서 더 진짜인지. 3문장.
-
-[나를한마디로] 이 사람 전체를 꿰뚫는 한 문장. 그 아래 총합 해석 5문장.
-
-[에너지키워드] 단어3개/슬래시구분
-
-[타임라인]
-${cy}|2글자|한줄
-${cy+1}|2글자|한줄
-${cy+2}|2글자|한줄
-${cy+3}|2글자|한줄
-${cy+4}|2글자|한줄`;
-
-  try{
-    const text=await callGemini(sys,`${data}\n분석주제:${sjTopicVal}\n질문:${document.getElementById('sj-q').value||sjTopicVal+' 운세'}`,3000);
-    const get=(t,n)=>text.match(new RegExp(`\\[${t}\\]([\\s\\S]*?)(?=\\[${n.replace(/\|/g,'\\|')}\\]|$)`))?.[1]?.trim()||'';
-
-    // 매트릭스 카드 렌더링
-    const matrices = [
-      {key:'타고난나', icon:'🌟', title:'타고난 나', subtitle:'일주 기질 · 본질'},
-      {key:'실행력', icon:'⚡', title:'실행력', subtitle:'편관 · 추진 에너지'},
-      {key:'움직이는나', icon:'🏃', title:'움직이는 나', subtitle:'식신 · 행동 패턴'},
-      {key:'성공전략', icon:'🎯', title:'성공 전략', subtitle:'격국 · 천직'},
-      {key:'현실의나', icon:'💰', title:'현실의 나', subtitle:'재성 · 돈의 형태'},
-      {key:'세상속의나', icon:'🌍', title:'세상 속의 나', subtitle:'관성 · 사회적 위치'},
-      {key:'관계의법칙', icon:'❤️', title:'관계의 법칙', subtitle:'육친 · 인연 패턴'},
-      {key:'숨겨진나', icon:'🔮', title:'숨겨진 나', subtitle:'편인 · 내면 세계'},
-      {key:'운명의본궤점', icon:'⏳', title:'운명의 본궤점', subtitle:'대운 · 세운 타이밍'},
-      {key:'이상VS행동', icon:'⚖️', title:'이상 VS 행동', subtitle:'꿈 vs 현실'},
-      {key:'사회VS가정', icon:'🏠', title:'사회 VS 가정', subtitle:'밖의 나 vs 집의 나'},
-      {key:'나를한마디로', icon:'✨', title:'나를 한마디로', subtitle:'전체 종합'}
-    ];
-
-    // 다음 키 배열
-    const keys = matrices.map(m=>m.key);
-
-    let matrixHtml = '<div style="display:grid;gap:12px;">';
-
-    // 타고난나 — 전체 너비 크게
-    const 타고난나txt = get('타고난나', '실행력');
-    if(타고난나txt){
-      matrixHtml += `<div style="padding:20px;background:linear-gradient(135deg,rgba(201,168,76,0.12) 0%,rgba(201,168,76,0.04) 100%);border:0.5px solid rgba(201,168,76,0.5);border-radius:14px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-          <span style="font-size:20px;">🌟</span>
-          <div><div style="font-size:14px;color:var(--gold);font-weight:600;">타고난 나</div><div style="font-size:10px;color:var(--text-3);">일주 기질 · 본질</div></div>
-        </div>
-        <div style="font-size:14px;color:var(--text);line-height:2.1;word-break:keep-all;">${타고난나txt}</div>
-      </div>`;
-    }
-
-    // 3x3 그리드 (실행력~숨겨진나)
-    const gridCards = matrices.slice(1, 9);
-    matrixHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
-    gridCards.forEach((m, i) => {
-      const nextKey = keys[i+2] || '운명의본궤점';
-      const txt = get(m.key, nextKey);
-      if(!txt) return;
-      matrixHtml += `<div style="padding:16px;background:var(--dark2);border:0.5px solid var(--border);border-radius:12px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:16px;">${m.icon}</span>
-          <div><div style="font-size:12px;color:var(--gold);">${m.title}</div><div style="font-size:9px;color:var(--text-3);">${m.subtitle}</div></div>
-        </div>
-        <div style="font-size:12px;color:var(--text-2);line-height:1.9;word-break:keep-all;">${txt}</div>
-      </div>`;
-    });
-    matrixHtml += '</div>';
-
-    // VS 카드 2개
-    matrixHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
-    ['이상VS행동','사회VS가정'].forEach((key, i) => {
-      const m = matrices.find(x=>x.key===key);
-      const next = i===0?'사회VS가정':'나를한마디로';
-      const txt = get(key, next);
-      if(!txt||!m) return;
-      matrixHtml += `<div style="padding:16px;background:var(--dark3);border:0.5px solid rgba(201,168,76,0.3);border-radius:12px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-          <span style="font-size:16px;">${m.icon}</span>
-          <div><div style="font-size:12px;color:var(--gold);">${m.title}</div><div style="font-size:9px;color:var(--text-3);">${m.subtitle}</div></div>
-        </div>
-        <div style="font-size:12px;color:var(--text-2);line-height:1.9;word-break:keep-all;">${txt}</div>
-      </div>`;
-    });
-    matrixHtml += '</div>';
-
-    // 나를 한마디로
-    const 한마디txt = get('나를한마디로', '에너지키워드');
-    if(한마디txt){
-      matrixHtml += `<div style="padding:20px;background:var(--dark2);border:0.5px solid var(--border);border-radius:14px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-          <span style="font-size:20px;">✨</span>
-          <div><div style="font-size:14px;color:var(--gold);">나를 한마디로</div><div style="font-size:10px;color:var(--text-3);">전체 종합</div></div>
-        </div>
-        <div style="font-size:14px;color:var(--text);line-height:2.1;word-break:keep-all;">${한마디txt}</div>
-      </div>`;
-    }
-
-    matrixHtml += '</div>';
-
-    // 에너지 키워드
-    const kw=get('에너지키워드','타임라인');
-    if(kw){
-      let kwHtml = '<div style="margin-top:12px;"><div style="font-size:9px;color:var(--text-3);letter-spacing:0.12em;margin-bottom:8px;text-transform:uppercase;">✦ 에너지 키워드</div>';
-      kw.split('/').forEach(k=>{kwHtml+=`<span style="display:inline-block;padding:4px 12px;border-radius:14px;border:0.5px solid rgba(201,168,76,0.4);color:var(--gold);font-size:12px;margin:3px;background:var(--gold-dim)">${k.trim()}</span>`;});
-      kwHtml += '</div>';
-      matrixHtml += kwHtml;
-    }
-
-    document.getElementById('sj-matrix-result').innerHTML = matrixHtml;
-
-    // 타임라인
-    const tlRaw=get('타임라인','$');
-    const tlEl=document.getElementById('sj-tl-items');
-    tlEl.innerHTML='';
-    tlRaw.split('\n').filter(l=>l.includes('|')).forEach(line=>{
-      const [yr,kw,desc]=line.split('|');
-      if(yr&&kw)tlEl.innerHTML+=`<div class="tl-row"><div class="tl-yr">${yr.trim()}</div><div><div class="tl-kw">${kw.trim()}</div><div class="tl-desc">${(desc||'').trim()}</div></div></div>`;
-    });
-    if(tlEl.innerHTML)document.getElementById('sj-tl').style.display='block';
-
-    document.getElementById('sj-reading').style.display='block';
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 사주 분석하기';
-}
 
 // 
 // 타로 SVG 카드 렌더링
@@ -7116,38 +6817,6 @@ function nuTab(name,btn){
   document.getElementById('nup-'+name).classList.add('active');
 }
 
-async function nuAiAnalyze() {
-  if (!nuData) return;
-  const {y,m,d,name,lp,py,bd,ex,su,pe} = nuData;
-  const btn = document.getElementById('nu-ai-btn');
-  btn.disabled=true; btn.textContent='해석 중...';
-
-  const numTxt = `생명수:${lp}(${NU_MEANINGS[lp]?.key}), 개인연도:${py}(${NU_MEANINGS[py]?.key}), 생일수:${bd}`
-    + (ex?`, 운명수:${ex}(${NU_MEANINGS[ex]?.key})`:'')
-    + (su?`, 영혼수:${su}`:'')
-    + (pe?`, 성격수:${pe}`:'');
-
-  const cy = new Date().getFullYear();
-
-  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 피타고라스 수비학 기반.
-직설적으로. 위로멘트없이. 각 숫자의 에너지를 근거로 사용. 나쁜 면도 돌파구 제시. 마스터 넘버(11,22,33)는 특별히 강조.
-
-형식:
-[생명수] 생명수 ${lp}의 핵심 에너지와 인생 방향 4문장.
-[개인연도] ${cy}년 개인연도 ${py}의 흐름과 기회 3문장.
-[현실조언] 수비학 기반 지금 해야 할 것과 피할 것 3문장.`;
-
-  try {
-    const text=await callGemini(sys,`생년월일: ${y}년 ${m}월 ${d}일\n${numTxt}${name?'\n이름: '+name:''}`,1500);
-    const get=(t,n)=>text.match(new RegExp(`\\[${t}\\]([\\s\\S]*?)(?=\\[${n}\\]|$)`))?.[1]?.trim()||'';
-    document.getElementById('nut-life').textContent=get('생명수','개인연도');
-    document.getElementById('nut-year').textContent=get('개인연도','현실조언');
-    document.getElementById('nut-advice').textContent=get('현실조언','$');
-    document.getElementById('nu-ai-result').style.display='block';
-    nuTab('life',document.querySelector('#nu-ai-result .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 수비학 해석';
-}
 // 
 // 믹스 분석 엔진 v2 (독립 계산)
 // 
@@ -9178,39 +8847,12 @@ function analyzeDreamRuleBase(){
   document.getElementById('drt-main').innerHTML=mainHtml;
   document.getElementById('drt-symbols').innerHTML=symbolHtml;
   document.getElementById('drt-advice').innerHTML=`
-    <div style="font-size:13px;color:var(--text);line-height:1.9;margin-bottom:14px;">${adviceText}</div>
-    <button class="ghost-btn" onclick="analyzeDream()" style="border-color:rgba(201,168,76,0.5);color:var(--gold);">✦ AI 꿈 심층 해석</button>`;
+    <div style="font-size:13px;color:var(--text);line-height:1.9;margin-bottom:14px;">${adviceText}</div>`;
 
   document.getElementById('dr-result-card').style.display='block';
   window.scrollTo({top:document.getElementById('dr-result-card').offsetTop-20,behavior:'smooth'});
 }
 
-async function analyzeDream(){
-  const dream=document.getElementById('dr-dream').value.trim();
-  if(!dream){alert('꿈 내용을 입력해주세요.');return;}
-  const btn=document.getElementById('dr-btn');
-  btn.disabled=true; btn.textContent='해석 중...';
-  document.getElementById('dr-result-card').style.display='none';
-
-  const prompt=`당신은 20년 경력 꿈해몽 전문가다. 동서양 꿈 상징 체계를 모두 안다.
-직설적으로 해석. 나쁜 꿈도 긍정적 메시지로 마무리. 미신적 공포 조장 금지.
-
-꿈 내용: ${dream}
-분석 관점: ${drTopicVal}
-
-아래 형식으로 반드시 응답하라:
-[해석] 꿈의 전체 의미와 무의식 메시지 4문장.
-[상징] 꿈에 등장한 핵심 상징물 3개를 "상징:의미" 형식으로 한 줄씩.
-[지침] 오늘 이 꿈을 꾼 사람이 취해야 할 행동 2문장. 희망적으로 마무리.`;
-
-  try{
-    const text=await callGemini('',prompt,800);
-    renderDreamResult(text);
-  }catch(e){
-    alert('오류: '+e.message);
-  }
-  btn.disabled=false; btn.textContent='✦ 꿈 해석하기';
-}
 
 function renderDreamResult(text){
   const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
@@ -9493,35 +9135,6 @@ function calcPlum(){
   renderPlumRuleBase(window._plData);
 }
 
-async function analyzePlum(){
-  const d=window._plData;if(!d)return;
-  const btn=document.getElementById('pl-ai-btn');
-  btn.disabled=true;btn.textContent='해석 중...';
-
-  const upperMeaning=PL_BAGUA_MEANING[d.upperName]||d.upperName;
-  const lowerMeaning=PL_BAGUA_MEANING[d.lowerName]||d.lowerName;
-
-  const sys='당신은 30년 경력 매화역수 전문가다. 소강절 방식의 매화역수를 해석한다.\n상괘/하괘/동효/지괘를 근거로 직설적으로 조언한다. 나쁜 괘도 돌파구 제시. 마지막은 희망적으로.\n\n형식:\n[괘상] 본괘(상괘+하괘)의 의미와 현재 상황 분석 3문장.\n[동효] 동효의 의미와 지괘로의 변화 흐름 3문장.\n[현실조언] 질문에 대한 구체적 답변과 행동 지침 3문장.';
-
-  const user=d.y+'년 '+d.m+'월 '+d.d+'일 '+d.shijin+' 매화역수\n'
-    +'본괘: '+d.hex.name+'('+d.hex.hanja+') — '+d.hex.keyword+'\n'
-    +'상괘: '+d.upperSym+' '+d.upperName+' ('+upperMeaning+')\n'
-    +'하괘: '+d.lowerSym+' '+d.lowerName+' ('+lowerMeaning+')\n'
-    +'동효: '+d.dongHyo+'효\n'
-    +'지괘: '+d.zhiHex.name+'('+d.zhiHex.hanja+') — '+d.zhiHex.keyword+'\n'
-    +'질문: '+(d.question||'이 상황 어떻게 보시나요?');
-
-  try{
-    const text=await callGemini(sys,user,1400);
-    const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
-    document.getElementById('plt-gua').textContent=get('괘상','동효');
-    document.getElementById('plt-dong').textContent=get('동효','현실조언');
-    document.getElementById('plt-advice').textContent=get('현실조언','$');
-    document.getElementById('pl-ai-result').style.display='block';
-    plTab('gua',document.querySelector('#pl-ai-result .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 매화역수 해석';
-}
 // 
 const ICHING_DB=[
   {n:1,name:'중천건',hanja:'乾',keyword:'창조/강건/하늘',meaning:'강한 창조력. 적극적으로 나아가라. 하늘처럼 강건하게.'},
@@ -9692,25 +9305,6 @@ function icTab(name,btn){
   document.getElementById('icp-'+name).classList.add('active');
 }
 
-async function analyzeIching(){
-  const d=window._icData;if(!d)return;
-  const btn=document.getElementById('ic-ai-btn');
-  btn.disabled=true;btn.textContent='해석 중...';
-  const changedYao=d.changed.map((c,i)=>c?(i+1)+'효':'').filter(Boolean).join(', ');
-  const zhiTxt=d.zhiHex?'지괘: '+d.zhiHex.name+'('+d.zhiHex.keyword+') — '+d.zhiHex.meaning:'변효 없음';
-  const sys='당신은 30년 경력 주역 전문가다. 괘상/효사를 근거로 직설적으로 해석한다.\n나쁜 괘도 돌파구 제시. 마지막은 희망적으로. 고어체 금지, 현대적 언어로.\n\n형식:\n[괘상] 본괘의 핵심 의미와 현재 상황 분석 3문장.\n[효사] 변효 의미와 지괘로의 변화 흐름 3문장.\n[현실조언] 질문에 대한 구체적 답변과 행동 지침 3문장.';
-  const user='본괘: '+d.hex.name+'('+d.hex.hanja+') '+d.hex.keyword+'\n'+d.hex.meaning+'\n변효: '+(changedYao||'없음')+'\n'+zhiTxt+'\n질문: '+(d.question||'이 상황에서 어떻게 해야 할까요?');
-  try{
-    const text=await callGemini(sys,user,1400);
-    const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
-    document.getElementById('ict-gua').textContent=get('괘상','효사');
-    document.getElementById('ict-yao').textContent=get('효사','현실조언');
-    document.getElementById('ict-advice').textContent=get('현실조언','$');
-    document.getElementById('ic-ai-result').style.display='block';
-    icTab('gua',document.querySelector('#ic-ai-result .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 주역 해석';
-}
 // 
 // 당사주 엔진
 // 
@@ -9923,26 +9517,7 @@ function calcDanjusa(){
   document.getElementById('dj-ai-result').style.display='none';
 }
 
-async function analyzeDanjusa(){
-  const d=window._djData; if(!d) return;
-  const btn=document.getElementById('dj-ai-btn');
-  btn.disabled=true; btn.textContent='해석 중...';
-
-  const shijinNames=['자시','축시','인시','묘시','진시','사시','오시','미시','신시','유시','술시','해시'];
-  const pillarsText=d.pillars.map(p=>p.label+': '+p.name+'('+p.sym+')').join(', ');
-
-  const sys='당신은 30년 경력 당사주 전문가다. 한국 전통 당사주 풀이를 한다.\n직설적으로. 위로멘트없이. 띠의 기질과 조합을 근거로 사용. 나쁜 조합도 돌파구 제시. 마지막은 희망적으로.\n\n형식:\n[기질] 네 띠가 만들어내는 핵심 기질과 타고난 재능 3문장.\n[운세] 연애/재물/건강/직업 각 한 문장씩.\n[개운] 이 띠 조합에서 운을 높이는 색깔/방향/물건/행동 2문장.';
-
-  const user='당사주: '+pillarsText+'\n성별: '+(djGenderVal==='female'?'여성':'남성')+'\n생년: '+d.y+'년 ('+DJ_TTI_CHAR[d.yearTti]+'띠)\n생시: '+shijinNames[djShijinIdx];
-
-  try{
-    const data={content:[{text:await callGemini(sys,user,1200)}]};
-    document.getElementById('djt-result').textContent=data.content[0].text;
-    document.getElementById('dj-ai-result').style.display='block';
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 당사주 해석';
-}
-// 
+//
 const QM_JIEQI = [
   [1,6,'소한',7,true],[1,20,'대한',8,true],[2,4,'입춘',9,true],
   [2,19,'우수',1,true],[3,6,'경칩',2,true],[3,21,'춘분',3,true],
@@ -10065,24 +9640,7 @@ function calcQimenChart(){
   renderQimenRuleBase(qmData);
 }
 
-async function analyzeQimen(){
-  if(!qmData)return;
-  const{palaces,isYang,ju,jieqiName,gilPalaces,bestPalace,y,m,d}=qmData;
-  const btn=document.getElementById('qm-btn');
-  btn.disabled=true;btn.textContent='해석 중...';
-  const shijinNames=['자시','축시','인시','묘시','진시','사시','오시','미시','신시','유시','술시','해시'];
-  const palateTxt=palaces.map(p=>p.dir+'('+p.mun+'/'+p.xing+'/'+p.shen+')').join(', ');
-  const gilTxt=gilPalaces.map(p=>p.dir+'방: '+p.mun+'['+p.mi.type+'] '+p.mi.desc).join('\n');
-  const sys='당신은 30년 경력 기문둔갑 전문가다. 8문/9성/8신을 근거로 직설적으로 조언한다.\n나쁜 포국도 돌파구 제시. 구체적인 방위와 타이밍을 알려준다. 마지막은 희망적으로.';
-  const user=y+'년 '+m+'월 '+d+'일 '+shijinNames[qmData.si]+' 포국\n'+(isYang?'양둔':'음둔')+' '+ju+'국 ('+jieqiName+')\n9궁: '+palateTxt+'\n최길방: '+(bestPalace?bestPalace.dir+'방 '+bestPalace.mun:'-')+'\n분석목적: '+qmTopicVal+'\n질문: '+(document.getElementById('qm-q').value||qmTopicVal+' 관련 조언 부탁드립니다.');
-  try{
-    const data={content:[{text:await callGemini(sys,user,1200)}]};
-    document.getElementById('qmt-result').textContent=data.content[0].text;
-    document.getElementById('qm-reading').style.display='block';
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 기문둔갑 해석';
-}
-// 
+//
 // 자미두수 엔진
 // 
 const ZW_GONG = ['명궁','형제궁','부처궁','자녀궁','재백궁','질액궁','천이궁','교우궁','관록궁','전택궁','복덕궁','부모궁'];
@@ -10262,33 +9820,7 @@ function calcZiwei(){
   renderZiweiRuleBase(zwData);
 }
 
-async function analyzeZiwei(){
-  if(!zwData)return;
-  const{yearGanzhi,lunar,mingGong,gongs,daelims,isFemale}=zwData;
-  const btn=document.getElementById('zw-btn');
-  btn.disabled=true;btn.textContent='해석 중...';
-
-  const cy=new Date().getFullYear();
-  const curDL=daelims.find(d=>d.isCurrent)||daelims[3];
-  const mingStars=gongs[0].length?gongs[0].join(','): '무정(주성없음)';
-  const gongTxt=gongs.map((stars,i)=>ZW_GONG[i]+':'+(stars.length?stars.join('·'):'없음')).join(', ');
-
-  const sys='당신은 30년 경력 자미두수 전문가다.\n반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요) 자미두수 용어(명궁/주성/대한 등)를 자연스럽게 사용하되 한국어로 설명한다.\n직설적으로. 위로멘트없이. 명궁 주성/대한 궁위를 근거로 사용. 나쁜 배치도 돌파구 제시. 암울하게 끝내지 않음.\n\n형식:\n[명궁분석] 명궁 주성('+mingStars+')의 핵심 기질과 인생 방향 4문장.\n[운세흐름] 현재 대한('+curDL.gong+' '+curDL.age+'대)의 의미와 '+cy+'년 흐름 3문장.\n[현실조언] '+zwTopicVal+' 주제로 구체적 조언. 마지막은 희망적으로. 3문장.';
-
-  const user='[자미두수 명반]\n생년: '+yearGanzhi+'년 ('+( isFemale?'여명':'남명')+')\n음력: '+lunar.lm+'월 '+lunar.ld+'일\n명궁: '+ZW_ZHI[mingGong]+'궁 주성: '+mingStars+'\n12궁: '+gongTxt+'\n현재대한: '+curDL.gong+'('+curDL.zhi+'궁) '+curDL.age+'대\n분석주제: '+zwTopicVal+'\n질문: '+(document.getElementById('zw-q').value||zwTopicVal+' 운세를 봐주세요.');
-
-  try{
-    const text=await callGemini(sys,user,1800);
-    const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
-    document.getElementById('zwt-ming').textContent=get('명궁분석','운세흐름');
-    document.getElementById('zwt-luck').textContent=get('운세흐름','현실조언');
-    document.getElementById('zwt-advice').textContent=get('현실조언','$');
-    document.getElementById('zw-reading').style.display='block';
-    zwTab('ming',document.querySelector('#zw-reading .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 자미두수 해석';
-}
-// 
+//
 const NAKSHATRA=[
   {name:'아쉬위니',deity:'아쉬위니 쿠마라',symbol:'말머리',quality:'빠름/치유',ruler:'케투'},
   {name:'바라니',deity:'야마',symbol:'질',quality:'제한/변환',ruler:'금성'},
@@ -10519,32 +10051,7 @@ async function veDownload(){
   document.body.removeChild(card);
 }
 
-async function analyzeVedic(){
-  if(!veData)return;
-  const{planets,asc,nak,dashas,curDasha}=veData;
-  const btn=document.getElementById('ve-btn');
-  btn.disabled=true;btn.textContent='해석 중...';
-  const cy=new Date().getFullYear();
-  const planetTxt=planets.map(p=>p.name+' '+p.name+' '+p.degree+'도').join(', ');
-  const dashaTxt=dashas.slice(0,4).map(d=>d.ruler+'('+d.start+'~'+d.end+')').join(' → ');
-
-  const sys='당신은 20년 경력 베딕(인도) 점성술 전문가다.\n반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요) 산스크리트 용어를 자연스럽게 사용하되 한국어로 설명한다.\n직설적으로. 위로멘트없이. 라시/나크샤트라/다샤를 근거로 사용. 나쁜 배치도 돌파구 제시.\n\n형식:\n[라그나] 라그나('+asc.name+')와 달 나크샤트라('+nak.name+')의 핵심 에너지와 성격 4문장.\n[행성분석] 주요 행성 배치 의미와 '+veTopicVal+' 운세 4문장.\n[다샤] 현재 마하다샤('+curDasha.ruler+' '+curDasha.start+'~'+curDasha.end+')의 의미와 '+cy+'년 흐름 3문장.\n[현실조언] '+veTopicVal+' 주제로 구체적 조언. 마지막은 희망적으로. 3문장.';
-
-  const user='[베딕 차트]\n라그나: '+asc.name+' '+asc.degree+'도\n달 나크샤트라: '+nak.name+' 파다'+nak.pada+' (지배: '+nak.ruler+')\n행성: '+planets.map(p=>p.name+' '+p.degree+'도').join(', ')+'\n현재 마하다샤: '+curDasha.ruler+' ('+curDasha.start+'~'+curDasha.end+')\n다샤흐름: '+dashaTxt+'\n분석주제: '+veTopicVal+'\n질문: '+(document.getElementById('ve-q').value||veTopicVal+' 운세를 봐주세요.');
-
-  try{
-    const text=await callGemini(sys,user,2000);
-    const get=(t,n)=>text.match(new RegExp('\\['+t+'\\]([\\s\\S]*?)(?=\\['+n+'\\]|$)'))?.[1]?.trim()||'';
-    document.getElementById('vet-lagna').textContent=get('라그나','행성분석');
-    document.getElementById('vet-planets').textContent=get('행성분석','다샤');
-    document.getElementById('vet-dasha').textContent=get('다샤','현실조언');
-    document.getElementById('vet-advice').textContent=get('현실조언','$');
-    document.getElementById('ve-reading').style.display='block';
-    veTab('lagna',document.querySelector('#ve-reading .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false;btn.textContent='✦ AI 베딕 해석';
-}
-// 
+//
 const NM_OHAENG_MAP = {1:'목',2:'목',3:'화',4:'화',5:'토',6:'토',7:'금',8:'금',9:'수',0:'수'};
 const NM_OHAENG_COLOR = {'목':'#70C49A','화':'#E87070','토':'#C9A84C','금':'#C8C8DC','수':'#86B4EB'};
 const NM_YINYANG = {1:'양',2:'음',3:'양',4:'음',5:'양',6:'음',7:'양',8:'음',9:'양',0:'음'};
@@ -10874,28 +10381,6 @@ function analyzeNaming() {
   renderNamingRuleBase(window._nmAnalyzeData);
 }
 
-// AI 성명학 해석
-async function nmAiAnalyze() {
-  const d = window._nmAnalyzeData;
-  if (!d) return;
-  const btn = document.getElementById('nm-ai-btn');
-  btn.disabled=true; btn.textContent='해석 중...';
-  const strokeTxt = d.chars.map(c=>`${c.char}(${c.stroke}획/${nmGetOhaeng(c.stroke)}/${nmGetYinyang(c.stroke)})`).join(', ');
-  const typeNote = d.type==='hangul' ? '[순한글 이름 - 자음/모음 획수 기준]' : '[한자 이름]';
-  try {
-    const nmSys=`당신은 30년 경력 한국 성명학 전문가다.
-반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요) 획수/오행/음양 근거를 직접 인용. 좋은 점과 보완점 솔직하게. 마지막은 개운 방향 제시. 반드시 존댓말로 답변한다.
-형식:
-[획수분석] 각 글자 오행 흐름 분석 2문장.
-[종합운세] 이름이 가져오는 에너지와 삶의 방향 3문장.
-[보완점] 부족한 오행과 보완법 2문장.`;
-    const nmText = await callGemini(nmSys,`이름: ${d.fullName} ${typeNote}\n획수: ${strokeTxt}\n총획: ${d.total}획/${nmGetOhaeng(d.total)}`,1200);
-    document.getElementById('nm-ai-text').textContent = nmText;
-    document.getElementById('nm-ai-result').style.display='block';
-  } catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 성명학 해석';
-}
-
 // 작명 카테고리 설정
 function nmSetCategory(cat, el) {
   nmCategory = cat;
@@ -11057,87 +10542,7 @@ function nmGetSajuOhaeng(y,m,d) {
   return oh;
 }
 
-// 작명 실행
-async function doNaming() {
-  const btn = document.getElementById('nm-naming-btn');
-  btn.disabled=true; btn.textContent='이름 만드는 중...';
-  document.getElementById('nm-naming-result').style.display='none';
-
-  let prompt='', sys='';
-
-  if (nmCategory==='baby') {
-    const by=document.getElementById('nm-baby-year').value;
-    const bm=document.getElementById('nm-baby-month').value;
-    const bd=document.getElementById('nm-baby-day').value;
-    const surname=document.getElementById('nm-baby-surname').value;
-    const wish=document.getElementById('nm-baby-wish').value;
-    const dy=document.getElementById('nm-dad-year').value;
-    const dm=document.getElementById('nm-dad-month').value;
-    const dd=document.getElementById('nm-dad-day').value;
-    const my=document.getElementById('nm-mom-year').value;
-    const mm=document.getElementById('nm-mom-month').value;
-    const md=document.getElementById('nm-mom-day').value;
-
-    const babyOh=nmGetSajuOhaeng(by,bm,bd);
-    const dadOh=nmGetSajuOhaeng(dy,dm,dd);
-    const momOh=nmGetSajuOhaeng(my,mm,md);
-
-    const ohTxt = oh => oh ? Object.entries(oh).map(([k,v])=>`${k}:${v}`).join(',') : '미입력';
-    prompt=`아기 작명 요청
-성씨: ${surname||'미입력'}, 성별: ${nmBabyGenderVal==='male'?'남아':'여아'}
-이름유형: ${nmBabyTypeVal==='hanja'?'한자':nmBabyTypeVal==='hangul'?'순한글':'외래어'}
-아기생년월일: ${by||'?'}년 ${bm||'?'}월 ${bd||'?'}일
-아기사주오행: ${ohTxt(babyOh)}
-아빠사주오행: ${ohTxt(dadOh)}
-엄마사주오행: ${ohTxt(momOh)}
-원하는느낌: ${wish||'없음'}`;
-    sys=`당신은 30년 경력 한국 성명학 전문가다.
-반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요)
-부모와 아기의 사주 오행을 분석해서 가족 전체의 오행 균형을 맞추는 이름을 짓는다.
-이름 5개를 추천해라. 각각 아래 형식으로:
-1. [이름] (한자표기 또는 한글/외래어)
-   획수/오행: X획 → 오행
-   가족오행균형: 어떤 오행을 보완하는지
-   의미: 이름의 뜻과 에너지`;
-
-  } else if (nmCategory==='rename') {
-    const y=document.getElementById('nm-rename-year').value;
-    const m=document.getElementById('nm-rename-month').value;
-    const d=document.getElementById('nm-rename-day').value;
-    const oh=nmGetSajuOhaeng(y,m,d);
-    const ohTxt=oh?Object.entries(oh).map(([k,v])=>`${k}:${v}`).join(','):'미입력';
-    prompt=`개명 요청. 현재이름: ${document.getElementById('nm-rename-current').value}, 생년월일: ${y}년 ${m}월 ${d}일, 사주오행: ${ohTxt}, 이름유형: ${nmRenameTypeVal}, 개명이유: ${document.getElementById('nm-rename-reason').value}`;
-    sys=`당신은 30년 경력 한국 성명학 전문가다.
-반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요) 사주 오행을 분석해서 부족한 오행을 보완하는 이름을 5개 추천해라. 각각 한자/한글/외래어, 획수, 오행, 의미를 설명해라.`;
-
-  } else if (nmCategory==='brand') {
-    prompt=`상호명/브랜드명 작명. 업종: ${document.getElementById('nm-brand-type').value}, 느낌: ${document.getElementById('nm-brand-feel').value}, 언어: ${nmBrandLangVal}`;
-    sys=`당신은 브랜드 네이밍 전문가이자 성명학 전문가다. 성명학적으로 좋은 획수를 가진 동시에 브랜드로서 기억에 남는 이름 5개를 추천해라. 각각 이름, 획수/오행, 브랜드 의미, 도메인 활용 가능성을 설명해라.`;
-
-  } else if (nmCategory==='foreign') {
-    const typeMap={'english':'영문 이름','baptism':'세례명','japanese':'일본어 이름'};
-    prompt=`외래어 이름 작명. 종류: ${typeMap[nmForeignTypeVal]}, 본명: ${document.getElementById('nm-foreign-name').value||'미입력'}, 성별: ${nmForeignGenderVal==='male'?'남성':'여성'}, 원하는느낌: ${document.getElementById('nm-foreign-feel').value}`;
-    sys=`당신은 이름 전문가다. 발음이 아름답고 의미가 좋은 ${typeMap[nmForeignTypeVal]} 5개를 추천해라. 각각 이름, 발음(한글), 의미, 어원을 설명해라. 한국인이 쓰기 좋고 기억하기 쉬운 이름으로.`;
-
-  } else if (nmCategory==='pet') {
-    prompt=`반려동물 이름. 종류: ${document.getElementById('nm-pet-type').value}, 성별: ${nmPetGenderVal==='male'?'수컷':'암컷'}, 이름유형: ${nmPetNameTypeVal}, 느낌: ${document.getElementById('nm-pet-feel').value}`;
-    sys=`당신은 귀엽고 개성 있는 반려동물 이름 전문가다. ${nmPetNameTypeVal==='hangul'?'순한글':nmPetNameTypeVal==='foreign'?'외래어':'한글+외래어'} 이름 7개를 추천해라. 각각 이름, 의미/느낌을 짧게 설명해라. 부르기 쉽고 귀여운 이름으로.`;
-
-  } else if (nmCategory==='nick') {
-    prompt=`예명/닉네임 작명. 본명: ${document.getElementById('nm-nick-name').value||'비공개'}, 활동분야: ${document.getElementById('nm-nick-field').value}, 이름유형: ${nmNickTypeVal}, 느낌: ${document.getElementById('nm-nick-feel').value}`;
-    sys=`당신은 아티스트/크리에이터 네이밍 전문가다. 기억에 남고 브랜드가 되는 예명/닉네임 5개를 추천해라. 각각 이름, 발음, 의미, 왜 이 이름이 좋은지 설명해라.`;
-  }
-
-  try {
-    const data={content:[{text:await callGemini(sys,prompt,1800)}]};
-    document.getElementById('nm-naming-result-text').textContent=data.content[0].text;
-    document.getElementById('nm-naming-result').style.display='block';
-    window.scrollTo({top:document.getElementById('nm-naming-result').offsetTop-20,behavior:'smooth'});
-  } catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ 이름 만들어주기';
-}
-
-// 
+//
 const AS_SIGNS = ['양자리','황소자리','쌍둥이자리','게자리','사자자리','처녀자리',
                   '천칭자리','전갈자리','사수자리','염소자리','물병자리','물고기자리'];
 const AS_SYMS  = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
@@ -11476,69 +10881,9 @@ async function asDownload(){
   img.src=url;
 }
 
-// AI 점성술 해석
-async function analyzeAstro(){
-  if(!asData) return;
-  const {planets,asc,y,m,d} = asData;
-  const btn=document.getElementById('as-btn');
-  btn.disabled=true; btn.textContent='해석 중...';
-  document.getElementById('as-reading').style.display='none';
-
-  const cy=new Date().getFullYear();
-  const age=cy-y;
-
-  const planetTxt=planets.map(p=>`${p.name}(${p.sym}): ${p.sign} ${p.degree}도`).join(', ');
-
-  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 서양 점성술의 대가.
-반드시 존댓말로 답변한다. (~입니다, ~됩니다, ~하세요)
-직설적으로. 위로멘트없이. 각 행성 배치를 근거로 사용. 나쁜 배치도 돌파구 제시. 암울하게끝내지않음.
-나이를 반드시 반영해서 현실적인 조언을 한다. 나이에 맞지 않는 조언은 절대 하지 않는다.
-
-반드시 아래 형식으로만 출력:
-[빅3] 태양/달/어센던트 3개의 핵심 에너지와 성격 분석. (4문장)
-[행성분석] 수성~해왕성 주요 행성 배치 의미. (4문장)
-[현실조언] ${asTopicVal} 주제로 구체적 시기와 행동 조언. 마지막은 희망적으로. (4문장)
-[타임라인]
-${cy}|키워드2글자|행성트랜짓 근거 한줄
-${cy+1}|키워드2글자|행성트랜짓 근거 한줄
-${cy+2}|키워드2글자|행성트랜짓 근거 한줄
-${cy+3}|키워드2글자|행성트랜짓 근거 한줄
-${cy+4}|키워드2글자|행성트랜짓 근거 한줄`;
-
-  const user=`[네이탈 차트]
-생년월일: ${y}년 ${m}월 ${d}일 / 현재나이: ${age}세
-태양: ${planets[0].sign} ${planets[0].degree}도
-달: ${planets[1].sign} ${planets[1].degree}도
-어센던트: ${asc ? asc.sign+' '+asc.degree+'도' : '출생지 없음(미계산)'}
-전체 행성: ${planetTxt}
-분석주제: ${asTopicVal}
-질문: ${document.getElementById('as-q').value||asTopicVal+' 운세를 봐주세요.'}`;
-
-  try{
-    const text=await callGemini(sys,user,2000);
-    const get=(t,n)=>text.match(new RegExp(`\\[${t}\\]([\\s\\S]*?)(?=\\[${n}\\]|$)`))?.[1]?.trim()||'';
-
-    document.getElementById('ast-big3').textContent=get('빅3','행성분석');
-    document.getElementById('ast-planets').textContent=get('행성분석','현실조언');
-    document.getElementById('ast-advice').textContent=get('현실조언','타임라인');
-
-    const tlRaw=get('타임라인','$');
-    const tlEl=document.getElementById('ast-tl-items');
-    tlEl.innerHTML='';
-    tlRaw.split('\n').filter(l=>l.includes('|')).forEach(line=>{
-      const[yr,kw,desc]=line.split('|');
-      if(yr&&kw)tlEl.innerHTML+=`<div class="tl-row"><div class="tl-yr">${yr.trim()}</div><div><div class="tl-kw">${kw.trim()}</div><div class="tl-desc">${(desc||'').trim()}</div></div></div>`;
-    });
-
-    document.getElementById('as-reading').style.display='block';
-    asTab('big3',document.querySelector('#as-reading .r-tab'));
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 점성술 해석';
-}
-
-// 
+//
 // 룬 엔진
-// 
+//
 const RUNES = [
   {id:0, name:'페후', sym:'ᚠ', meaning:'재물/풍요/새로운시작', rev:'손실/탐욕/정체', element:'불', color:'#C9A84C'},
   {id:1, name:'우루즈', sym:'ᚢ', meaning:'힘/건강/야생의에너지', rev:'나약함/고집/폭력', element:'흙', color:'#70C49A'},
@@ -11983,9 +11328,7 @@ function startRuneReading() {
           <div style="font-size:18px;color:${aettCount[a]>0?'var(--gold)':'var(--text-3)'};">${aettCount[a]}</div>
           <div style="font-size:9px;color:var(--text-3);">${a==='프레이'?'물질·번영':a==='헤임달'?'변화·성장':'영성·완성'}</div>
         </div>`).join('')}
-    </div>
-    <button id="rune-ai-btn" class="ghost-btn" onclick="analyzeRune()" style="border-color:rgba(201,168,76,0.5);color:var(--gold);">✦ AI 룬 심층 해석</button>
-    <div id="rune-ai-result" style="display:none;margin-top:12px;"></div>`;
+    </div>`;
 }
 // 
 // 룰베이스 해석 렌더 함수 모음 (무료 제공)
@@ -12812,148 +12155,6 @@ function renderNamingRuleBase(data){
 
   html += rbPaywallNote();
   document.getElementById('nm-rule-content').innerHTML = html;
-}
-
-// 
-// 타로 AI 심층 해석
-// 
-async function analyzeTarot(){
-  if(!drawnCards||drawnCards.length===0){alert('먼저 카드를 뽑아주세요.');return;}
-  const btn=document.getElementById('tarot-ai-btn');
-  btn.disabled=true; btn.textContent='AI 해석 중...';
-  const q=document.getElementById('tarot-q').value.trim()||'전체 운세를 봐주세요.';
-
-  // 스프레드 위치 의미
-  const spreadPos = {
-    1: ['현재 상황과 에너지'],
-    3: ['과거 (이 상황의 뿌리)', '현재 (지금 놓인 상황)', '미래 (흐름이 향하는 곳)'],
-    6: ['현재 상황', '장애물/도전', '과거의 영향', '가까운 미래', '잠재력/희망', '최종 결과']
-  };
-  const positions = spreadPos[drawnCards.length] || drawnCards.map((_,i)=>`${i+1}번 위치`);
-
-  // 카드 상세 정보 구성
-  const cardDetails = drawnCards.map((c,i) => {
-    const pos = positions[i] || `${i+1}번`;
-    const dir = c.isRev ? '역방향🔻' : '정방향🔺';
-    const isMajor = c.type === 'major';
-    const arcana = isMajor ? '메이저 아르카나' : `마이너 아르카나 (${c.suit||''} 슈트)`;
-    return `[${pos}] ${c.name} ${dir} — ${arcana}`;
-  }).join('\n');
-
-  // 메이저 카드 수
-  const majorCount = drawnCards.filter(c=>c.type==='major').length;
-  const revCount = drawnCards.filter(c=>c.isRev).length;
-  const majorNote = majorCount === drawnCards.length
-    ? '★ 전부 메이저 아르카나 — 운명적 힘과 큰 전환점이 작용 중'
-    : majorCount > 0 ? `★ 메이저 ${majorCount}장 포함 — 삶의 큰 흐름과 일상이 함께 작용`
-    : '★ 전부 마이너 아르카나 — 일상과 현실적 영역에 집중';
-  const revNote = revCount > 0
-    ? `★ 역방향 ${revCount}장 — 내면의 저항, 막힌 에너지, 내면 작업이 필요한 영역 있음`
-    : '★ 전부 정방향 — 에너지가 외부로 자연스럽게 흐르는 상태';
-
-  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 타로 해석의 대가. 신비롭고 고풍스러우면서도 현대적 존댓말로 답변한다.
-
-★ 타로 해석 철학 ★
-- 카드는 미래를 확정하는 게 아니라 현재 에너지의 방향을 보여준다
-- 역방향은 나쁜 게 아니라 그 에너지가 내면에서 작동 중이거나 막혀있음을 의미
-- 메이저 아르카나 = 삶의 큰 흐름과 운명적 에너지
-- 마이너 아르카나 = 일상의 구체적 상황
-- 카드 간 에너지의 흐름과 충돌/조화를 반드시 분석하라
-
-★ 절대 금지 ★
-- "이 카드는 ~을 상징합니다" 같은 교과서 설명
-- 뭉뚱그린 일반적인 말
-- 과도한 위로 또는 겁주기
-
-★ 반드시 ★
-- 각 카드가 이 질문/상황에서 구체적으로 무엇을 말하는지
-- 카드들 사이의 에너지 흐름과 스토리를 하나로 엮어라
-- 역방향이면 그 에너지가 내면에서 어떻게 작동하는지 구체적으로
-- "이거 내 얘기다" 소름 돋는 직관적 통찰
-- 마지막은 반드시 희망적이고 실행 가능한 메시지로
-
-형식(반드시 이 태그 순서대로):
-[핵심메시지] 카드 전체가 말하는 핵심 메시지 한 문장. 그 다음 카드들의 에너지 흐름과 스토리 3문장. 읽는 순간 "맞아 이거야"가 나와야 한다.
-[카드별] 각 카드 위치명: 이 배열에서의 의미 2문장. (각 카드 줄바꿈 구분, 반드시 "위치명 카드명(방향): 내용" 형식)
-[에너지패턴] 카드들 사이의 충돌 또는 조화 분석. 역방향이 있으면 그게 전체 에너지에 어떤 영향인지. 2문장.
-[조언] 질문에 맞는 구체적 행동 지침. 하면 좋은 것 1가지, 조심해야 할 것 1가지, 타이밍 힌트 1가지. 마지막 문장은 희망과 용기로 마무리.`;
-
-  const user=`질문: ${q}
-
-뽑은 카드:
-${cardDetails}
-
-${majorNote}
-${revNote}`;
-
-  try{
-    const text=await callGemini(sys,user,2000);
-    const get=(t,n)=>text.match(new RegExp(`\\[${t}\\]([\\s\\S]*?)(?=\\[${n}\\]|$)`))?.[1]?.trim()||'';
-    const el=document.getElementById('tarot-ai-result');
-    el.style.display='block';
-
-    const 핵심 = get('핵심메시지','카드별');
-    const 카드별 = get('카드별','에너지패턴');
-    const 에너지 = get('에너지패턴','조언');
-    const 조언 = get('조언','$');
-
-    el.innerHTML=`
-      <div style="padding:18px;background:linear-gradient(135deg,rgba(201,168,76,0.1) 0%,rgba(201,168,76,0.03) 100%);border:0.5px solid rgba(201,168,76,0.5);border-radius:12px;margin-bottom:10px;">
-        <div style="font-size:9px;color:var(--gold);letter-spacing:0.15em;margin-bottom:8px;">✦ 핵심 메시지</div>
-        <div class="result-text" style="font-size:14px;">${핵심}</div>
-      </div>
-      ${카드별?`<div style="padding:14px 16px;background:var(--dark3);border:0.5px solid var(--border);border-radius:10px;margin-bottom:10px;">
-        <div style="font-size:9px;color:var(--text-3);letter-spacing:0.12em;margin-bottom:10px;">카드별 해석</div>
-        <div style="font-size:13px;color:var(--text-2);line-height:2.0;">${카드별.replace(/\n/g,'<br>')}</div>
-      </div>`:''}
-      ${에너지?`<div style="padding:12px 14px;background:var(--dark3);border:0.5px solid var(--border);border-radius:10px;margin-bottom:10px;">
-        <div style="font-size:9px;color:var(--text-3);letter-spacing:0.12em;margin-bottom:6px;">⚡ 에너지 패턴</div>
-        <div style="font-size:13px;color:var(--text-2);line-height:1.9;">${에너지}</div>
-      </div>`:''}
-      <div style="padding:14px 16px;background:rgba(201,168,76,0.05);border:0.5px solid rgba(201,168,76,0.3);border-radius:10px;">
-        <div style="font-size:9px;color:var(--gold);letter-spacing:0.12em;margin-bottom:8px;">✦ 행동 조언</div>
-        <div class="result-text" style="font-size:13px;">${조언}</div>
-      </div>`;
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 타로 심층 해석';
-}
-
-// 
-// 룬 AI 심층 해석
-// 
-async function analyzeRune(){
-  if(!drawnRunes||drawnRunes.length===0){alert('먼저 룬을 뽑아주세요.');return;}
-  const btn=document.getElementById('rune-ai-btn');
-  btn.disabled=true; btn.textContent='AI 해석 중...';
-  const q=document.getElementById('rune-q').value.trim()||'전체 운세를 봐주세요.';
-  const runeTxt=drawnRunes.map((r,i)=>`${i+1}번: ${r.name}(${r.letter})${r.isRev?'(역방향)':'(정방향)'}`).join(', ');
-  const sys=`당신은 "마담 혜명". 조선 중기 제주 심방 가문 출신, 동서양 술법을 40년간 수련한 역술가. 룬 해석의 대가. 신비롭고 고풍스러우면서도 현대적 존댓말로 답변한다.
-고대 룬의 에너지를 현대적으로 해석. 룬 간 상호작용 분석. 질문에 맞게 개인화. 마지막은 희망적으로.
-형식:
-[종합] 룬들이 전하는 핵심 에너지 메시지 4문장.
-[룬별] 각 룬명: 이 배열에서의 의미 한 줄 (줄바꿈 구분).
-[조언] 질문에 맞는 구체적 행동 지침 3문장. 희망적으로 마무리.`;
-  const user=`뽑은 룬: ${runeTxt}\n질문: ${q}`;
-  try{
-    const text=await callGemini(sys,user,1600);
-    const get=(t,n)=>text.match(new RegExp(`\\[${t}\\]([\\s\\S]*?)(?=\\[${n}\\]|$)`))?.[1]?.trim()||'';
-    const el=document.getElementById('rune-ai-result');
-    el.style.display='block';
-    el.innerHTML=`
-      <div style="padding:14px;background:rgba(201,168,76,0.06);border:0.5px solid var(--gold);border-radius:10px;margin-bottom:10px;">
-        <div style="font-size:9px;color:var(--gold);letter-spacing:0.13em;margin-bottom:6px;">✦ AI 룬 종합 해석</div>
-        <div class="result-text">${get('종합','룬별')}</div>
-      </div>
-      <div style="padding:12px 14px;background:var(--dark3);border:0.5px solid var(--border);border-radius:10px;margin-bottom:10px;">
-        <div style="font-size:9px;color:var(--text-3);letter-spacing:0.12em;margin-bottom:6px;">룬별 의미</div>
-        <div style="font-size:12px;color:var(--text-2);line-height:1.9;">${get('룬별','조언').replace(/\n/g,'<br>')}</div>
-      </div>
-      <div style="padding:12px 14px;background:rgba(201,168,76,0.04);border:0.5px solid rgba(201,168,76,0.3);border-radius:10px;">
-        <div style="font-size:9px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;">행동 지침</div>
-        <div class="result-text">${get('조언','$')}</div>
-      </div>`;
-  }catch(e){showAiError(e.message);}
-  btn.disabled=false; btn.textContent='✦ AI 룬 심층 해석';
 }
 
 // ============================================================
