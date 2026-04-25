@@ -3307,8 +3307,16 @@ function calcHapChung(사주팔자) {
 
   // 형
   for (const { 형, 이름, 의미 } of 형표) {
+    // 자형(같은 지지 두 개): 지지목록에 해당 지지가 2개 이상일 때만 성립.
+    // 기존 .filter(...).length 방식은 같은 지지가 1개만 있어도 length 2가 되는 버그가 있었다.
+    if (형.length === 2 && 형[0] === 형[1]) {
+      const cnt = 지지목록.filter(j => j === 형[0]).length;
+      if (cnt >= 2) 결과.형.push(`${이름}: ${의미}`);
+      continue;
+    }
+    // 상형(2지지 다른 값) / 삼형(3지지): 매칭 지지 2개 이상이면 성립(반형 포함).
     const 있는것 = 형.filter(j => 지지목록.includes(j));
-    if (있는것.length >= (형.length === 2 ? 2 : 2)) {
+    if (있는것.length >= 2) {
       결과.형.push(`${이름}: ${의미}`);
     }
   }
