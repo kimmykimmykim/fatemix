@@ -4380,7 +4380,13 @@ function sjTab(name,btn){
 
 function getYP(y,m,d){let yr=y;if(m<2||(m===2&&d<4))yr=y-1;return{g:((yr-4)%10+10)%10,j:((yr-4)%12+12)%12};}
 function getMP(y,m,d,yg){let sm=m;if(d<절기입절[m-1])sm=m-1;if(sm<=0)sm=12;const ji=(sm%12);const s=[2,4,6,8,0][yg%5];const ord=sm-2<0?sm+10:sm-2;return{g:(s+ord)%10,j:ji};}
-function getDP(y,m,d){const diff=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);return{g:((0+diff)%10+10)%10,j:((10+diff)%12+12)%12};}
+function getDP(y,m,d){
+  // FIX: Chrome이 1900년 한국을 LMT(UTC+8:27:52)로 처리해
+  // 1900-01-01 기준점이 32분 어긋나 일주가 하루 밀리던 버그.
+  // Date.UTC()로 timezone 영향 제거.
+  const diff=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(1900,0,1))/86400000);
+  return {g:((0+diff)%10+10)%10, j:((10+diff)%12+12)%12};
+}
 function getHP(dg,h){let ji;if(h>=23||h<1)ji=0;else if(h<3)ji=1;else if(h<5)ji=2;else if(h<7)ji=3;else if(h<9)ji=4;else if(h<11)ji=5;else if(h<13)ji=6;else if(h<15)ji=7;else if(h<17)ji=8;else if(h<19)ji=9;else if(h<21)ji=10;else ji=11;return{g:([0,2,4,6,8][dg%5]+ji)%10,j:ji};}
 function getOH(ps){const c={목:0,화:0,토:0,금:0,수:0};ps.forEach(p=>{c[천간오행[p.g]]++;c[지지오행[p.j]]++;});return c;}
 function getYS(oh){const max=Object.entries(oh).sort((a,b)=>b[1]-a[1])[0][0];const s={목:'화',화:'토',토:'금',금:'수',수:'목'};return{용신:s[max],희신:s[s[max]],기신:max};}
