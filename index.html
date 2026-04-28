@@ -12146,6 +12146,10 @@ function initTodayFortune() {
   const luckCls = JI_LUCK_CLASS[dp.j];
   const luckLbl = JI_LUCK_LABEL[dp.j];
   const iljinOh = 천간오행[dp.g];
+
+  // 본인 일주 (사용자 일간 오행 — _showTodayMsg에서 사용자별 차별화에 사용)
+  const myDp = getDP(birth.y, birth.m, birth.d);
+  const myGanOh = 천간오행[myDp.g];
   document.getElementById('tf-iljin-name').textContent = iljinName;
   document.getElementById('tf-iljin-sub').innerHTML =
     `<span class="${luckCls}">${luckLbl}</span> <span style="color:var(--text-3);font-size:11px;">${JI_DESC[dp.j]}</span>`;
@@ -12181,7 +12185,7 @@ function initTodayFortune() {
   }
 
   // 한줄 운세 — DB에서 즉시 뽑기
-  _tfMsgState = { luckLbl, oh: iljinOh, seed, dp, personalDay, birth };
+  _tfMsgState = { luckLbl, oh: iljinOh, myGanOh, seed, dp, personalDay, birth };
   _showTodayMsg();
 }
 
@@ -12194,20 +12198,22 @@ function _shortOracleMsg(raw) {
 
 function _showTodayMsg() {
   if (!_tfMsgState) return;
-  const { luckLbl, oh, seed, dp, personalDay, birth } = _tfMsgState;
+  const { luckLbl, myGanOh, seed, dp, personalDay, birth } = _tfMsgState;
 
   // ── 사주 기반 구체적 3줄 운세 생성 ──
   const now = new Date();
   const hour = now.getHours();
   const dayGan = 천간[dp.g];
   const dayJi = 지지[dp.j];
-  const dayOh = 천간오행[dp.g];
+  const dayOh = 천간오행[dp.g];      // 오늘 일진 오행
+  const myOh = myGanOh || dayOh;     // 본인 일간 오행 (없으면 dayOh 폴백)
 
   // 오행 상생/상극 관계
   const SANG_SAENG = {'목':'화','화':'토','토':'금','금':'수','수':'목'};
   const SANG_GEUK = {'목':'토','토':'수','수':'화','화':'금','금':'목'};
-  const isGeuk = SANG_GEUK[oh] === dayOh;
-  const isSaeng = SANG_SAENG[oh] === dayOh;
+  // 오늘 일진이 본인에게 미치는 영향: 일진→본인 방향으로 판정
+  const isGeuk = SANG_GEUK[dayOh] === myOh;   // 오늘이 본인을 극
+  const isSaeng = SANG_SAENG[dayOh] === myOh; // 오늘이 본인을 생
 
   // 시간대 매핑
   const SI_NAMES = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
@@ -12215,9 +12221,9 @@ function _showTodayMsg() {
   const goodHours = isSaeng ? '오전' : '오후';
   const cautionHours = isGeuk ? '저녁' : '점심';
 
-  // 방위
+  // 방위 — 본인 오행 기준
   const DIR_MAP = {'목':'동쪽','화':'남쪽','토':'중앙','금':'서쪽','수':'북쪽'};
-  const goodDir = DIR_MAP[SANG_SAENG[oh]] || '동쪽';
+  const goodDir = DIR_MAP[myOh] || '동쪽';
 
   // 구체적 행동
   const ACTIONS_GOOD = {
@@ -12235,8 +12241,8 @@ function _showTodayMsg() {
     '수':['수영이나 물놀이','우울한 생각에 빠지기','과음']
   };
 
-  const actionPool = ACTIONS_GOOD[oh] || ACTIONS_GOOD['토'];
-  const cautionPool = ACTIONS_CAUTION[isGeuk ? dayOh : oh] || ACTIONS_CAUTION['토'];
+  const actionPool = ACTIONS_GOOD[myOh] || ACTIONS_GOOD['토'];
+  const cautionPool = ACTIONS_CAUTION[isGeuk ? dayOh : myOh] || ACTIONS_CAUTION['토'];
   const action = actionPool[(seed + _tfVariant) % actionPool.length];
   const caution = cautionPool[(seed + _tfVariant * 3) % cautionPool.length];
 
