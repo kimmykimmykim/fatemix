@@ -2190,8 +2190,12 @@ function qkSubmitSaju(){
   // P3 로직 실행 — 내부에서 fm_saju_last 자동 저장 + sjData 설정 + initTodayFortune 트리거됨
   try{ if(typeof calcSaju==='function') calcSaju(); }catch(e){ console.warn(e); }
 
-  // 간단확인 페이지 재렌더 (3섹션 전환)
+  // 간단확인 페이지 재렌더 (사용자가 다시 quick으로 와도 결과 있게)
   try{ renderQuickCheck(); }catch(e){}
+
+  // 사주 입력 직후 만세력 확인 화면으로 자동 이동
+  // (calcSaju에서 #sj-result-card가 이미 display:block 처리됨)
+  go('saju');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
