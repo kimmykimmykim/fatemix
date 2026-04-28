@@ -4380,7 +4380,13 @@ function sjTab(name,btn){
 
 function getYP(y,m,d){let yr=y;if(m<2||(m===2&&d<4))yr=y-1;return{g:((yr-4)%10+10)%10,j:((yr-4)%12+12)%12};}
 function getMP(y,m,d,yg){let sm=m;if(d<절기입절[m-1])sm=m-1;if(sm<=0)sm=12;const ji=(sm%12);const s=[2,4,6,8,0][yg%5];const ord=sm-2<0?sm+10:sm-2;return{g:(s+ord)%10,j:ji};}
-function getDP(y,m,d){const diff=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);return{g:((0+diff)%10+10)%10,j:((10+diff)%12+12)%12};}
+function getDP(y,m,d){
+  // FIX: Chrome이 1900년 한국을 LMT(UTC+8:27:52)로 처리해
+  // 1900-01-01 기준점이 32분 어긋나 일주가 하루 밀리던 버그.
+  // Date.UTC()로 timezone 영향 제거.
+  const diff=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(1900,0,1))/86400000);
+  return {g:((0+diff)%10+10)%10, j:((10+diff)%12+12)%12};
+}
 function getHP(dg,h){let ji;if(h>=23||h<1)ji=0;else if(h<3)ji=1;else if(h<5)ji=2;else if(h<7)ji=3;else if(h<9)ji=4;else if(h<11)ji=5;else if(h<13)ji=6;else if(h<15)ji=7;else if(h<17)ji=8;else if(h<19)ji=9;else if(h<21)ji=10;else ji=11;return{g:([0,2,4,6,8][dg%5]+ji)%10,j:ji};}
 function getOH(ps){const c={목:0,화:0,토:0,금:0,수:0};ps.forEach(p=>{c[천간오행[p.g]]++;c[지지오행[p.j]]++;});return c;}
 function getYS(oh){const max=Object.entries(oh).sort((a,b)=>b[1]-a[1])[0][0];const s={목:'화',화:'토',토:'금',금:'수',수:'목'};return{용신:s[max],희신:s[s[max]],기신:max};}
@@ -7398,7 +7404,8 @@ function mxCalcRune(y, m, d) {
 function mxCalcDanjusaSimple(y, m, d) {
   const TTI = ['자(쥐)','축(소)','인(호랑이)','묘(토끼)','진(용)','사(뱀)','오(말)','미(양)','신(원숭이)','유(닭)','술(개)','해(돼지)'];
   const yr = TTI[((y-4)%12+12)%12];
-  const diff = Math.floor((new Date(y,m-1,d) - new Date(1900,0,31)) / 86400000);
+  // FIX: getDP와 동일한 KST LMT 버그 회피 — Date.UTC()로 timezone 영향 제거
+  const diff = Math.floor((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31)) / 86400000);
   const dr = TTI[((diff%12)+12)%12];
   return `년띠: ${yr} / 일띠: ${dr} — 두 기질의 교차점에서 운명이 만납니다.`;
 }
@@ -9322,9 +9329,6 @@ const DJ_TTI_CHAR = ['쥐','소','범','토끼','용','뱀','말','양','원숭�
 // 당사주 월 기준 (절기 기반 음력월 → 띠)
 const DJ_MONTH_TTI = [2,3,4,5,6,7,8,9,10,11,0,1]; // 음력 1월=인(호랑이)부터
 
-// 당사주 일주 계산 (1900.1.1 기준 갑자일)
-const DJ_BASE_JD = new Date(1900, 0, 1);
-
 // 기본 해석 데이터
 const DJ_YEAR_DESC = {
   '쥐': '영리하고 재치있으며 적응력이 뛰어납니다. 어떤 상황에서도 기회를 놓치지 않는 감각이 있고, 재물운이 강합니다. 사람을 읽는 눈이 있어 처세에 능하지만, 지나치게 계산적으로 보일 수 있습니다. 머리가 빠르고 말이 빠릅니다. 당신의 가장 큰 자산은 어디서든 살아남는 생존 능력입니다.',
@@ -9439,7 +9443,8 @@ function calcDanjusa(){
   const monthTti = monthTtiIdx;
 
   // 일띠 (1900.1.31 기준 경오일(午) 기준으로 계산)
-  const diff = Math.floor((new Date(y,m-1,d) - new Date(1900,0,31)) / 86400000);
+  // FIX: getDP와 동일한 KST LMT 버그 회피 — Date.UTC()로 timezone 영향 제거
+  const diff = Math.floor((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31)) / 86400000);
   const dayTti = ((diff % 12) + 12) % 12;
 
   // 시띠 = 시진 인덱스 그대로
@@ -10538,7 +10543,9 @@ function nmGetSajuOhaeng(y,m,d) {
   if(!y||!m||!d) return null;
   const 천간오행=['목','목','화','화','토','토','금','금','수','수'];
   const 지지오행=['수','토','목','목','토','화','화','토','금','금','토','수'];
-  const diff=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);
+  // FIX: getDP와 동일한 KST LMT 버그 회피 — Date.UTC()로 timezone 영향 제거
+  // TODO: getDP() 호출로 대체해 인라인 중복 제거 가능
+  const diff=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(1900,0,1))/86400000);
   const yg=((y-4)%10+10)%10, yj=((y-4)%12+12)%12;
   const dg=((0+diff)%10+10)%10, dj=((10+diff)%12+12)%12;
   const oh={목:0,화:0,토:0,금:0,수:0};
