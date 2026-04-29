@@ -1113,6 +1113,7 @@ h1, h2, h3,
     <div class="ohaeng-row" id="sj-ohaeng"></div>
     <div class="label" style="margin-top:4px;">대운 흐름</div>
     <div class="un-scroll" id="sj-un"></div>
+    <div id="sj-shinsal-section" style="display:none;margin-top:14px;"></div>
     <div class="save-row">
       <button class="ghost-btn" onclick="sjSave()">✦ 저장하기</button>
       <button class="ghost-btn" onclick="sjDownload()">↓ 이미지</button>
@@ -4516,9 +4517,14 @@ function calcSaju(){
   const 일주key = 천간[dp.g]+지지[dp.j];
   const 일주텍스트 = 일주해석DB[일주key] || '';
 
+  let 신살결과 = [];
+  try {
+    if (typeof calcShinsal === 'function') 신살결과 = calcShinsal([yp,mp,dp,hp], 천간[dp.g]);
+  } catch(e) { 신살결과 = []; }
+
   sjData={y,m,d,h,min,base,yp,mp,dp,hp,oh,ys,du,cdu,su,age,cy,
     일간오행, 신강정보, 격국정보, 정밀용신, 조후정보, 일주key, 일주텍스트,
-    marital: sjMaritalVal};
+    신살결과, marital: sjMaritalVal};
   renderSaju();
   renderSajuRuleBase();
   document.getElementById('sj-result-card').style.display='block';
@@ -4588,6 +4594,25 @@ function renderSaju(){
       <div class="un-ji">${지지[u.j]}</div>
       <div class="un-yr">${u.year}~</div>
     </div>`).join('');
+
+  // 신살
+  const 신살 = sjData.신살결과 || [];
+  const shinsalEl = document.getElementById('sj-shinsal-section');
+  if (shinsalEl) {
+    if (신살.length === 0) {
+      shinsalEl.style.display = 'none';
+      shinsalEl.innerHTML = '';
+    } else {
+      shinsalEl.style.display = 'block';
+      shinsalEl.innerHTML =
+        `<div class="label" style="margin-top:4px;">신살</div>` +
+        `<div class="ohaeng-row">` +
+        신살.map(s =>
+          `<span class="ob" style="border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);cursor:help;" title="${(s.설명||'').replace(/"/g,'&quot;')}">${s.신살}</span>`
+        ).join('') +
+        `</div>`;
+    }
+  }
 }
 
 //  룰베이스 해석 렌더링 (AI 없이 풍성한 해석) 
