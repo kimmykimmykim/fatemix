@@ -5239,7 +5239,7 @@ function renderSajuRuleBase(){
   const cdu = du.find(u => age >= u.age && age < u.age + 10) || du[0] || sjData.cdu;
   const oc = {목:'#70C49A',화:'#E87070',토:'#C9A84C',금:'#C8C8DC',수:'#86B4EB'};
 
-  const 격국명Core = 격국정보.격 && 격국정보.격 !== '잡격' ? 격국정보.격 : '건록격';
+  const 격국명Core = 격국정보.격;
   const coreKey = `${신강정보.판정}_${격국명Core}`;
   let coreNarrative = SJ_NARRATIVE_CORE[coreKey] || SJ_NARRATIVE_CORE[`신강_${격국명Core}`] || SJ_NARRATIVE_CORE['중화_건록격'];
 
@@ -5255,7 +5255,7 @@ function renderSajuRuleBase(){
   const zeroOh = Object.entries(oh).filter(([k,v])=>v===0).map(([k])=>k);
   const 판정색 = 신강정보.판정==='신강'?'#E87070':신강정보.판정==='신약'?'#86B4EB':'#70C49A';
 
-  const 격국명 = 격국정보.격 && 격국정보.격 !== '잡격' ? 격국정보.격 : '건록격';
+  const 격국명 = 격국정보.격;
   const domainKey = `${신강정보.판정}_${격국명}`;
   const domain = SJ_DOMAIN_DB[domainKey] || SJ_DOMAIN_DB[`신강_${격국명}`] || SJ_DOMAIN_DB['중화_건록격'];
 
@@ -7313,7 +7313,7 @@ function mxBuildMixSaju(y, m, d, shijinIdx, isFemale, marital = 'single') {
 
   const 일주해석텍스트 = (typeof 일주해석DB !== 'undefined' ? 일주해석DB[일주key] : '') || '';
 
-  const 격국명 = 격국정보.격 && 격국정보.격 !== '잡격' ? 격국정보.격 : '건록격';
+  const 격국명 = 격국정보.격;
   const coreKey = `${신강정보.판정}_${격국명}`;
   const 코어나레이티브 = (typeof SJ_NARRATIVE_CORE !== 'undefined'
     ? (SJ_NARRATIVE_CORE[coreKey] || SJ_NARRATIVE_CORE[`신강_${격국명}`] || SJ_NARRATIVE_CORE['중화_건록격'])
