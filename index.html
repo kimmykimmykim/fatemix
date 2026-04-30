@@ -3801,7 +3801,7 @@ function calcHiddenStemScore(dayEl,pillars,monthBranchChar){
     hidden.forEach((sc,i)=>{
       const si=천간.indexOf(sc);
       if(si<0)return;
-      const el=천간오행[si],ow=i===0?1.0:i===1?0.75:0.55;
+      const el=천간오행[si],ow=i===0?0.4:i===1?0.55:0.45;
       const score=(sw[el]||1)*bw*ow;
       if(isSupportElement(dayEl,el))support+=score; else if(isDrainOrControlElement(dayEl,el))drain+=score;
     });
@@ -3816,8 +3816,8 @@ function calcRootScore(dayEl,dp,pillars){
   pillars.forEach((p,idx)=>{
     if(idx===2)return;
     const be=지지오행[p.j];
-    if(be===dayEl)root+=1.1;
-    if(be===getGenerateElement(dayEl))root+=0.8;
+    if(be===dayEl)root+=0.4;
+    if(be===getGenerateElement(dayEl))root+=0.3;
   });
   return root;
 }
@@ -3840,14 +3840,19 @@ function calcSingang(yp,mp,dp,hp,일간오행){
   보정 += (득세점수 - 15) * 0.05;
   보정 = Math.max(-2.5, Math.min(2.5, 보정));
   const net = +((baseNet + 보정).toFixed(2));
+  // 7단계 라벨 (포스텔러식): 극왕 / 태왕 / 신왕 / 중화 / 신약 / 태약 / 극약
   let 판정세분='중화';
-  if(net >= 6) 판정세분='극신강';
-  else if(net >= 2.8) 판정세분='신강';
-  else if(net <= -6) 판정세분='극신약';
-  else if(net <= -2.8) 판정세분='신약';
+  if(net >= 14) 판정세분='극왕';
+  else if(net >= 10) 판정세분='태왕';
+  else if(net >= 5) 판정세분='신왕';
+  else if(net >= -3) 판정세분='중화';
+  else if(net >= -8) 판정세분='신약';
+  else if(net >= -12) 판정세분='태약';
+  else 판정세분='극약';
+  // 판정 (3단계, 호환성): 기존 소비처 (calcYongshin 등)는 판정만 받음
   let 판정='중화';
-  if(판정세분==='극신강'||판정세분==='신강') 판정='신강';
-  else if(판정세분==='극신약'||판정세분==='신약') 판정='신약';
+  if(['극왕','태왕','신왕'].includes(판정세분)) 판정='신강';
+  else if(['신약','태약','극약'].includes(판정세분)) 판정='신약';
   let 조후우선 = false, 조후우선사유 = '';
   const 극열월 = ['사','오','미'], 극한월 = ['해','자','축'];
   const dist = {목:0, 화:0, 토:0, 금:0, 수:0};
@@ -3869,7 +3874,6 @@ function calcSingang(yp,mp,dp,hp,일간오행){
     조후우선 = true;
     조후우선사유 = `${월지문자}월 극한 + ${일간오행} 일간 — 화 보완 필요`;
   }
-  const 총점=Math.max(0,Math.min(100,Math.round(50+net*4)));
   let comment='';
   if(판정==='신강')comment=`${일간오행} 기운의 자립성이 강합니다. 비겁·인성의 도움과 뿌리가 살아 있어 자기주도성이 강한 편입니다.`;
   else if(판정==='신약')comment=`${일간오행} 기운이 환경 압박을 더 크게 받습니다. 재성·관성·식상의 소모보다 인성·비겁 보강이 우선입니다.`;
@@ -3882,14 +3886,17 @@ function calcSingang(yp,mp,dp,hp,일간오행){
     조후우선 ? `조후우선(${조후우선사유})` : null
   ].filter(Boolean).join(' · ');
   comment += ` [근거: ${근거조각}]`;
-  return{판정,판정세분,총점,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,보정:+보정.toFixed(2),root:+root.toFixed(2),조후우선,조후우선사유,comment};
+  return{판정,판정세분,득령,득지,득세점수,월지:월지문자,season:visible.season,supportTotal:+supportTotal.toFixed(2),drainTotal:+drainTotal.toFixed(2),net,보정:+보정.toFixed(2),root:+root.toFixed(2),조후우선,조후우선사유,comment};
 }
 
-// 샘플 판정 예상 (브라우저 콘솔 검증용):
-// net +7, 득령✓, 득지✓ → 판정:'신강', 판정세분:'극신강'
-// net -7, 득령✗, 득지✗, 월지=오, 일간=화 → 판정:'신약', 판정세분:'극신약', 조후우선:true(보완 수)
-// net +1.5, 득령✗, 득지✓ → 판정:'중화', 판정세분:'중화'
-// net -3, 득령✗, 월지=자, 일간=수 → 판정:'신약', 판정세분:'신약', 조후우선:true(보완 화)
+// 샘플 판정 예상 (브라우저 콘솔 검증용, 7단계 라벨):
+// net +14 이상 → 판정세분:'극왕', 판정:'신강'
+// net +10~14 → 판정세분:'태왕', 판정:'신강'
+// net +5~10 → 판정세분:'신왕', 판정:'신강'
+// net -3~+5 → 판정세분:'중화', 판정:'중화'
+// net -8~-3 → 판정세분:'신약', 판정:'신약'
+// net -12~-8 → 판정세분:'태약', 판정:'신약'
+// net -12 미만 → 판정세분:'극약', 판정:'신약'
 
 function calcTenGod(dayEl,dayYY,targetEl,targetYY){
   const 생나=getGenerateElement(dayEl),내가생=getDrainElement(dayEl),내가극=getWealthElement(dayEl),나를극=getControlMeElement(dayEl);
@@ -5313,7 +5320,7 @@ function renderSajuRuleBase(){
 
   // ① 핵심 배지
   html += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
-    <span style="padding:4px 12px;border-radius:12px;font-size:11px;border:0.5px solid ${판정색};color:${판정색};background:${판정색}18;">${신강정보.판정} ${신강정보.총점}점</span>
+    <span style="padding:4px 12px;border-radius:12px;font-size:11px;border:0.5px solid ${판정색};color:${판정색};background:${판정색}18;">${신강정보.판정세분}</span>
     <span style="padding:4px 12px;border-radius:12px;font-size:11px;border:0.5px solid var(--gold);color:var(--gold);background:rgba(201,168,76,0.08);">${격국정보.격}</span>
     <span style="padding:4px 12px;border-radius:12px;font-size:11px;border:0.5px solid ${oc[정밀용신.용신]||'var(--border)'};color:${oc[정밀용신.용신]||'var(--text-2)'};background:${oc[정밀용신.용신]||'transparent'}18;">용신 ${정밀용신.용신}</span>
     <span style="padding:4px 12px;border-radius:12px;font-size:11px;border:0.5px solid var(--border);color:var(--text-2);">「${조후정보.물상}」</span>
